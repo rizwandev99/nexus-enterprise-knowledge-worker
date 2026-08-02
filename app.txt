@@ -1,0 +1,9 @@
+ "Project 1 (RAG Search Web App): A Next.js full-stack app using pgvector for document search, Vercel AI SDK for streaming responses with citations, and telemetry for tracing.
+
+Project 2 (Enterprise MCP Agent): A custom TypeScript MCP server exposing a PostgreSQL database or REST API, connected to a LangGraph.js agent that can handle multi-step workflows and self-correct errors.".
+
+these are two projects. i want to merge them and make a single project only.
+
+i want to build a single mvp type project , so that i can show off in interviews and get selected . suggest me all the projects. rank overall these suggestions.
+
+
