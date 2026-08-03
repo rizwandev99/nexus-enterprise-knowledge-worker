@@ -18,9 +18,13 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 - **Database & Vector Store**: PostgreSQL 16+, `pgvector`, Prisma ORM
 - **MCP Integration**: `@modelcontextprotocol/sdk`, `@langchain/mcp-adapters`
 
+### Environment
+- **OS**: Windows
+- **Terminal**: Git Bash (Always provide standard Unix/Linux Bash commands, NEVER PowerShell commands).
+
 ### Current Status
-- **Phase**: MCP Server Construction
-- **Current Step**: Step 2.1 - Build `src/mcp-server/server.ts`
+- **Phase**: Orchestration Core
+- **Current Step**: Step 3.1 - Build Agent State interface (`src/lib/agent/state.ts`)
 
 ### Completed Steps
 - [x] Project requirements defined (`prd.md`).
@@ -30,9 +34,9 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 - [x] 1.3: Generate SQL migration for `match_hybrid_chunks` and execute `prisma db push`.
 
 ### Remaining Steps
-- [ ] **Step 2: MCP Server Construction**
-  - [ ] 2.1: Build `src/mcp-server/server.ts` with standard DB/API tools.
-  - [ ] 2.2: Verify MCP server initialization and stdio transport.
+- [x] **Step 2: MCP Server Construction**
+  - [x] 2.1: Build `src/mcp-server/server.ts` with standard DB/API tools.
+  - [x] 2.2: Verify MCP server initialization and stdio transport.
 - [ ] **Step 3: Orchestration Core**
   - [ ] 3.1: Build Agent State interface (`src/lib/agent/state.ts`).
   - [ ] 3.2: Build LangGraph workflow (`src/lib/agent/graph.ts`) integrating `MultiServerMCPClient`.
@@ -106,7 +110,7 @@ Agents must strictly adhere to the following folder hierarchy:
 ## Execution & Testing Commands
 - **Database**: `docker compose up -d`
 - **Prisma**: `npx prisma db push` and `npx prisma studio`
-- **MCP Server Test**: `npx ts-node src/mcp-server/server.ts`
+- **MCP Server Test**: `npx tsx src/mcp-server/server.ts`
 - **Next.js Dev Server**: `npm run dev`
 
 ## Definition of Done (DoD) & Version Control
