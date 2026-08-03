@@ -37,7 +37,7 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 - [x] **Step 2: MCP Server Construction**
   - [x] 2.1: Build `src/mcp-server/server.ts` with standard DB/API tools.
   - [x] 2.2: Verify MCP server initialization and stdio transport.
-- [ ] **Step 3: Orchestration Core**
+- [x] **Step 3: Orchestration Core**
   - [x] 3.1: Build Agent State interface (`src/lib/agent/state.ts`).
   - [x] 3.2: Build LangGraph workflow (`src/lib/agent/graph.ts`) integrating `MultiServerMCPClient`.
   - [x] 3.3: Implement cyclic self-correction edges and HITL interrupt logic.
