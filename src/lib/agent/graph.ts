@@ -6,7 +6,7 @@
 
 // StateGraph: Helps us build the flowchart. START and END are the beginning and end.
 // interrupt: A special function that pauses the app to ask a human for permission.
-import { StateGraph, END, START, interrupt } from "@langchain/langgraph";
+import { StateGraph, END, START, interrupt, MemorySaver } from "@langchain/langgraph";
 
 // ChatOpenAI: The actual AI brain (like ChatGPT) we will use.
 import { ChatOpenAI } from "@langchain/openai";
@@ -212,5 +212,6 @@ export async function createAgentGraph() {
     });
 
   // Finally, compile and return our completed flowchart!
-  return workflow.compile();
+  const memory = new MemorySaver();
+  return workflow.compile({ checkpointer: memory });
 }

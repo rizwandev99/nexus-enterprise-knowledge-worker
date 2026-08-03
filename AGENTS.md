@@ -23,8 +23,8 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 - **Terminal**: Git Bash (Always provide standard Unix/Linux Bash commands, NEVER PowerShell commands).
 
 ### Current Status
-- **Phase**: API Route & Next.js Presentation
-- **Current Step**: Step 4.2 - Build React 19 Client UI with `useChat`, citations, and approval modals.
+- **Phase**: Telemetry Hardening
+- **Current Step**: Step 5.1 - Configure `instrumentation.ts` for OpenTelemetry.
 
 ### Completed Steps
 - [x] Project requirements defined (`prd.md`).
@@ -33,6 +33,7 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 - [x] 1.2: Initialize Prisma, create `schema.prisma`.
 - [x] 1.3: Generate SQL migration for `match_hybrid_chunks` and execute `prisma db push`.
 - [x] Step 4.1 - Implement `/src/app/api/chat/route.ts` bridging `streamEvents` to Vercel AI SDK.
+- [x] Step 4.2 - Build React 19 Client UI with `useChat`, citations, and approval modals.
 
 ### Remaining Steps
 - [x] **Step 2: MCP Server Construction**
@@ -42,9 +43,9 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 3.1: Build Agent State interface (`src/lib/agent/state.ts`).
   - [x] 3.2: Build LangGraph workflow (`src/lib/agent/graph.ts`) integrating `MultiServerMCPClient`.
   - [x] 3.3: Implement cyclic self-correction edges and HITL interrupt logic.
-- [ ] **Step 4: API Route & Next.js Presentation**
+- [x] **Step 4: API Route & Next.js Presentation**
   - [x] 4.1: Implement `/src/app/api/chat/route.ts` bridging `streamEvents` to Vercel AI SDK.
-  - [ ] 4.2: Build React 19 Client UI with `useChat`, citations, and approval modals.
+  - [x] 4.2: Build React 19 Client UI with `useChat`, citations, and approval modals.
 - [ ] **Step 5: Telemetry Hardening**
   - [ ] 5.1: Configure `instrumentation.ts` for OpenTelemetry.
 
