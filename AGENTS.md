@@ -24,7 +24,7 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 
 ### Current Status
 - **Phase**: API Route & Next.js Presentation
-- **Current Step**: Step 4.1 - Implement `/src/app/api/chat/route.ts` bridging `streamEvents` to Vercel AI SDK
+- **Current Step**: Step 4.2 - Build React 19 Client UI with `useChat`, citations, and approval modals.
 
 ### Completed Steps
 - [x] Project requirements defined (`prd.md`).
@@ -32,6 +32,7 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 - [x] 1.1: Create `docker-compose.yml` with PostgreSQL `pgvector`.
 - [x] 1.2: Initialize Prisma, create `schema.prisma`.
 - [x] 1.3: Generate SQL migration for `match_hybrid_chunks` and execute `prisma db push`.
+- [x] Step 4.1 - Implement `/src/app/api/chat/route.ts` bridging `streamEvents` to Vercel AI SDK.
 
 ### Remaining Steps
 - [x] **Step 2: MCP Server Construction**
@@ -42,7 +43,7 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 3.2: Build LangGraph workflow (`src/lib/agent/graph.ts`) integrating `MultiServerMCPClient`.
   - [x] 3.3: Implement cyclic self-correction edges and HITL interrupt logic.
 - [ ] **Step 4: API Route & Next.js Presentation**
-  - [ ] 4.1: Implement `/src/app/api/chat/route.ts` bridging `streamEvents` to Vercel AI SDK.
+  - [x] 4.1: Implement `/src/app/api/chat/route.ts` bridging `streamEvents` to Vercel AI SDK.
   - [ ] 4.2: Build React 19 Client UI with `useChat`, citations, and approval modals.
 - [ ] **Step 5: Telemetry Hardening**
   - [ ] 5.1: Configure `instrumentation.ts` for OpenTelemetry.
@@ -65,7 +66,7 @@ To prevent errors caused by outdated base training data, all agents MUST strictl
    - **Step 1: The Overview**: Since it is assumed everything is new to the user, the AI must first introduce the technology or concept, explaining what it is at a high, understandable level.
    - **Step 2: The Context**: The AI must explain the common things related to this technology and provide real-world context on how and why it is used.
    - **Step 3: The Instructions**: Only after providing the overview and context, the AI should give a detailed breakdown of how to do the work, providing step-by-step instructions and code snippets in the chat for the user to execute.
-2. **User Execution**: The human user is solely responsible for writing/pasting the code, running terminal commands, and testing the implementation.
+2. **User Execution**: The human user is solely responsible for writing/pasting the code, running terminal commands, and testing the implementation. **EXCEPTION**: If the user explicitly instructs the AI to execute a step (e.g., "do this step yourself"), the AI MUST execute the commands and write the code directly for the user. Otherwise, strictly maintain the full learning mode.
 3. **Step-by-Step Validation**: Provide only ONE step at a time. Do not proceed to the next step until the user confirms the current step is completed, tested, and they feel confident about it.
 4. **Continuous State & Guidelines Tracking**: The AI must automatically keep this entire `AGENTS.md` document up to date. This includes updating the "Current Status", "Completed Steps", and "Remaining Steps" sections whenever a step is completed, as well as continuously reviewing and updating the overall guidelines, rules, and project context as the project's needs evolve, without the user having to manually ask for updates.
 
