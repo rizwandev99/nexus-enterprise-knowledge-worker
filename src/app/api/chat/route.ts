@@ -89,7 +89,8 @@ export async function POST(req: Request) {
            const sensitiveCall = lastMsg.tool_calls[0];
            
            // We use a magic string in a standard text chunk to trigger the modal safely
-           await writer.write(encoder.encode(`0:"[APPROVAL_REQUEST]${JSON.stringify(sensitiveCall).replace(/"/g, '\\"')}"\\n`));
+           await writer.write(encoder.encode(`0:" "\n`));
+           await writer.write(encoder.encode(`0:"[APPROVAL_REQUEST]${JSON.stringify(sensitiveCall).replace(/"/g, '\\"')}"\n`));
         }
       }
 

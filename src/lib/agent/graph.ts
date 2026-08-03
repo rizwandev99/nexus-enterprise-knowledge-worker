@@ -8,8 +8,8 @@
 // interrupt: A special function that pauses the app to ask a human for permission.
 import { StateGraph, END, START, interrupt, MemorySaver } from "@langchain/langgraph";
 
-// ChatOpenAI: The actual AI brain (like ChatGPT) we will use.
-import { ChatOpenAI } from "@langchain/openai";
+// ChatGroq: The actual AI brain we will use.
+import { ChatGroq } from "@langchain/groq";
 
 // MultiServerMCPClient: A tool that lets our AI connect to external databases or APIs.
 import { MultiServerMCPClient } from "@langchain/mcp-adapters";
@@ -33,7 +33,7 @@ const mcpClient = new MultiServerMCPClient({
     enterprise: {
       transport: "stdio",
       command: "npx",
-      args: ["ts-node", "src/mcp-server/server.ts"],
+      args: ["tsx", "src/mcp-server/server.ts"],
     },
   },
 });
@@ -45,7 +45,7 @@ export async function createAgentGraph() {
   // ==========================================
   // We grab the tools from our server and give them to the AI so it knows what it can do.
   const mcpTools = await mcpClient.getTools();
-  const model = new ChatOpenAI({ modelName: "gpt-4o", temperature: 0 }).bindTools(mcpTools);
+  const model = new ChatGroq({ model: "llama-3.3-70b-versatile", temperature: 0 }).bindTools(mcpTools);
 
 
   // ==========================================

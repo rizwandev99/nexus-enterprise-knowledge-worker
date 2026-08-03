@@ -4,7 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 
 // Prisma v7 Required Imports
-import { PrismaClient } from "../../generated/prisma/client.js";
+import { PrismaClient } from "../../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
@@ -16,7 +16,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 // Create the MCP Server
-const server = new Server(
+export const server = new Server(
   {
     name: "nexus-database-server",
     version: "1.0.0",
@@ -44,6 +44,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["title", "content"],
         },
       },
+      {
+        name: "execute_sql_mutation",
+        description: "Execute a direct SQL mutation on the database (DANGEROUS)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: { type: "string", description: "The SQL query to execute" },
+          },
+          required: ["query"],
+        },
+      }
     ],
   };
 });
@@ -67,6 +78,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         {
           type: "text",
           text: `Successfully added document with ID: ${doc.id}`,
+        },
+      ],
+    };
+  }
+
+  if (request.params.name === "execute_sql_mutation") {
+    const { query } = request.params.arguments as any;
+    // For safety in this MVP, we just pretend to execute it
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Successfully executed mutation: ${query}`,
         },
       ],
     };

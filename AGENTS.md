@@ -24,7 +24,7 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 
 ### Current Status
 - **Phase**: Telemetry Hardening
-- **Current Step**: Step 5.1 - Configure `instrumentation.ts` for OpenTelemetry.
+- **Current Step**: Step 5.2 - Configure OTLP exporters and tracing backend.
 
 ### Completed Steps
 - [x] Project requirements defined (`prd.md`).
@@ -47,7 +47,7 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 4.1: Implement `/src/app/api/chat/route.ts` bridging `streamEvents` to Vercel AI SDK.
   - [x] 4.2: Build React 19 Client UI with `useChat`, citations, and approval modals.
 - [ ] **Step 5: Telemetry Hardening**
-  - [ ] 5.1: Configure `instrumentation.ts` for OpenTelemetry.
+  - [x] 5.1: Configure `instrumentation.ts` for OpenTelemetry.
 
 ---
 

@@ -12,10 +12,11 @@ export default function ChatPage() {
 
   // Find the most recent approval request hidden in the messages
   const approvalRequests = messages.map(m => {
-     const text = (m.parts?.find((p: any) => p.type === 'text') as any)?.text || "";
-     if (text.startsWith("[APPROVAL_REQUEST]")) {
+     const text = (m.parts?.find((p: any) => p.type === 'text') as any)?.text || m.content || "";
+     const match = text.match(/\[APPROVAL_REQUEST\](.*)/);
+     if (match) {
         try {
-          return JSON.parse(text.replace("[APPROVAL_REQUEST]", ""));
+          return JSON.parse(match[1]);
         } catch (e) { return null; }
      }
      return null;
@@ -27,6 +28,10 @@ export default function ChatPage() {
   const pendingApproval = latestApproval && !resolvedApprovals.has(latestApproval.id) 
     ? latestApproval 
     : null;
+
+  console.log("MESSAGES:", messages);
+  console.log("APPROVAL REQUESTS:", approvalRequests);
+  console.log("PENDING APPROVAL:", pendingApproval);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,8 +103,12 @@ export default function ChatPage() {
         
         {messages.map((m) => {
           // Do not render our hidden magic strings in the UI!
-          const textContent = (m.parts?.find((p: any) => p.type === 'text') as any)?.text || "";
-          if (textContent === "[HUMAN_APPROVAL_YES]" || textContent === "[HUMAN_APPROVAL_NO]" || textContent.startsWith("[APPROVAL_REQUEST]")) return null;
+          const textContent = (m.parts?.find((p: any) => p.type === 'text') as any)?.text || m.content || "";
+          if (textContent === "[HUMAN_APPROVAL_YES]" || textContent === "[HUMAN_APPROVAL_NO]") return null;
+          
+          // Strip the magic string out of the UI if the AI said something before the tool call
+          const cleanText = textContent.replace(/\[APPROVAL_REQUEST\].*/, "");
+          if (!cleanText.trim()) return null;
           
           return (
             <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
