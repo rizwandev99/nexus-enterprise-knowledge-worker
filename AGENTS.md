@@ -23,8 +23,8 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 - **Terminal**: Git Bash (Always provide standard Unix/Linux Bash commands, NEVER PowerShell commands).
 
 ### Current Status
-- **Phase**: Orchestration Core
-- **Current Step**: Step 3.1 - Build Agent State interface (`src/lib/agent/state.ts`)
+- **Phase**: API Route & Next.js Presentation
+- **Current Step**: Step 4.1 - Implement `/src/app/api/chat/route.ts` bridging `streamEvents` to Vercel AI SDK
 
 ### Completed Steps
 - [x] Project requirements defined (`prd.md`).
@@ -38,9 +38,9 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 2.1: Build `src/mcp-server/server.ts` with standard DB/API tools.
   - [x] 2.2: Verify MCP server initialization and stdio transport.
 - [ ] **Step 3: Orchestration Core**
-  - [ ] 3.1: Build Agent State interface (`src/lib/agent/state.ts`).
-  - [ ] 3.2: Build LangGraph workflow (`src/lib/agent/graph.ts`) integrating `MultiServerMCPClient`.
-  - [ ] 3.3: Implement cyclic self-correction edges and HITL interrupt logic.
+  - [x] 3.1: Build Agent State interface (`src/lib/agent/state.ts`).
+  - [x] 3.2: Build LangGraph workflow (`src/lib/agent/graph.ts`) integrating `MultiServerMCPClient`.
+  - [x] 3.3: Implement cyclic self-correction edges and HITL interrupt logic.
 - [ ] **Step 4: API Route & Next.js Presentation**
   - [ ] 4.1: Implement `/src/app/api/chat/route.ts` bridging `streamEvents` to Vercel AI SDK.
   - [ ] 4.2: Build React 19 Client UI with `useChat`, citations, and approval modals.
