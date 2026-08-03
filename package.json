@@ -5,12 +5,13 @@
     "start": "next start"
   },
   "devDependencies": {
+    "@ai-sdk/react": "^4.0.51",
     "@types/node": "^26.1.2",
     "@types/pg": "^8.20.3",
     "prisma": "^7.9.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.1",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@langchain/core": "^1.2.4",
