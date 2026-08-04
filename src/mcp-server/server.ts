@@ -85,15 +85,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   if (request.params.name === "execute_sql_mutation") {
     const { query } = request.params.arguments as any;
-    // For safety in this MVP, we just pretend to execute it
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Successfully executed mutation: ${query}`,
-        },
-      ],
-    };
+    try {
+      const sqlString = typeof query === "string" ? query : String(query);
+      // Prisma v7 with pg adapter has a known bug with executeRawUnsafe on some environments.
+      // We bypass it by executing directly against the underlying pg pool!
+      await pool.query(sqlString);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Successfully executed mutation: ${query}`,
+          },
+        ],
+      };
+    } catch (error: any) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error executing mutation: ${error.message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
   }
 
   throw new Error(`Tool not found: ${request.params.name}`);

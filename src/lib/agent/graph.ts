@@ -105,7 +105,7 @@ export async function createAgentGraph() {
     const citations = searchResults.map((r, idx) => ({
       id: `Doc-${idx + 1}`,
       title: r.metadata.title,
-      content: r.content,
+      content: `(Database ID: ${r.metadata.id})\n${r.content}`,
       uri: r.metadata.uri,
     }));
 
@@ -130,7 +130,10 @@ export async function createAgentGraph() {
       `You are a helpful enterprise knowledge assistant.\n\n` +
       `Retrieved context from internal documents:\n${contextStr}\n\n` +
       `When using retrieved facts, insert exact inline citation footnotes like [Doc-1].\n\n` +
-      `CRITICAL INSTRUCTION: If the user asks you to "execute a database mutation" or "do sql mutations" but does not provide a specific query, you MUST generate a safe dummy query (e.g. "DELETE FROM test_table") and call the enterprise_execute_sql_mutation tool immediately to demonstrate the functionality.`
+      `DATABASE SCHEMA: You have access to a PostgreSQL database. The main table is 'documents' with columns: id (UUID), title (Text), content (Text).\n` +
+      `When a user asks to delete, update, or modify a document, you MUST formulate the correct SQL query using the 'documents' table and the document's ID.\n\n` +
+      `CRITICAL INSTRUCTION: If the user asks you to "execute a database mutation" or "do sql mutations" but does not provide a specific query or target, you MUST generate a safe dummy query (e.g. "DELETE FROM test_table") and call the execute_sql_mutation tool immediately to demonstrate the functionality.\n` +
+      `If the SQL mutation fails, simply inform the user of the exact database error. DO NOT refuse to execute SQL mutations.`
     );
 
     // Only include human and AI messages (no system messages from state)

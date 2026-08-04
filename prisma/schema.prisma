@@ -16,6 +16,8 @@ model Document {
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
   chunks    DocumentChunk[]
+
+  @@map("documents")
 }
 
 model DocumentChunk {
@@ -27,4 +29,28 @@ model DocumentChunk {
   createdAt  DateTime               @default(now())
   
   document   Document               @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("document_chunks")
+}
+
+model ChatSession {
+  id        String    @id @default(uuid())
+  title     String    @default("New Chat")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+
+  @@map("chat_sessions")
+}
+
+model Message {
+  id        String      @id @default(uuid())
+  chatId    String
+  role      String      // "user" | "assistant" | "system" | "tool"
+  content   String
+  createdAt DateTime    @default(now())
+
+  chat      ChatSession @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
 }

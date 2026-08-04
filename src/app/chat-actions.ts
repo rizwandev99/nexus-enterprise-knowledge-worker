@@ -1,0 +1,79 @@
+"use server";
+
+import { PrismaClient } from "../../generated/prisma/client";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { ChatGroq } from "@langchain/groq";
+import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+
+const connectionString = `${process.env.DATABASE_URL}`;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+export async function getChatSessions() {
+  return await prisma.chatSession.findMany({
+    orderBy: { updatedAt: "desc" },
+  });
+}
+
+export async function createChatSession() {
+  const session = await prisma.chatSession.create({
+    data: { title: "New Chat" },
+  });
+  return session;
+}
+
+export async function deleteChatSession(id: string) {
+  await prisma.chatSession.delete({ where: { id } });
+}
+
+export async function renameChatSession(id: string, title: string) {
+  await prisma.chatSession.update({
+    where: { id },
+    data: { title },
+  });
+}
+
+export async function getChatMessages(chatId: string) {
+  const messages = await prisma.message.findMany({
+    where: { chatId },
+    orderBy: { createdAt: "asc" },
+  });
+  return messages.map((m: any) => ({
+    id: m.id,
+    role: m.role as "user" | "assistant" | "system" | "tool",
+    content: m.content,
+  }));
+}
+
+export async function saveMessage(chatId: string, role: string, content: string) {
+  return await prisma.message.create({
+    data: { chatId, role, content },
+  });
+}
+
+export async function generateChatTitle(chatId: string, firstMessageContent: string) {
+  try {
+    const model = new ChatGroq({
+      model: "llama-3.3-70b-versatile",
+      temperature: 0,
+    });
+    
+    const response = await model.invoke([
+      new SystemMessage("You are a helpful assistant that generates extremely concise chat titles (2-4 words max) based on the user's first message. Output ONLY the title, no quotes or prefix."),
+      new HumanMessage(firstMessageContent)
+    ]);
+
+    let title = typeof response.content === "string" ? response.content : "New Chat";
+    title = title.trim().replace(/^["']|["']$/g, ""); // strip quotes if any
+    
+    if (title) {
+      await renameChatSession(chatId, title);
+    }
+    return title;
+  } catch (error) {
+    console.error("Failed to generate chat title:", error);
+    return null;
+  }
+}

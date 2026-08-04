@@ -12,6 +12,7 @@ import {
   createUIMessageStreamResponse,
 } from "ai";
 import { generateId } from "@ai-sdk/provider-utils";
+import { saveMessage, generateChatTitle } from "../../chat-actions";
 
 export const maxDuration = 60;
 
@@ -24,12 +25,8 @@ function writeApprovalNotice(
 ) {
   const approvalId = generateId();
 
-  // 1. The tool-approval-request chunk (native AI SDK HITL support)
-  writer.write({
-    type: "tool-approval-request",
-    approvalId,
-    toolCallId: sensitiveCall.id ?? approvalId,
-  });
+  // We skip emitting native `tool-approval-request` because it requires a preceding `tool-call` event.
+  // We handle approval purely through text parsing in the client instead.
 
   // 2. A visible text block so the modal detector in page.tsx can find it
   const noticeId = generateId();
@@ -43,7 +40,14 @@ function writeApprovalNotice(
 }
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const url = new URL(req.url);
+  const jsonBody = await req.json();
+  const { messages } = jsonBody;
+  const chatId = url.searchParams.get("chatId") || jsonBody.chatId;
+
+  if (!chatId) {
+    return new Response(JSON.stringify({ error: "Missing chatId" }), { status: 400 });
+  }
 
   // ── Create our LangGraph agent workflow ───────────────────────────────────
   let workflow: any;
@@ -54,8 +58,8 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 
-  // We use a constant thread ID so MemorySaver persists state across turns
-  const config = { configurable: { thread_id: "default-thread" }, version: "v2" as const };
+  // We use the chatId so MemorySaver isolates state per chat
+  const config = { configurable: { thread_id: chatId }, version: "v2" as const };
 
   // ── Extract the latest message text ──────────────────────────────────────
   const lastMsg = messages[messages.length - 1];
@@ -63,6 +67,16 @@ export async function POST(req: Request) {
     typeof lastMsg.content === "string"
       ? lastMsg.content
       : lastMsg.parts?.find((p: any) => p.type === "text")?.text ?? "";
+
+  // ── Save user message and trigger auto-naming ────────────────────────────
+  if (text !== "[HUMAN_APPROVAL_YES]" && text !== "[HUMAN_APPROVAL_NO]") {
+    await saveMessage(chatId, "user", text);
+    
+    // Auto-name chat if it's the first message
+    if (messages.length <= 2) {
+       generateChatTitle(chatId, text).catch(console.error);
+    }
+  }
 
   // ── Build the AI SDK v7 UIMessageStream ───────────────────────────────────
   const stream = createUIMessageStream({
@@ -83,6 +97,7 @@ export async function POST(req: Request) {
         // Tool-call-only responses (like HITL triggers) produce no text, so
         // we must not emit an empty text block that would confuse the detector.
         let textBlockId: string | null = null;
+        let assistantContent = "";
 
         const ensureTextBlockOpen = () => {
           if (!textBlockId) {
@@ -101,6 +116,7 @@ export async function POST(req: Request) {
                 ? event.data.chunk.content
                 : String(event.data.chunk.content);
               if (delta) {
+                assistantContent += delta;
                 ensureTextBlockOpen();
                 writer.write({ type: "text-delta", id: textBlockId!, delta });
               }
@@ -130,6 +146,10 @@ export async function POST(req: Request) {
           // Close the text block if we opened one
           if (textBlockId) {
             writer.write({ type: "text-end", id: textBlockId });
+          }
+
+          if (assistantContent.trim()) {
+            await saveMessage(chatId, "assistant", assistantContent);
           }
 
           // ── Check if LangGraph paused at an interrupt (HITL) ─────────────

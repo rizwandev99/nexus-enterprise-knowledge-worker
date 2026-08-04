@@ -31,7 +31,7 @@
   --radius-xl: 16px;
   --radius-pill-sm: 64px;
   --radius-pill: 100px;
-  
+
   /* Fonts */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
