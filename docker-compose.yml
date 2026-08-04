@@ -14,5 +14,13 @@ services:
     volumes:
       - nexus_pgdata:/var/lib/postgresql/data
 
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: nexus_jaeger
+    restart: always
+    ports:
+      - "4318:4318" # This is the port Next.js is sending data to!
+      - "16686:16686" # This is the dashboard UI port
+
 volumes:
   nexus_pgdata:
