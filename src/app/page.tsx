@@ -1,174 +1,214 @@
 "use client";
 
-import { useState } from "react";
 import { useChat } from "@ai-sdk/react";
+import { useState, useEffect, useRef } from "react";
 
 export default function ChatPage() {
-  const { messages, sendMessage } = useChat();
+  const { messages, sendMessage, status } = useChat();
+
   const [input, setInput] = useState("");
-  
-  // Track which tool calls we've already approved/rejected so the modal disappears
   const [resolvedApprovals, setResolvedApprovals] = useState<Set<string>>(new Set());
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Find the most recent approval request hidden in the messages
-  const approvalRequests = messages.map(m => {
-     const text = (m.parts?.find((p: any) => p.type === 'text') as any)?.text || m.content || "";
-     const match = text.match(/\[APPROVAL_REQUEST\](.*)/);
-     if (match) {
-        try {
-          return JSON.parse(match[1]);
-        } catch (e) { return null; }
-     }
-     return null;
-  }).filter(Boolean);
-  
-  const latestApproval = approvalRequests[approvalRequests.length - 1];
+  const isLoading = status === "streaming" || status === "submitted";
 
-  // Show the modal if we have a request we haven't resolved yet
-  const pendingApproval = latestApproval && !resolvedApprovals.has(latestApproval.id) 
-    ? latestApproval 
-    : null;
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-  console.log("MESSAGES:", messages);
-  console.log("APPROVAL REQUESTS:", approvalRequests);
-  console.log("PENDING APPROVAL:", pendingApproval);
+  const approvalMarkerMsg = [...messages]
+    .reverse()
+    .find(
+      (m) =>
+        m.role === "assistant" &&
+        m.parts?.some(
+          (p: any) => p.type === "text" && p.text?.includes("__APPROVAL_REQUEST__")
+        )
+    );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || pendingApproval) return;
-    sendMessage({ role: 'user', parts: [{ type: 'text', text: input }] });
+  const approvalId = approvalMarkerMsg?.id ?? null;
+  const pendingApproval =
+    approvalMarkerMsg && approvalId && !resolvedApprovals.has(approvalId)
+      ? approvalMarkerMsg
+      : null;
+
+  const handleApprove = async () => {
+    if (!pendingApproval || !approvalId) return;
+    setResolvedApprovals((prev) => new Set(prev).add(approvalId));
+    sendMessage({ text: "[HUMAN_APPROVAL_YES]" });
+  };
+
+  const handleReject = async () => {
+    if (!pendingApproval || !approvalId) return;
+    setResolvedApprovals((prev) => new Set(prev).add(approvalId));
+    sendMessage({ text: "[HUMAN_APPROVAL_NO]" });
+  };
+
+  const handleSend = () => {
+    const text = input.trim();
+    if (!text || isLoading) return;
     setInput("");
-  };
-
-  const handleApprove = () => {
-    if (!pendingApproval) return;
-    setResolvedApprovals(prev => new Set(prev).add(pendingApproval.id));
-    sendMessage({ role: 'user', parts: [{ type: 'text', text: '[HUMAN_APPROVAL_YES]' }] });
-  };
-
-  const handleReject = () => {
-    if (!pendingApproval) return;
-    setResolvedApprovals(prev => new Set(prev).add(pendingApproval.id));
-    sendMessage({ role: 'user', parts: [{ type: 'text', text: '[HUMAN_APPROVAL_NO]' }] });
+    sendMessage({ text });
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#fafafa] text-[#171717] font-sans relative">
+    <div className="flex h-screen bg-canvas-soft text-ink font-sans relative overflow-hidden">
       
-      {/* Approval Modal (Displays over the chat if pendingApproval exists) */}
+      {/* ── Approval Modal ─────────────────────────────────────────── */}
       {pendingApproval && (
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-[#ebebeb] animate-in fade-in zoom-in duration-200">
-            <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-5">
+        <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-canvas rounded-lg shadow-2xl max-w-md w-full p-xl border border-hairline">
+            <div className="w-12 h-12 bg-warning-soft text-warning-deep rounded-full flex items-center justify-center mb-md">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold mb-2">Action Approval Required</h2>
-            <p className="text-[#666] mb-5 text-sm leading-relaxed">
-              The AI is attempting to execute a sensitive operation. Please review the details below and approve or reject this action.
+            <h2 className="text-2xl font-semibold tracking-[-0.96px] mb-xs">Action Approval Required</h2>
+            <p className="text-body mb-lg text-sm leading-relaxed">
+              The AI is attempting to execute a sensitive operation. Please review and approve or reject this action.
             </p>
-            <div className="bg-[#fafafa] p-4 rounded-xl border border-[#ebebeb] mb-6 overflow-hidden">
-              <div className="font-semibold text-[#171717] mb-1 font-mono text-sm">
-                {pendingApproval.name}
-              </div>
-              <pre className="text-[#666] font-mono text-xs overflow-x-auto pt-2 border-t border-[#ebebeb] mt-2">
-                {JSON.stringify(pendingApproval.args, null, 2)}
+            <div className="bg-canvas-soft-2 p-md rounded-md border border-hairline mb-xl overflow-hidden">
+              <pre className="text-body font-mono text-xs overflow-x-auto">
+                {(pendingApproval.parts?.find(
+                  (p: any) => p.type === "text" && p.text?.includes("__APPROVAL_REQUEST__")
+                ) as any)?.text?.replace("__APPROVAL_REQUEST__\n", "")}
               </pre>
             </div>
-            <div className="flex gap-3 justify-end">
-              <button onClick={handleReject} className="px-5 py-2.5 rounded-full border border-[#ebebeb] text-[#171717] font-medium text-sm hover:bg-[#f5f5f5] transition-colors">
-                Reject Action
+            <div className="flex gap-sm justify-end">
+              <button onClick={handleReject} className="px-sm py-xs rounded-pill border border-hairline text-ink font-medium text-sm hover:bg-canvas-soft-2 transition-colors">
+                Reject
               </button>
-              <button onClick={handleApprove} className="px-5 py-2.5 rounded-full bg-orange-600 text-white font-medium text-sm hover:bg-orange-700 transition-colors shadow-md">
-                Approve & Continue
+              <button onClick={handleApprove} className="px-sm py-xs rounded-pill bg-primary text-on-primary font-medium text-sm hover:opacity-90 transition-opacity">
+                Approve &amp; Continue
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Header */}
-      <header className="flex h-16 items-center px-6 bg-white border-b border-[#ebebeb]">
-        <h1 className="text-xl font-semibold tracking-tight">Nexus Knowledge Worker</h1>
-      </header>
-
-      {/* Chat Messages Area */}
-      <main className="flex-1 overflow-y-auto p-6 max-w-4xl mx-auto w-full space-y-6">
-        {messages.length === 0 && (
-          <div className="text-center text-[#888888] mt-20">
-            Send a message to start chatting with the enterprise AI.
-          </div>
-        )}
-        
-        {messages.map((m) => {
-          // Do not render our hidden magic strings in the UI!
-          const textContent = (m.parts?.find((p: any) => p.type === 'text') as any)?.text || m.content || "";
-          if (textContent === "[HUMAN_APPROVAL_YES]" || textContent === "[HUMAN_APPROVAL_NO]") return null;
-          
-          // Strip the magic string out of the UI if the AI said something before the tool call
-          const cleanText = textContent.replace(/\[APPROVAL_REQUEST\].*/, "");
-          if (!cleanText.trim()) return null;
-          
-          return (
-            <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`p-4 rounded-xl max-w-[80%] shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a] border border-[#ebebeb] ${
-                m.role === 'user' 
-                  ? 'bg-[#171717] text-white' 
-                  : 'bg-white text-[#171717]'
-              }`}>
-                <div className="text-xs font-medium mb-2 opacity-70 uppercase tracking-wider">
-                  {m.role === 'user' ? 'You' : 'Nexus AI'}
-                </div>
-                
-                <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {m.parts?.map((part: any, index: number) => {
-                    
-                    // Render standard text
-                    if (part.type === 'text') {
-                      return <span key={index}>{part.text}</span>;
-                    }
-                    
-                    // Render tool calls (Vercel SDK maps the `9:` stream format into this)
-                    if (part.type === 'tool-invocation') {
-                      return (
-                        <div key={index} className="mt-2 mb-2 p-3 bg-[#fafafa] border border-[#ebebeb] text-[#171717] rounded-lg flex items-center gap-3">
-                           <div className="w-4 h-4 border-2 border-[#888] border-t-transparent rounded-full animate-spin"></div>
-                           <span className="font-mono text-xs font-medium tracking-tight">
-                             Executing <span className="text-blue-600">{part.toolInvocation.toolName}</span>...
-                           </span>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </main>
-
-      {/* Input Form Area */}
-      <div className="p-6 bg-white border-t border-[#ebebeb]">
-        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto flex gap-3">
-          <input
-            className="flex-1 h-12 px-4 rounded-lg border border-[#ebebeb] bg-[#fafafa] text-sm focus:outline-none focus:border-[#171717] transition-colors disabled:opacity-50"
-            value={input}
-            placeholder="Ask a question about your enterprise data..."
-            onChange={(e) => setInput(e.target.value)}
-            disabled={!!pendingApproval}
-          />
-          <button 
-            type="submit"
-            disabled={!!pendingApproval}
-            className="h-12 px-6 rounded-full bg-[#171717] text-white font-medium text-sm hover:bg-black transition-colors disabled:opacity-50"
-          >
-            Send
+      {/* ── Sidebar (ex-app-shell-row pattern) ─────────────────────── */}
+      <aside className="w-64 bg-canvas border-r border-hairline flex flex-col shrink-0 hidden md:flex">
+        <div className="h-16 flex items-center px-lg border-b border-hairline font-semibold tracking-tight text-lg">
+          Nexus Workspace
+        </div>
+        <div className="flex-1 overflow-y-auto p-sm space-y-xs">
+          <div className="text-caption-mono text-mute px-sm pt-md pb-xs uppercase tracking-wider">Chat History</div>
+          <button className="w-full text-left bg-canvas-soft px-sm py-xs rounded-sm text-body-sm font-medium border-l-[3px] border-primary">
+            Current Session
           </button>
-        </form>
-      </div>
-      
+        </div>
+        <div className="p-md border-t border-hairline flex items-center gap-xs text-body-sm text-body">
+          <div className="w-8 h-8 rounded-full bg-canvas-soft border border-hairline flex items-center justify-center">U</div>
+          <span>User Account</span>
+        </div>
+      </aside>
+
+      {/* ── Main Content Area ──────────────────────────────────────── */}
+      <main className="flex-1 flex flex-col h-full bg-canvas-soft min-w-0">
+        
+        {/* Header */}
+        <header className="flex h-16 items-center px-lg bg-canvas border-b border-hairline shrink-0 justify-between">
+          <div className="flex items-center gap-md">
+            <h1 className="text-lg font-semibold tracking-tight">Enterprise Knowledge Worker</h1>
+            {isLoading && (
+              <div className="flex items-center gap-2 text-xs text-mute">
+                <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                Thinking…
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-xs">
+            <button className="px-xs py-[4px] rounded-sm bg-canvas text-ink text-sm font-medium border border-hairline">
+              Ask AI
+            </button>
+            <button className="px-xs py-[4px] rounded-sm bg-primary text-on-primary text-sm font-medium">
+              Share
+            </button>
+          </div>
+        </header>
+
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto p-lg flex flex-col">
+          <div className="max-w-3xl mx-auto w-full space-y-xl">
+            {messages.length === 0 && (
+              <div className="text-center text-mute mt-32">
+                <h2 className="text-2xl font-semibold tracking-[-0.96px] text-ink mb-xs">Welcome to Nexus</h2>
+                <p className="text-body">Send a message to start querying your enterprise data.</p>
+              </div>
+            )}
+
+            {messages.map((m) => {
+              const textContent = (m.parts?.find((p: any) => p.type === "text") as any)?.text ?? "";
+
+              if (textContent === "[HUMAN_APPROVAL_YES]" || textContent === "[HUMAN_APPROVAL_NO]")
+                return null;
+
+              const hasContent = textContent.trim() || m.parts?.some((p: any) => p.type === "tool-invocation");
+              if (!hasContent) return null;
+
+              return (
+                <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`p-lg rounded-md max-w-[85%] border border-hairline ${m.role === "user" ? "bg-primary text-on-primary" : "bg-canvas text-ink shadow-[0px_1px_1px_#00000005,0px_2px_2px_#0000000a]"}`}>
+                    <div className="font-mono text-[12px] mb-sm opacity-60 uppercase tracking-wider">
+                      {m.role === "user" ? "You" : "Nexus AI"}
+                    </div>
+                    <div className="text-[16px] leading-[24px] whitespace-pre-wrap">
+                      {m.parts?.map((part: any, index: number) => {
+                        if (part.type === "text") return <span key={index}>{part.text}</span>;
+
+                        if (part.type === "tool-invocation") {
+                          const isDone = part.toolInvocation?.state === "result";
+                          return (
+                            <div key={index} className="mt-md mb-md p-sm bg-canvas-soft border border-hairline rounded-sm flex items-center gap-sm">
+                              {isDone ? (
+                                <span className="text-success text-xs">✓</span>
+                              ) : (
+                                <div className="w-3 h-3 border-2 border-mute border-t-transparent rounded-full animate-spin" />
+                              )}
+                              <span className="font-mono text-xs font-medium text-body">
+                                {isDone ? "Ran" : "Running"} <span className="text-link">{part.toolInvocation?.toolName}</span>{!isDone && "…"}
+                              </span>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }) ?? <span>{textContent}</span>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={messagesEndRef} className="h-4" />
+          </div>
+        </div>
+
+        {/* Input Bar */}
+        <div className="p-lg bg-canvas border-t border-hairline shrink-0">
+          <div className="max-w-3xl mx-auto relative">
+            <input
+              className="w-full h-12 px-sm rounded-sm border border-hairline bg-canvas text-sm focus:outline-none focus:border-hairline-strong transition-colors disabled:opacity-50 pr-24 shadow-sm"
+              value={input}
+              placeholder="Ask a question about your enterprise data..."
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              disabled={isLoading}
+            />
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={isLoading || !input.trim()}
+              className="absolute right-[4px] top-[4px] bottom-[4px] px-sm rounded-sm bg-primary text-on-primary font-medium text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

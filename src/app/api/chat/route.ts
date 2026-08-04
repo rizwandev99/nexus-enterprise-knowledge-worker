@@ -1,111 +1,211 @@
+// src/app/api/chat/route.ts
+//
+// This is the bridge between our LangGraph agent and the Next.js frontend.
+// It uses the AI SDK v7 UIMessageStream protocol which the useChat() hook
+// on the client understands natively.
+
 import { createAgentGraph } from "@/lib/agent/graph";
 import { HumanMessage } from "@langchain/core/messages";
-import { Command } from "@langchain/langgraph";
+import { Command, isGraphInterrupt } from "@langchain/langgraph";
+import {
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+} from "ai";
+import { generateId } from "@ai-sdk/provider-utils";
 
 export const maxDuration = 60;
 
-export async function POST(req: Request) {
-  // `data` will contain our custom action if the user clicked Approve/Reject
-  const { messages, data } = await req.json();
+// ── Helper: write an approval notice to the UI stream ────────────────────────
+// This writes a text block containing the __APPROVAL_REQUEST__ marker that
+// page.tsx detects to show the orange approval modal.
+function writeApprovalNotice(
+  writer: any,
+  sensitiveCall: { name: string; args: any; id?: string }
+) {
+  const approvalId = generateId();
 
-  let workflow;
+  // 1. The tool-approval-request chunk (native AI SDK HITL support)
+  writer.write({
+    type: "tool-approval-request",
+    approvalId,
+    toolCallId: sensitiveCall.id ?? approvalId,
+  });
+
+  // 2. A visible text block so the modal detector in page.tsx can find it
+  const noticeId = generateId();
+  writer.write({ type: "text-start", id: noticeId });
+  writer.write({
+    type: "text-delta",
+    id: noticeId,
+    delta: `__APPROVAL_REQUEST__\nTool: ${sensitiveCall.name}\nArgs: ${JSON.stringify(sensitiveCall.args, null, 2)}`,
+  });
+  writer.write({ type: "text-end", id: noticeId });
+}
+
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  // ── Create our LangGraph agent workflow ───────────────────────────────────
+  let workflow: any;
   try {
     workflow = await createAgentGraph();
   } catch (error: any) {
     console.error("Failed to create agent graph:", error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
-  
-  // We use a constant thread ID for this session so MemorySaver can persist the state
+
+  // We use a constant thread ID so MemorySaver persists state across turns
   const config = { configurable: { thread_id: "default-thread" }, version: "v2" as const };
 
-  const encoder = new TextEncoder();
-  const stream = new TransformStream();
-  const writer = stream.writable.getWriter();
+  // ── Extract the latest message text ──────────────────────────────────────
+  const lastMsg = messages[messages.length - 1];
+  const text: string =
+    typeof lastMsg.content === "string"
+      ? lastMsg.content
+      : lastMsg.parts?.find((p: any) => p.type === "text")?.text ?? "";
 
-  (async () => {
-    try {
-      let eventStream;
-      
-      const lastMsg = messages[messages.length - 1];
-      const text = lastMsg.content || (lastMsg.parts && lastMsg.parts[0]?.text) || "";
-      
-      // Check if this request is a resume action from the Approval Modal (via Magic String)
-      if (text === "[HUMAN_APPROVAL_YES]") {
-        eventStream = await workflow.streamEvents(
-          new Command({ resume: { approved: true } }),
-          config
-        );
-      } else if (text === "[HUMAN_APPROVAL_NO]") {
-        eventStream = await workflow.streamEvents(
-          new Command({ resume: { approved: false } }),
-          config
-        );
-      } else {
-        // Normal chat message
-        eventStream = await workflow.streamEvents(
-          { messages: [new HumanMessage(text)] }, 
-          config
-        );
-      }
-      
-      // Loop through every single event the AI generates
-      for await (const event of eventStream) {
-        
-        // 1. Stream Text Chunks
-        if (event.event === "on_chat_model_stream" && event.data.chunk.content) {
-          const textChunk = event.data.chunk.content;
-          await writer.write(encoder.encode(`0:${JSON.stringify(textChunk)}\n`));
+  // ── Build the AI SDK v7 UIMessageStream ───────────────────────────────────
+  const stream = createUIMessageStream({
+    execute: async ({ writer }) => {
+      try {
+        // ── Determine what to send to LangGraph ────────────────────────────
+        let graphInput: any;
+        if (text === "[HUMAN_APPROVAL_YES]") {
+          graphInput = new Command({ resume: { approved: true } });
+        } else if (text === "[HUMAN_APPROVAL_NO]") {
+          graphInput = new Command({ resume: { approved: false } });
+        } else {
+          graphInput = { messages: [new HumanMessage(text)] };
         }
-        
-        // 2. Stream Tool Start (Format: `9:`)
-        if (event.event === "on_tool_start") {
-          const toolCall = {
-            toolCallId: event.run_id,
-            toolName: event.name,
-            args: event.data.input,
-          };
-          await writer.write(encoder.encode(`9:[${JSON.stringify(toolCall)}]\n`));
-        }
-        
-        // 3. Stream Tool End (Format: `a:`)
-        if (event.event === "on_tool_end") {
-          const toolResult = {
-            toolCallId: event.run_id,
-            result: event.data.output,
-          };
-          await writer.write(encoder.encode(`a:[${JSON.stringify(toolResult)}]\n`));
-        }
-      }
-      
-      // 4. Check if the graph paused for Human Approval!
-      const finalState = await workflow.getState(config);
-      if (finalState.next.length > 0) {
-        // The graph is paused. Find the tool call that triggered the pause.
-        const allMessages = finalState.values.messages;
-        const lastMsg = allMessages[allMessages.length - 1];
-        
-        if (lastMsg && lastMsg.tool_calls && lastMsg.tool_calls.length > 0) {
-           const sensitiveCall = lastMsg.tool_calls[0];
-           
-           // We use a magic string in a standard text chunk to trigger the modal safely
-           await writer.write(encoder.encode(`0:" "\n`));
-           await writer.write(encoder.encode(`0:"[APPROVAL_REQUEST]${JSON.stringify(sensitiveCall).replace(/"/g, '\\"')}"\n`));
-        }
-      }
 
-    } catch (err: any) {
-      console.error("Error during AI streaming:", err);
-      await writer.write(encoder.encode(`3:${JSON.stringify(err.message)}\n`));
-    } finally {
-      await writer.close();
-    }
-  })();
+        // ── Run the LangGraph pipeline ─────────────────────────────────────
+        // We open the text block LAZILY — only when real text tokens arrive.
+        // Tool-call-only responses (like HITL triggers) produce no text, so
+        // we must not emit an empty text block that would confuse the detector.
+        let textBlockId: string | null = null;
 
-  return new Response(stream.readable, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "x-vercel-ai-data-stream": "v1",
+        const ensureTextBlockOpen = () => {
+          if (!textBlockId) {
+            textBlockId = generateId();
+            writer.write({ type: "text-start", id: textBlockId });
+          }
+        };
+
+        try {
+          const eventStream = workflow.streamEvents(graphInput, config);
+
+          for await (const event of eventStream) {
+            // Stream text tokens from the LLM
+            if (event.event === "on_chat_model_stream" && event.data?.chunk?.content) {
+              const delta = typeof event.data.chunk.content === "string"
+                ? event.data.chunk.content
+                : String(event.data.chunk.content);
+              if (delta) {
+                ensureTextBlockOpen();
+                writer.write({ type: "text-delta", id: textBlockId!, delta });
+              }
+            }
+
+            // Signal tool start to the frontend
+            if (event.event === "on_tool_start") {
+              writer.write({
+                type: "tool-input-available",
+                toolCallId: event.run_id,
+                toolName: event.name,
+                input: event.data?.input ?? {},
+              });
+            }
+
+            // Signal tool completion to the frontend
+            if (event.event === "on_tool_end") {
+              const output = event.data?.output;
+              writer.write({
+                type: "tool-output-available",
+                toolCallId: event.run_id,
+                output: typeof output === "string" ? output : JSON.stringify(output),
+              });
+            }
+          }
+
+          // Close the text block if we opened one
+          if (textBlockId) {
+            writer.write({ type: "text-end", id: textBlockId });
+          }
+
+          // ── Check if LangGraph paused at an interrupt (HITL) ─────────────
+          // After the stream ends normally (no exception), check if the graph
+          // is waiting at an interrupt node.
+          const finalState = await workflow.getState(config);
+          console.log("[route] finalState.next:", finalState.next);
+
+          if (finalState.next.length > 0) {
+            const allMessages = finalState.values.messages ?? [];
+            const lastStateMsg = allMessages[allMessages.length - 1];
+            console.log("[route] HITL detected. Last message tool_calls:", lastStateMsg?.tool_calls);
+
+            if (lastStateMsg?.tool_calls?.length > 0) {
+              writeApprovalNotice(writer, lastStateMsg.tool_calls[0]);
+            }
+          }
+
+        } catch (streamErr: any) {
+          // ── Handle LangGraph GraphInterrupt (thrown during streamEvents) ──
+          // interrupt() in approvalNode throws GraphInterrupt which propagates
+          // through streamEvents. We catch it here and convert it to an approval
+          // notice instead of an error.
+          if (isGraphInterrupt(streamErr)) {
+            console.log("[route] GraphInterrupt caught — triggering HITL approval.");
+
+            // Close any open text block before writing the approval
+            if (textBlockId) {
+              writer.write({ type: "text-end", id: textBlockId });
+            }
+
+            // Get the paused state to find the pending tool call
+            try {
+              const pausedState = await workflow.getState(config);
+              console.log("[route] Paused state next:", pausedState.next);
+              const allMessages = pausedState.values.messages ?? [];
+              const lastStateMsg = allMessages[allMessages.length - 1];
+
+              if (lastStateMsg?.tool_calls?.length > 0) {
+                writeApprovalNotice(writer, lastStateMsg.tool_calls[0]);
+              } else {
+                // Interrupt without a specific tool call — show generic notice
+                writeApprovalNotice(writer, {
+                  name: "sensitive_operation",
+                  args: {},
+                });
+              }
+            } catch (stateErr) {
+              console.error("[route] Could not read paused state:", stateErr);
+              writeApprovalNotice(writer, { name: "sensitive_operation", args: {} });
+            }
+          } else {
+            // Re-throw non-interrupt errors to be caught by the outer catch
+            throw streamErr;
+          }
+        }
+
+      } catch (err: any) {
+        console.error("[route] Fatal streaming error:", err);
+        // Write the error as visible text so the user sees what happened
+        const errId = generateId();
+        writer.write({ type: "text-start", id: errId });
+        writer.write({
+          type: "text-delta",
+          id: errId,
+          delta: `⚠️ Error: ${err.message ?? "An unexpected error occurred."}`,
+        });
+        writer.write({ type: "text-end", id: errId });
+      }
+    },
+
+    onError: (err) => {
+      console.error("[route] UIMessageStream onError:", err);
+      return err instanceof Error ? err.message : "An unexpected error occurred.";
     },
   });
+
+  return createUIMessageStreamResponse({ stream });
 }

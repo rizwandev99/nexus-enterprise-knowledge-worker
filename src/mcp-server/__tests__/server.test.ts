@@ -27,7 +27,7 @@ describe('MCP Server', () => {
         }
       },
       CallToolRequestSchema
-    );
+    ) as any;
 
     expect(result.content).toBeDefined();
     expect(result.content[0].type).toBe('text');

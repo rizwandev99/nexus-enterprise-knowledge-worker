@@ -61,6 +61,14 @@ To prevent errors caused by outdated base training data, all agents MUST strictl
 
 ## Workflow & Collaboration Rules
 
+## Workflow & Collaboration Rules
+
+**YOLO MODE (CURRENTLY ON)**: YOLO Mode is a dynamic toggle controlled by the user (e.g., "turn on yolo mode", "turn off yolo mode"). 
+- **When ON:** The standard mentorship workflow is suspended. The AI MUST execute all code changes, file creations, and terminal commands directly without asking the user to copy/paste. The AI should only stop to ask questions upfront if there is design confusion or a strict manual requirement (like authentication).
+- **When OFF:** The Mentorship Model below is strictly enforced.
+
+*(Note: The Mentorship Model below is suspended while YOLO Mode is CURRENTLY ON)*
+
 **CRITICAL OVERRIDE**: The user has explicitly requested to "learn while doing". This means the standard auto-generation workflows (like the Manager Protocol) are suspended. All agents MUST adhere to the following:
 
 1. **Mentorship Model (Senior to Junior Developer)**: The AI MUST act as a **Senior Developer** mentoring the user, who should be treated as a **Junior Developer for whom every single technology, stack, and concept is entirely new**. Do NOT write the code into the project files directly. **Crucially, before giving the user any instructions or code, the AI must provide a beginner-friendly overview.** The structure of the response MUST be exactly as follows:
