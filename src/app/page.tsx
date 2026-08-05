@@ -9,7 +9,9 @@ import Sidebar from "@/components/sidebar";
 export default function ChatPage() {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
 
-  const chatHelpers: any = useChat();
+  const chatHelpers: any = useChat({
+    id: activeChatId ?? undefined,
+  });
   const { messages, setMessages, append, status } = chatHelpers;
 
   const loadedChatIdRef = useRef<string | null>(null);
@@ -74,17 +76,25 @@ export default function ChatPage() {
   const handleSend = async () => {
     const text = input.trim();
     if (!text || isLoading) return;
-    setInput("");
-    
-    let currentChatId = activeChatId;
-    if (!currentChatId) {
-      const session = await createChatSession();
-      loadedChatIdRef.current = session.id;
-      setActiveChatId(session.id);
-      currentChatId = session.id;
+
+    try {
+      let currentChatId = activeChatId;
+      if (!currentChatId) {
+        const session = await createChatSession();
+        if (!session || !session.id) {
+          throw new Error("Could not create chat session");
+        }
+        loadedChatIdRef.current = session.id;
+        setActiveChatId(session.id);
+        currentChatId = session.id;
+      }
+
+      setInput("");
+      append({ role: "user", content: text }, { body: { chatId: currentChatId } });
+    } catch (err: any) {
+      console.error("[handleSend] Failed to send message:", err);
+      alert("Failed to send message: " + (err?.message || String(err)));
     }
-    
-    append({ role: "user", content: text }, { body: { chatId: currentChatId } });
   };
 
   return (
