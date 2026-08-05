@@ -179,9 +179,14 @@ export default function ChatPage() {
             )}
 
             {messages.map((m: any) => {
-              const textContent = m.parts 
-                ? (m.parts.find((p: any) => p.type === "text") as any)?.text ?? "" 
-                : m.content ?? "";
+              const partsText = Array.isArray(m.parts)
+                ? m.parts
+                    .filter((p: any) => p.type === "text" && p.text)
+                    .map((p: any) => p.text)
+                    .join("")
+                : "";
+
+              const textContent = partsText || (typeof m.content === "string" ? m.content : "");
 
               if (
                 textContent === "[HUMAN_APPROVAL_YES]" || 
@@ -191,7 +196,7 @@ export default function ChatPage() {
                 return null;
               }
 
-              const hasContent = textContent.trim() || m.parts?.some((p: any) => p.type === "tool-invocation");
+              const hasContent = textContent.trim() || (Array.isArray(m.parts) && m.parts.some((p: any) => p.type === "tool-invocation"));
               if (!hasContent) return null;
 
               return (
@@ -201,7 +206,7 @@ export default function ChatPage() {
                       {m.role === "user" ? "You" : "Nexus AI"}
                     </div>
                     <div className="text-[16px] leading-[24px] whitespace-pre-wrap">
-                      {m.parts ? m.parts.map((part: any, index: number) => {
+                      {Array.isArray(m.parts) && m.parts.length > 0 ? m.parts.map((part: any, index: number) => {
                         if (part.type === "text") return <span key={index}>{part.text}</span>;
 
                         if (part.type === "tool-invocation") {
@@ -220,7 +225,7 @@ export default function ChatPage() {
                           );
                         }
                         return null;
-                      }) : <span>{m.content}</span>}
+                      }) : <span>{textContent || m.content}</span>}
                     </div>
                   </div>
                 </div>
