@@ -3,8 +3,12 @@ import * as instrumentation from '../instrumentation';
 import * as vercelOtel from '@vercel/otel';
 
 vi.mock('@vercel/otel', () => {
+  function OTLPExporterMock() {
+    return {};
+  }
   return {
     registerOTel: vi.fn(),
+    OTLPHttpProtoTraceExporter: OTLPExporterMock,
   };
 });
 
@@ -17,8 +21,10 @@ describe('Next.js Instrumentation (Step 5.1)', () => {
     await instrumentation.register();
     
     // Verify that registerOTel was called with the correct service name
-    expect(vercelOtel.registerOTel).toHaveBeenCalledWith({
-      serviceName: 'nexus-enterprise',
-    });
+    expect(vercelOtel.registerOTel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        serviceName: 'nexus-enterprise',
+      })
+    );
   });
 });

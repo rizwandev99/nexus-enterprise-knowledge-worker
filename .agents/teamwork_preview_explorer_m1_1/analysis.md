@@ -1,3 +1,95 @@
+# Milestone 1 Technical Specification & Architecture Analysis
+
+## Executive Summary
+This document provides the complete, exact technical specification for Milestone 1 (M1) of the **Nexus-Enterprise Knowledge Worker** native tool migration.
+
+The objective is to eliminate the `MultiServerMCPClient` stdio child process server (`src/mcp-server/server.ts`) and replace it with in-process native LangChain tools using `tool()` from `@langchain/core/tools` in `src/lib/agent/tools.ts`. 
+
+By removing stdio child process spawning:
+1. The application becomes 100% serverless-compatible (e.g. for Vercel deployment).
+2. Overhead, sub-process startup latency, and timeout fallbacks are completely eliminated.
+3. Full compatibility with Human-in-the-Loop (HITL) approval interrupts (`execute_sql_mutation`) and cyclic self-correction error loops (`RUNTIME EXCEPTION: ...`) is preserved.
+
+---
+
+## 1. Database Connection & Client Architecture
+
+Both `src/mcp-server/server.ts` and `src/lib/db/hybrid-search.ts` use the Prisma v7 PostgreSQL adapter configuration.
+
+In `src/lib/agent/tools.ts`, database access is initialized using the exact same pattern:
+- `pg.Pool` connects to `process.env.DATABASE_URL` (with fallback to default local Postgres URL).
+- `@prisma/adapter-pg` initializes `PrismaPg(pool)`.
+- `PrismaClient` is instantiated with `{ adapter }` using relative import `../../../generated/prisma/client`.
+
+---
+
+## 2. Complete Exact Specification: `src/lib/agent/tools.ts`
+
+```typescript
+// src/lib/agent/tools.ts
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
+import { PrismaClient } from "../../../generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
+
+// ── 1. Database & Prisma Client Setup ──────────────────────────────────────────
+const pool = new pg.Pool({
+  connectionString:
+    process.env.DATABASE_URL ||
+    "postgresql://postgres:postgrespassword@localhost:5432/nexus?schema=public",
+});
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+// ── 2. Add Document Tool ────────────────────────────────────────────────────────
+export const addDocumentTool = tool(
+  async ({ title, content }: { title: string; content: string }) => {
+    const doc = await prisma.document.create({
+      data: {
+        title,
+        content,
+      },
+    });
+
+    return `Successfully added document with ID: ${doc.id}`;
+  },
+  {
+    name: "add_document",
+    description: "Add a new document to the enterprise knowledge base",
+    schema: z.object({
+      title: z.string().describe("Title of the document"),
+      content: z.string().describe("Content of the document"),
+    }),
+  }
+);
+
+// ── 3. Execute SQL Mutation Tool (Sensitive / HITL Guarded) ───────────────────
+export const executeSqlMutationTool = tool(
+  async ({ query }: { query: string }) => {
+    const sqlString = typeof query === "string" ? query : String(query);
+    // Directly execute against pg pool to bypass Prisma v7 raw query edge cases
+    await pool.query(sqlString);
+    return `Successfully executed mutation: ${query}`;
+  },
+  {
+    name: "execute_sql_mutation",
+    description: "Execute a direct SQL mutation on the database (DANGEROUS)",
+    schema: z.object({
+      query: z.string().describe("The SQL query to execute"),
+    }),
+  }
+);
+
+// ── 4. Export Native Tools Array ─────────────────────────────────────────────
+export const nativeTools = [addDocumentTool, executeSqlMutationTool];
+```
+
+---
+
+## 3. Complete Exact Specification: `src/lib/agent/graph.ts`
+
+```typescript
 // src/lib/agent/graph.ts
 import { SystemMessage, AIMessage } from "@langchain/core/messages";
 import { StateGraph, END, START, interrupt, MemorySaver } from "@langchain/langgraph";
@@ -112,7 +204,7 @@ export async function createAgentGraph() {
         const targetTool = nativeTools.find((t) => t.name === call.name);
         if (!targetTool) throw new Error(`Tool ${call.name} not available.`);
 
-        const output = await (targetTool as any).invoke(call.args);
+        const output = await targetTool.invoke(call.args);
 
         results.push({
           role: "tool",
@@ -166,3 +258,26 @@ export async function createAgentGraph() {
 
   return workflow.compile({ checkpointer: memory });
 }
+```
+
+---
+
+## 4. Verification & Compatibility Analysis
+
+### Human-In-The-Loop (HITL) Interrupt Verification
+1. `approvalNode` identifies `sensitiveCall` via `tc.name.includes("execute_sql_mutation")`.
+2. Native tool `executeSqlMutationTool` is registered with name `"execute_sql_mutation"`.
+3. When `ChatGroq` invokes `execute_sql_mutation`, `approvalNode` catches the call. If `!state.isApproved`, `interrupt({ type: "HUMAN_APPROVAL_REQUEST", toolCall: sensitiveCall })` is invoked.
+4. In `src/app/api/chat/route.ts`, `isGraphInterrupt(streamErr)` catches the interrupt error during `workflow.streamEvents(...)`.
+5. `route.ts` retrieves `pausedState.values.messages` and calls `writeApprovalNotice(writer, lastStateMsg.tool_calls[0])`.
+6. `writeApprovalNotice` emits `__APPROVAL_REQUEST__\nTool: execute_sql_mutation\nArgs: ...` into the UI stream, which `page.tsx` parses to present the orange approval modal.
+7. Upon user click ("Approve" / "Reject"), `route.ts` posts `Command({ resume: { approved: true | false } })`, resuming graph execution at `approvalNode`.
+8. **Conclusion**: Native tool migration requires zero changes to `route.ts` or UI components and guarantees 100% HITL interrupt fidelity.
+
+### Cyclic Self-Correction Verification
+1. In `toolExecutionNode`, each tool call is executed via `targetTool.invoke(call.args)`.
+2. If `targetTool.invoke` throws an Error (e.g. PostgreSQL syntax error or missing table), the `catch (err: any)` block constructs a tool message with content `RUNTIME EXCEPTION: ${err.message}` and `isError: true`.
+3. The conditional edge after `tools` node checks: `const isErr = lastMsg.content?.toString().includes("RUNTIME EXCEPTION");`.
+4. If `isErr` is `true` and `state.retryCount < 3`, the graph routes back to `"reasoning"`.
+5. In `"reasoning"`, the LLM inspects the tool response containing `RUNTIME EXCEPTION: ...`, auto-corrects the query or parameters, and generates a corrected tool call or response.
+6. **Conclusion**: Cyclic self-correction behavior is 100% preserved.

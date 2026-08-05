@@ -6,8 +6,8 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 ### Core Architectural Features
 - **Hybrid RAG Engine**: PostgreSQL `pgvector` cosine similarity + full-text keyword search (`tsvector`) via Reciprocal Rank Fusion.
 - **Stateful Agent Machine**: LangGraph.js directed acyclic/cyclic graph with persistent PostgreSQL state checkpointers.
-- **Model Context Protocol (MCP)**: Custom TypeScript MCP server for enterprise database/API actions.
-- **Cyclic Self-Correction**: Graph logic that automatically catches and heals from MCP execution exceptions.
+- **In-Process Agent Tools**: Native LangChain `@tool` definitions (`add_document` and `execute_sql_mutation`) running directly in-process.
+- **Cyclic Self-Correction**: Graph logic that automatically catches and heals from tool execution exceptions.
 - **Human-in-the-Loop (HITL)**: Graph-level interrupt boundaries for dangerous operations (e.g., SQL mutations) awaiting human UI confirmation.
 - **Enterprise Telemetry**: OpenTelemetry (OTel) instrumentation for tracing LLM calls and tool executions.
 
@@ -16,7 +16,7 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 - **Client UI**: Vercel AI SDK 6, Tailwind CSS v4, shadcn/ui
 - **Agent Orchestration**: LangGraph.js v1.0, `@langchain/core`
 - **Database & Vector Store**: PostgreSQL 16+, `pgvector`, Prisma ORM
-- **MCP Integration**: `@modelcontextprotocol/sdk`, `@langchain/mcp-adapters`
+- **In-Process Tools**: Native `@langchain/core/tools` (`addDocumentTool`, `executeSqlMutationTool`)
 
 ### Environment
 - **OS**: Windows
@@ -65,9 +65,21 @@ To prevent errors caused by outdated base training data, all agents MUST strictl
 2. **Consult Local Skills First:** Search for and fully read relevant `.agents/skills/` documents (like `prisma-upgrade-v7`, `tailwind-4-docs`) which contain the absolute latest best practices and breaking changes.
 3. **Mandatory Context7 MCP Usage:** If a local skill does not exist, you MUST use the Context7 MCP server (`resolve-library-id` followed by `query-docs`) to fetch the current official documentation for that exact version before writing any code. YOU MUST NEVER RELY ON YOUR TRAINING DATA for library syntax or configuration. Web search should only be used as a last resort if Context7 fails.
 
-## Workflow & Collaboration Rules
+## Repository Branch & Clean Workspace Protocol
+
+1. **Dual Branch Strategy (`dev` vs `main`)**:
+   - **`dev` Branch**: The default workspace branch for daily active development. All working files, agent logs, prompt instructions, scratch files, test scripts, and dev notes reside on `dev`.
+   - **`main` Branch**: The production branch visible to interviewers on GitHub. `main` must remain 100% clean, containing only industry-standard production code, clean comments, structured modular architecture, and formal documentation.
+2. **Publishing to `main` Protocol**:
+   - When the user explicitly requests to "publish", "deploy", or "sync to main", agents MUST only migrate production code, clean comments, and standard project documentation to `main`.
+   - All internal AI agent files (`.agents/`, `AGENTS.md`, `skills-lock.json`), temporary test scripts, and scratch notes MUST be excluded from `main`.
+3. **Temporary Test Script & Isolation Rules**:
+   - **Isolated Folder Creation**: Any temporary test script or utility snippet created during development MUST be placed inside an isolated scratch directory (e.g., `scratch/`). Never place temporary test scripts directly in the repository root.
+   - **Auto-Deletion**: All temporary test scripts MUST be deleted immediately after their diagnostic or test execution is complete, keeping the codebase clean.
+
 
 ## Workflow & Collaboration Rules
+
 
 **YOLO MODE (CURRENTLY ON)**: YOLO Mode is a dynamic toggle controlled by the user (e.g., "turn on yolo mode", "turn off yolo mode"). 
 - **When ON:** The standard mentorship workflow is suspended. The AI MUST execute all code changes, file creations, and terminal commands directly without asking the user to copy/paste. The AI should only stop to ask questions upfront if there is design confusion or a strict manual requirement (like authentication).
@@ -118,15 +130,13 @@ When building, designing, or refactoring user interfaces for this project, all a
 Agents must strictly adhere to the following folder hierarchy:
 - `/src/app/` - Next.js App Router pages and API routes.
 - `/src/components/` - Reusable UI components.
-- `/src/lib/agent/` - LangGraph state, nodes, and orchestration logic.
-- `/src/lib/mcp/` - MCP client configurations.
-- `/src/mcp-server/` - The standalone TypeScript MCP Server.
+- `/src/lib/agent/` - LangGraph state, nodes, native `@tool` definitions (`tools.ts`), and orchestration logic.
 - `/prisma/` - Database schemas and migrations.
 
 ## Execution & Testing Commands
 - **Database**: `docker compose up -d`
 - **Prisma**: `npx prisma db push` and `npx prisma studio`
-- **MCP Server Test**: `npx tsx src/mcp-server/server.ts`
+- **Unit Tests**: `npx vitest run`
 - **Next.js Dev Server**: `npm run dev`
 
 ## Definition of Done (DoD) & Version Control
