@@ -10,7 +10,7 @@ export default function ChatPage() {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
 
   const chatHelpers: any = useChat();
-  const { messages, setMessages, sendMessage, status } = chatHelpers;
+  const { messages, setMessages, append, status } = chatHelpers;
 
   useEffect(() => {
     if (activeChatId) {
@@ -53,13 +53,13 @@ export default function ChatPage() {
   const handleApprove = async () => {
     if (!pendingApproval || !approvalId) return;
     setResolvedApprovals((prev) => new Set(prev).add(approvalId));
-    sendMessage({ text: "[HUMAN_APPROVAL_YES]" });
+    append({ role: "user", content: "[HUMAN_APPROVAL_YES]" });
   };
 
   const handleReject = async () => {
     if (!pendingApproval || !approvalId) return;
     setResolvedApprovals((prev) => new Set(prev).add(approvalId));
-    sendMessage({ text: "[HUMAN_APPROVAL_NO]" });
+    append({ role: "user", content: "[HUMAN_APPROVAL_NO]" });
   };
 
   const handleSend = async () => {
@@ -74,7 +74,7 @@ export default function ChatPage() {
       currentChatId = session.id;
     }
     
-    sendMessage({ text }, { body: { chatId: currentChatId } });
+    append({ role: "user", content: text }, { body: { chatId: currentChatId } });
   };
 
   return (
@@ -133,9 +133,15 @@ export default function ChatPage() {
             <button 
               onClick={async () => {
                 setIsSeeding(true);
-                await seedDummyData();
-                setIsSeeding(false);
-                alert("Dummy data seeded successfully!");
+                try {
+                  await seedDummyData();
+                  alert("Dummy data seeded successfully!");
+                } catch (error: any) {
+                  console.error("Seeding error:", error);
+                  alert("Failed to seed data: " + (error?.message || String(error)));
+                } finally {
+                  setIsSeeding(false);
+                }
               }}
               disabled={isSeeding}
               className="px-3 py-1.5 rounded-sm bg-emerald-50 text-emerald-700 text-sm font-medium border border-emerald-200 disabled:opacity-50"

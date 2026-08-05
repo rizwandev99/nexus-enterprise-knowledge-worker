@@ -23,8 +23,8 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 - **Terminal**: Git Bash (Always provide standard Unix/Linux Bash commands, NEVER PowerShell commands).
 
 ### Current Status
-- **Phase**: Completed
-- **Current Step**: All steps completed successfully!
+- **Phase**: Production Live
+- **Current Step**: Application is successfully deployed, and all E2E tests have passed.
 
 ### Completed Steps
 - [x] Project requirements defined (`prd.md`).
@@ -32,10 +32,6 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 - [x] 1.1: Create `docker-compose.yml` with PostgreSQL `pgvector`.
 - [x] 1.2: Initialize Prisma, create `schema.prisma`.
 - [x] 1.3: Generate SQL migration for `match_hybrid_chunks` and execute `prisma db push`.
-- [x] Step 4.1 - Implement `/src/app/api/chat/route.ts` bridging `streamEvents` to Vercel AI SDK.
-- [x] Step 4.2 - Build React 19 Client UI with `useChat`, citations, and approval modals.
-
-### Remaining Steps
 - [x] **Step 2: MCP Server Construction**
   - [x] 2.1: Build `src/mcp-server/server.ts` with standard DB/API tools.
   - [x] 2.2: Verify MCP server initialization and stdio transport.
@@ -49,6 +45,15 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 - [x] **Step 5: Telemetry Hardening**
   - [x] 5.1: Configure `instrumentation.ts` for OpenTelemetry.
   - [x] 5.2: Configure OTLP exporters and tracing backend.
+- [x] **Step 6: Production Deployment & E2E Testing**
+  - [x] 6.1: Provision cloud database (Prisma Postgres).
+  - [x] 6.2: Link and deploy application to Vercel global edge network.
+  - [x] 6.3: Perform E2E Live Testing via Playwright to verify UI, DB, and AI tracing integrations.
+
+### Remaining Steps
+- [ ] No remaining technical steps for the MVP.
+- [ ] (Optional) Record video demo / Loom.
+- [ ] (Optional) Finalize and polish README.md for portfolio showcasing.
 
 ---
 
@@ -64,11 +69,11 @@ To prevent errors caused by outdated base training data, all agents MUST strictl
 
 ## Workflow & Collaboration Rules
 
-**YOLO MODE (CURRENTLY OFF)**: YOLO Mode is a dynamic toggle controlled by the user (e.g., "turn on yolo mode", "turn off yolo mode"). 
+**YOLO MODE (CURRENTLY ON)**: YOLO Mode is a dynamic toggle controlled by the user (e.g., "turn on yolo mode", "turn off yolo mode"). 
 - **When ON:** The standard mentorship workflow is suspended. The AI MUST execute all code changes, file creations, and terminal commands directly without asking the user to copy/paste. The AI should only stop to ask questions upfront if there is design confusion or a strict manual requirement (like authentication).
 - **When OFF:** The Mentorship Model below is strictly enforced.
 
-*(Note: The Mentorship Model below is strictly enforced while YOLO Mode is CURRENTLY OFF)*
+*(Note: The Mentorship Model below is suspended while YOLO Mode is CURRENTLY ON)*
 
 **CRITICAL OVERRIDE**: The user has explicitly requested to "learn while doing". This means the standard auto-generation workflows (like the Manager Protocol) are suspended. All agents MUST adhere to the following:
 

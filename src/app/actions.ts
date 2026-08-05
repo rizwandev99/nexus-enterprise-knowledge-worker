@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 // Initialize our database connection with the v7 adapter
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL || "postgresql://postgres:postgrespassword@localhost:5432/nexus?schema=public",
+  connectionTimeoutMillis: 5000,
 });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
