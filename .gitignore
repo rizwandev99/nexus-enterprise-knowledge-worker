@@ -39,3 +39,12 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Internal AI Agent & Workflow Files
+.agents/
+AGENTS.md
+skills-lock.json
+prd.md
+DESIGN.md
+PROJECT.md
+scratch/
