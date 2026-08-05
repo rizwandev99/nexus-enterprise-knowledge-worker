@@ -9,9 +9,7 @@ import Sidebar from "@/components/sidebar";
 export default function ChatPage() {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
 
-  const chatHelpers: any = useChat({
-    id: activeChatId ?? undefined,
-  });
+  const chatHelpers: any = useChat();
   const { messages, setMessages, append, status } = chatHelpers;
 
   const loadedChatIdRef = useRef<string | null>(null);
