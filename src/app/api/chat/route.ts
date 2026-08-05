@@ -10,8 +10,8 @@ import { Command, isGraphInterrupt } from "@langchain/langgraph";
 import {
   createUIMessageStream,
   createUIMessageStreamResponse,
+  generateId,
 } from "ai";
-import { generateId } from "@ai-sdk/provider-utils";
 import { saveMessage, generateChatTitle } from "../../chat-actions";
 
 export const maxDuration = 60;
