@@ -12,15 +12,24 @@ export default function ChatPage() {
   const chatHelpers: any = useChat();
   const { messages, setMessages, append, status } = chatHelpers;
 
+  const loadedChatIdRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (activeChatId) {
-      getChatMessages(activeChatId).then((msgs: any) => {
-        setMessages(msgs);
-      });
-    } else {
-      setMessages([]);
+    if (loadedChatIdRef.current === activeChatId) {
+      return;
     }
-  }, [activeChatId, setMessages]);
+
+    loadedChatIdRef.current = activeChatId;
+
+    if (!activeChatId) {
+      setMessages([]);
+      return;
+    }
+
+    getChatMessages(activeChatId).then((msgs: any) => {
+      setMessages(msgs);
+    });
+  }, [activeChatId]);
 
   const [input, setInput] = useState("");
   const [resolvedApprovals, setResolvedApprovals] = useState<Set<string>>(new Set());
@@ -70,6 +79,7 @@ export default function ChatPage() {
     let currentChatId = activeChatId;
     if (!currentChatId) {
       const session = await createChatSession();
+      loadedChatIdRef.current = session.id;
       setActiveChatId(session.id);
       currentChatId = session.id;
     }

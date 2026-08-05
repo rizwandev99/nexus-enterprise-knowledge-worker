@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   const url = new URL(req.url);
   const jsonBody = await req.json();
   const { messages } = jsonBody;
-  const chatId = url.searchParams.get("chatId") || jsonBody.chatId;
+  const chatId = url.searchParams.get("chatId") || jsonBody.chatId || jsonBody.body?.chatId;
 
   if (!chatId) {
     return new Response(JSON.stringify({ error: "Missing chatId" }), { status: 400 });

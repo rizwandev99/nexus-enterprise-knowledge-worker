@@ -37,12 +37,10 @@ export default function Sidebar({
     // Poll for updates occasionally (e.g. for auto-naming)
     const interval = setInterval(loadSessions, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeChatId]);
 
-  const handleNewChat = async () => {
-    const session = await createChatSession();
-    await loadSessions();
-    onSelectChat(session.id);
+  const handleNewChat = () => {
+    onSelectChat("");
   };
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
