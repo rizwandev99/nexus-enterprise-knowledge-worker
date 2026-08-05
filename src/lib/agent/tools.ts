@@ -1,16 +1,6 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { PrismaClient } from "../../../generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
-
-const pool = new pg.Pool({
-  connectionString:
-    process.env.DATABASE_URL ||
-    "postgresql://postgres:postgrespassword@localhost:5432/nexus?schema=public",
-});
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+import { prisma, pool } from "../db/prisma";
 
 export const addDocumentTool = tool(
   async ({ title, content }: { title: string; content: string }) => {

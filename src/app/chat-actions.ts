@@ -1,15 +1,8 @@
 "use server";
 
-import { PrismaClient } from "../../generated/prisma/client";
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { prisma } from "../lib/db/prisma";
 import { ChatGroq } from "@langchain/groq";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
-
-const connectionString = `${process.env.DATABASE_URL}`;
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
 
 export async function getChatSessions() {
   return await prisma.chatSession.findMany({

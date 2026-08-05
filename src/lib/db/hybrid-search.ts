@@ -1,12 +1,4 @@
-import { PrismaClient } from "../../../generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
-
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://postgres:postgrespassword@localhost:5432/nexus?schema=public",
-});
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+import { prisma } from "./prisma";
 
 export async function executeHybridSearch(query: string) {
   // Temporary: Until vector embeddings are fully implemented, 

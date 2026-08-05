@@ -1,17 +1,7 @@
 "use server";
 
-import { PrismaClient } from "../../generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
+import { prisma } from "../lib/db/prisma";
 import { revalidatePath } from "next/cache";
-
-// Initialize our database connection with the v7 adapter
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://postgres:postgrespassword@localhost:5432/nexus?schema=public",
-  connectionTimeoutMillis: 5000,
-});
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
 
 export async function seedDummyData() {
   await prisma.document.createMany({
