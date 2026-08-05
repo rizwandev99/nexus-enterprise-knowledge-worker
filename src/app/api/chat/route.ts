@@ -153,7 +153,11 @@ export async function POST(req: Request) {
           }
 
           if (assistantContent.trim()) {
-            await saveMessage(chatId, "assistant", assistantContent);
+            try {
+              await saveMessage(chatId, "assistant", assistantContent);
+            } catch (err) {
+              console.error("[route] Warning: Could not save assistant message:", err);
+            }
           }
 
           // ── Check if LangGraph paused at an interrupt (HITL) ─────────────
