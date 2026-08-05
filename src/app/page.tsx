@@ -134,7 +134,8 @@ export default function ChatPage() {
               onClick={async () => {
                 setIsSeeding(true);
                 try {
-                  await seedDummyData();
+                  const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Seeding request timed out. This often happens if Vercel cannot reach your database (e.g. if it's local).")), 10000));
+                  await Promise.race([seedDummyData(), timeoutPromise]);
                   alert("Dummy data seeded successfully!");
                 } catch (error: any) {
                   console.error("Seeding error:", error);
