@@ -70,11 +70,15 @@ export async function POST(req: Request) {
 
   // ── Save user message and trigger auto-naming ────────────────────────────
   if (text !== "[HUMAN_APPROVAL_YES]" && text !== "[HUMAN_APPROVAL_NO]") {
-    await saveMessage(chatId, "user", text);
-    
-    // Auto-name chat if it's the first message
-    if (messages.length <= 2) {
-       generateChatTitle(chatId, text).catch(console.error);
+    try {
+      await saveMessage(chatId, "user", text);
+      
+      // Auto-name chat if it's the first message
+      if (messages.length <= 2) {
+         generateChatTitle(chatId, text).catch(console.error);
+      }
+    } catch (saveErr) {
+      console.error("[route] Warning: Could not save message or title:", saveErr);
     }
   }
 
