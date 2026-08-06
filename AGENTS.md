@@ -24,7 +24,7 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 
 ### Current Status
 - **Phase**: Production Live — Portfolio Grade
-- **Current Step**: All MVP fixes complete. Project is now portfolio-ready for high-paying remote job applications.
+- **Current Step**: Step 9 complete. Full Linear.app-style dark glassmorphism UI redesign applied and deployed.
 
 ### Completed Steps
 - [x] Project requirements defined (`prd.md`).
@@ -66,6 +66,16 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 8.10: Add proper `<form>` semantics, `aria-label` attributes, and `useCallback` memoization to input components.
   - [x] 8.11: Create premium `README.md` with shields.io badges, Mermaid architecture diagram, setup guide.
   - [x] 8.12: Add `.env.example`, MIT `LICENSE`, and GitHub Actions CI workflow.
+- [x] **Step 9: Premium UI Redesign (Linear.app-Style Dark Glassmorphism)**
+  - [x] 9.1: Full dark design system in `globals.css` — `#0a0a0f` base, `#6366f1` brand, glass surfaces, noise texture overlay, ambient glow layers.
+  - [x] 9.2: Redesigned `ChatInput` — auto-resize textarea, focus ring glow, animated loading dots, char counter, keyboard hint.
+  - [x] 9.3: Redesigned `MessageBubble` — gradient user bubble, branded AI avatar with glow, tool-invocation cards, fade-up entry animation.
+  - [x] 9.4: Redesigned `MessageList` — bento quick-start cards, branded logo mark, gradient welcome heading.
+  - [x] 9.5: Redesigned `Sidebar` — glass surface, brand logo, Linear-style active pill indicator, hover icon reveal, rotating `+` icon.
+  - [x] 9.6: Redesigned `ApprovalModal` — warning header stripe, dark frosted backdrop, brand gradient approve button, spring animation.
+  - [x] 9.7: Redesigned `Toast` — glass card, left accent bar, icon, dismiss button, spring slide-in animation.
+  - [x] 9.8: Redesigned `page.tsx` — ambient glow layers, glass header, status streaming pill, message count, sidebar toggle tooltip.
+  - [x] 9.9: Zero TypeScript errors confirmed after redesign.
 
 ### Remaining Steps
 - [ ] (Optional) Record video demo / Loom.
