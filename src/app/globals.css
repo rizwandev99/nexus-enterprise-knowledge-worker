@@ -1,60 +1,50 @@
 @import "tailwindcss";
 
 /* ────────────────────────────────────────────────
-   Design Tokens — Linear-inspired dark palette
+   Design Tokens — Dark Glassmorphic Palette (Refined)
 ──────────────────────────────────────────────── */
 @theme {
   /* Core surfaces */
-  --color-base:          #0a0a0f;   /* deepest background */
-  --color-surface:       #111118;   /* card / sidebar bg  */
-  --color-surface-2:     #16161f;   /* elevated surface   */
-  --color-surface-3:     #1c1c28;   /* hover states       */
-  --color-overlay:       rgba(17,17,24,0.8); /* modal backdrops */
+  --color-base:          #090a0f;   /* deepest pitch dark background */
+  --color-surface:       #11131a;   /* main card / sidebar surface   */
+  --color-surface-2:     #161922;   /* elevated hover surface        */
+  --color-surface-3:     #1d212d;   /* active / focus surface        */
+  --color-overlay:       rgba(9,10,15,0.85);
 
   /* Borders */
-  --color-border:        rgba(255,255,255,0.06);
-  --color-border-strong: rgba(255,255,255,0.12);
-  --color-border-focus:  rgba(99,102,241,0.6);
+  --color-border:        rgba(255,255,255,0.07);
+  --color-border-strong: rgba(255,255,255,0.14);
+  --color-border-focus:  rgba(20,184,166,0.6); /* Teal focus glow */
 
   /* Text */
-  --color-text-primary:  #f1f0ff;
-  --color-text-secondary:#9490b5;
-  --color-text-muted:    #524e6e;
-  --color-text-inverse:  #0a0a0f;
+  --color-text-primary:  #f3f4f6;
+  --color-text-secondary:#9ca3af;
+  --color-text-muted:    #4b5563;
+  --color-text-inverse:  #090a0f;
 
-  /* Brand — Indigo/Violet like Linear */
-  --color-brand:         #6366f1;
-  --color-brand-hover:   #818cf8;
-  --color-brand-muted:   rgba(99,102,241,0.12);
-  --color-brand-glow:    rgba(99,102,241,0.25);
+  /* Brand Accents — Cyan / Teal like reference screenshot */
+  --color-brand:         #14b8a6;   /* Teal accent */
+  --color-brand-hover:   #2dd4bf;   /* Lighter teal */
+  --color-brand-muted:   rgba(20,184,166,0.14);
+  --color-brand-glow:    rgba(20,184,166,0.30);
 
-  /* Semantic */
-  --color-success:       #34d399;
-  --color-success-muted: rgba(52,211,153,0.12);
-  --color-warning:       #fbbf24;
-  --color-warning-muted: rgba(251,191,36,0.12);
-  --color-error:         #f87171;
-  --color-error-muted:   rgba(248,113,113,0.12);
-  --color-info:          #60a5fa;
-
-  /* Glass */
-  --glass-bg:            rgba(17,17,24,0.72);
-  --glass-border:        rgba(255,255,255,0.07);
+  /* Semantic Pill Badges */
+  --color-badge-teal-bg: #132e35;
+  --color-badge-teal-fg: #5eead4;
+  --color-badge-pink-bg: #3b1c24;
+  --color-badge-pink-fg: #fca5a5;
+  --color-badge-green-bg:#163522;
+  --color-badge-green-fg:#86efac;
+  --color-badge-purple-bg:#2d1b3f;
+  --color-badge-purple-fg:#d8b4fe;
 
   /* Radius */
-  --radius-xs:   3px;
-  --radius-sm:   6px;
-  --radius-md:   10px;
-  --radius-lg:   14px;
-  --radius-xl:   18px;
-  --radius-2xl:  24px;
+  --radius-xs:   4px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   22px;
   --radius-pill: 999px;
-
-  /* Shadows */
-  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
-  --shadow-md:  0 4px 24px rgba(0,0,0,0.5);
-  --shadow-lg:  0 8px 48px rgba(0,0,0,0.7);
-  --shadow-brand: 0 0 0 3px var(--color-brand-glow);
 
   /* Fonts */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -62,7 +52,7 @@
 }
 
 /* ────────────────────────────────────────────────
-   Base Reset
+   Base Reset & Scrollbars
 ──────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -81,71 +71,90 @@ body {
   overflow: hidden;
 }
 
-/* Thin custom scrollbar */
-::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
 
 /* ────────────────────────────────────────────────
-   Noise texture overlay (subtle grain)
+   Background Grid Pattern (Inspiration Screenshot)
 ──────────────────────────────────────────────── */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ────────────────────────────────────────────────
+   Top Glowing Fluid Glass Orb (Inspiration Visual)
+──────────────────────────────────────────────── */
+.fluid-orb {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 480px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(20, 184, 166, 0.22) 0%,
+    rgba(14, 116, 144, 0.15) 45%,
+    rgba(9, 10, 15, 0) 75%
+  );
+  filter: blur(45px);
   pointer-events: none;
-  z-index: 9999;
-  opacity: 0.4;
+  animation: orb-pulse 8s ease-in-out infinite alternate;
+}
+
+@keyframes orb-pulse {
+  0% {
+    transform: translateX(-50%) scale(1) translateY(0px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(-50%) scale(1.12) translateY(12px);
+    opacity: 1;
+  }
 }
 
 /* ────────────────────────────────────────────────
-   Ambient gradient glow
+   Glass utility
 ──────────────────────────────────────────────── */
-.ambient-glow {
-  position: fixed;
-  pointer-events: none;
-  z-index: 0;
-}
-.ambient-glow-tl {
-  top: -20%;
-  left: -10%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 70%);
-}
-.ambient-glow-br {
-  bottom: -20%;
-  right: -10%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%);
+.glass-panel {
+  background: rgba(17, 19, 26, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
 }
 
 /* ────────────────────────────────────────────────
-   Glass card utility
+   Animations
 ──────────────────────────────────────────────── */
-.glass {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+@keyframes toast-in {
+  from { transform: translateX(110%) scale(0.95); opacity: 0; }
+  to   { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes toast-out {
+  from { transform: translateX(0) scale(1); opacity: 1; }
+  to   { transform: translateX(110%) scale(0.95); opacity: 0; }
 }
 
-/* ────────────────────────────────────────────────
-   Brand gradient text
-──────────────────────────────────────────────── */
-.gradient-text {
-  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* ────────────────────────────────────────────────
-   Animated Loading Dots
-──────────────────────────────────────────────── */
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-animate {
+  animation: msg-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Loading animation */
 .loading-dot {
   display: inline-block;
   width: 5px;
@@ -159,104 +168,5 @@ body::before {
 
 @keyframes dot-bounce {
   0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-  40% { transform: translateY(-6px); opacity: 1; }
+  40% { transform: translateY(-5px); opacity: 1; }
 }
-
-/* ────────────────────────────────────────────────
-   Shimmer / skeleton
-──────────────────────────────────────────────── */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.shimmer {
-  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-surface-2) 50%, var(--color-surface) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.6s ease-in-out infinite;
-}
-
-/* ────────────────────────────────────────────────
-   Toast animations
-──────────────────────────────────────────────── */
-@keyframes toast-in {
-  from { transform: translateX(110%) scale(0.96); opacity: 0; }
-  to   { transform: translateX(0)   scale(1);    opacity: 1; }
-}
-@keyframes toast-out {
-  from { transform: translateX(0)   scale(1);    opacity: 1; }
-  to   { transform: translateX(110%) scale(0.96); opacity: 0; }
-}
-
-/* ────────────────────────────────────────────────
-   Modal animation
-──────────────────────────────────────────────── */
-@keyframes modal-in {
-  from { opacity: 0; transform: scale(0.96) translateY(8px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0); }
-}
-
-/* ────────────────────────────────────────────────
-   Sidebar slide
-──────────────────────────────────────────────── */
-@keyframes sidebar-in {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-/* ────────────────────────────────────────────────
-   Message fade-up
-──────────────────────────────────────────────── */
-@keyframes msg-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.msg-animate {
-  animation: msg-in 0.28s cubic-bezier(0.16,1,0.3,1) forwards;
-}
-
-/* ────────────────────────────────────────────────
-   Focus ring
-──────────────────────────────────────────────── */
-.focus-ring:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-brand);
-}
-
-/* ────────────────────────────────────────────────
-   Bento card base
-──────────────────────────────────────────────── */
-.bento-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.bento-card:hover {
-  border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-md);
-}
-
-/* ────────────────────────────────────────────────
-   Prose inside messages
-──────────────────────────────────────────────── */
-.prose-dark code {
-  font-family: var(--font-mono);
-  font-size: 0.82em;
-  background: var(--color-surface-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xs);
-  padding: 0.1em 0.35em;
-  color: var(--color-brand-hover);
-}
-.prose-dark pre {
-  background: var(--color-surface-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 1rem 1.25rem;
-  overflow-x: auto;
-  font-family: var(--font-mono);
-  font-size: 0.8em;
-  line-height: 1.7;
-}
-.prose-dark strong { color: var(--color-text-primary); }
-.prose-dark em { color: var(--color-text-secondary); font-style: italic; }

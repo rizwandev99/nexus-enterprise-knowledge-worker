@@ -11,8 +11,8 @@ import { ToastProvider, useToast } from "@/components/toast";
 
 /* ─── Status pill colours ─── */
 const STATUS_PILL = {
-  streaming: { bg: "rgba(99,102,241,0.15)", dot: "#6366f1", label: "Streaming" },
-  submitted: { bg: "rgba(99,102,241,0.10)", dot: "#818cf8", label: "Thinking…" },
+  streaming: { bg: "rgba(20,184,166,0.15)", dot: "#14b8a6", label: "Streaming" },
+  submitted: { bg: "rgba(20,184,166,0.10)", dot: "#2dd4bf", label: "Thinking…" },
   ready:     { bg: "transparent",           dot: "transparent", label: "" },
   error:     { bg: "rgba(248,113,113,0.12)", dot: "#f87171", label: "Error" },
 };
@@ -20,9 +20,10 @@ const STATUS_PILL = {
 function ChatApp() {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>(undefined);
   const { showToast } = useToast();
 
-  /* Open sidebar on desktop by default */
+  /* Toggle sidebar handler */
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth >= 768) setIsSidebarOpen(true);
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -40,7 +41,7 @@ function ChatApp() {
   const prevStatusRef = useRef(status);
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
 
-  /* Refresh sidebar 3 s after stream ends (title generation delay) */
+  /* Refresh sidebar 3s after stream ends */
   useEffect(() => {
     if (prevStatusRef.current !== "ready" && status === "ready") {
       const t = setTimeout(() => setSidebarRefreshTrigger((n) => n + 1), 3000);
@@ -125,12 +126,8 @@ function ChatApp() {
   return (
     <div
       className="flex h-screen overflow-hidden relative"
-      style={{ background: "var(--color-base)" }}
+      style={{ background: "#090a0f" }}
     >
-      {/* Ambient glows */}
-      <div className="ambient-glow ambient-glow-tl" />
-      <div className="ambient-glow ambient-glow-br" />
-
       {/* HITL modal */}
       <ApprovalModal
         pendingApproval={pendingApproval as UIMessage}
@@ -138,7 +135,7 @@ function ChatApp() {
         onReject={handleReject}
       />
 
-      {/* Sidebar */}
+      {/* Sidebar with icon rail & session drawer */}
       <Sidebar
         activeChatId={activeChatId}
         onSelectChat={(id) => {
@@ -150,101 +147,83 @@ function ChatApp() {
         refreshTrigger={sidebarRefreshTrigger}
       />
 
-      {/* Main area */}
+      {/* Main Container */}
       <main className="flex-1 flex flex-col h-full min-w-0 relative z-10">
-        {/* Top bar */}
+        {/* Top Header */}
         <header
-          className="flex h-14 items-center px-4 shrink-0 justify-between"
+          className="flex h-14 items-center px-6 shrink-0 justify-between relative z-20"
           style={{
-            background: "rgba(10,10,15,0.85)",
+            background: "rgba(9, 10, 15, 0.75)",
             backdropFilter: "blur(20px)",
-            borderBottom: "1px solid var(--color-border)",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
           }}
         >
-          {/* Left: toggle + title */}
+          {/* Left: Toggle + App Name */}
           <div className="flex items-center gap-3">
-            {/* Sidebar toggle */}
-            <div className="group relative">
-              <button
-                onClick={() => setIsSidebarOpen((p) => !p)}
-                className="p-1.5 rounded-lg transition-all duration-150 hover:opacity-80 active:scale-95"
-                style={{
-                  color: "var(--color-text-muted)",
-                  background: "transparent",
-                }}
-                aria-label="Toggle Sidebar"
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                  <line x1="9" y1="3" x2="9" y2="21" />
-                </svg>
-              </button>
-              {/* Tooltip */}
+            <button
+              onClick={() => setIsSidebarOpen((p) => !p)}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+              aria-label="Toggle Sessions Drawer"
+              title="Toggle Chat Sessions (Ctrl+B)"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <line x1="9" y1="3" x2="9" y2="21" />
+              </svg>
+            </button>
+
+            <span className="text-xs font-semibold text-gray-300 tracking-tight">
+              Nexus Knowledge Base
+            </span>
+
+            {/* Status Pill */}
+            {isLoading && (
               <div
-                className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1.5 rounded-lg text-xs whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50"
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border border-teal-500/30"
                 style={{
-                  background: "var(--color-surface-2)",
-                  border: "1px solid var(--color-border-strong)",
-                  color: "var(--color-text-secondary)",
-                  boxShadow: "var(--shadow-md)",
+                  background: pill.bg,
+                  color: "#5eead4",
                 }}
               >
-                Sidebar
-                <span className="ml-1.5 font-mono opacity-60">⌘B</span>
+                <span
+                  className="w-1.5 h-1.5 rounded-full animate-pulse"
+                  style={{ background: pill.dot }}
+                />
+                {pill.label}
               </div>
-            </div>
-
-            {/* Divider */}
-            <div
-              className="h-5 w-px"
-              style={{ background: "var(--color-border-strong)" }}
-            />
-
-            {/* Title */}
-            <div className="flex items-center gap-2">
-              <h1
-                className="text-sm font-semibold tracking-tight"
-                style={{ color: "var(--color-text-primary)" }}
-              >
-                {activeChatId ? "Chat" : "Enterprise Knowledge Worker"}
-              </h1>
-
-              {/* Status pill */}
-              {isLoading && (
-                <div
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium"
-                  style={{
-                    background: pill.bg,
-                    color: "var(--color-brand-hover)",
-                    border: "1px solid rgba(99,102,241,0.25)",
-                  }}
-                >
-                  <span
-                    className="w-1.5 h-1.5 rounded-full animate-pulse"
-                    style={{ background: pill.dot }}
-                  />
-                  {pill.label}
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
-          {/* Right: message count */}
-          {messages.length > 0 && (
-            <div
-              className="text-[11px] font-mono"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              {messages.length} msg{messages.length !== 1 ? "s" : ""}
+          {/* Right: User Profile Avatar Badge (From Inspiration Image) */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-white/20 cursor-pointer transition-all">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center text-[10px] font-bold text-slate-950">
+                U
+              </div>
+              <span className="text-xs font-medium text-gray-300">
+                User Account
+              </span>
+              <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
-          )}
+          </div>
         </header>
 
-        {/* Messages */}
-        <MessageList messages={messages as UIMessage[]} messagesEndRef={messagesEndRef} />
+        {/* Message List area featuring top Orb, typography hero, & 4 Feature Bento Cards */}
+        <MessageList
+          messages={messages as UIMessage[]}
+          messagesEndRef={messagesEndRef}
+          onSelectPrompt={(prompt) => setSelectedPrompt(prompt)}
+        />
 
-        {/* Input */}
-        <ChatInput onSend={handleSend} isLoading={isLoading} />
+        {/* Input matching inspiration design */}
+        <ChatInput
+          onSend={handleSend}
+          isLoading={isLoading}
+          selectedPrompt={selectedPrompt}
+          onClearSelectedPrompt={() => setSelectedPrompt(undefined)}
+        />
       </main>
     </div>
   );
