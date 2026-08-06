@@ -11,14 +11,28 @@ export const addDocumentTool = tool(
       },
     });
 
-    return `Successfully added document with ID: ${doc.id}`;
+    try {
+      // Chunk content into ~1000 char blocks for chunk search indexing
+      const chunkSize = 1000;
+      for (let i = 0; i < content.length; i += chunkSize) {
+        const chunkText = content.slice(i, i + chunkSize);
+        await pool.query(
+          `INSERT INTO document_chunks ("id", "documentId", "content", "createdAt") VALUES (gen_random_uuid(), $1, $2, NOW())`,
+          [doc.id, chunkText]
+        );
+      }
+    } catch (chunkErr) {
+      console.warn("Notice: Document saved, chunk indexing skipped:", chunkErr);
+    }
+
+    return `Successfully added document "${doc.title}" with ID: ${doc.id}`;
   },
   {
     name: "add_document",
     description: "Add a new document to the enterprise knowledge base",
     schema: z.object({
       title: z.string().describe("Title of the document"),
-      content: z.string().describe("Content of the document"),
+      content: z.string().describe("Full extracted text content of the document"),
     }),
   }
 );
