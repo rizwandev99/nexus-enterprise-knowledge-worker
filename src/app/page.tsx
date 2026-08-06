@@ -35,7 +35,7 @@ function ChatApp() {
   // generateChatTitle runs as a detached promise in the route and takes ~1-3 s
   // (Groq LLM round-trip) to write the new title to the DB, so we wait 3 s.
   useEffect(() => {
-    if (prevStatusRef.current !== "idle" && status === "idle") {
+    if (prevStatusRef.current !== "ready" && status === "ready") {
       const timer = setTimeout(() => setSidebarRefreshTrigger((n) => n + 1), 3000);
       return () => clearTimeout(timer);
     }

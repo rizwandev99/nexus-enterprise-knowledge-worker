@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { addDocumentTool, executeSqlMutationTool, nativeTools } from '../tools';
+import { addDocumentTool, executeSqlMutationTool, executeSqlQueryTool, nativeTools } from '../tools';
 
 // Mock pg module before importing or executing tools
 vi.mock('pg', () => {
@@ -74,10 +74,11 @@ describe('Native Agent Tools (Milestone 2)', () => {
   });
 
   describe('nativeTools array', () => {
-    it('should export nativeTools array containing both tools', () => {
-      expect(nativeTools).toHaveLength(2);
+    it('should export nativeTools array containing all tools', () => {
+      expect(nativeTools).toHaveLength(3);
       expect(nativeTools).toContain(addDocumentTool);
       expect(nativeTools).toContain(executeSqlMutationTool);
+      expect(nativeTools).toContain(executeSqlQueryTool);
     });
   });
 });
