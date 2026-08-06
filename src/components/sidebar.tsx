@@ -22,11 +22,13 @@ export default function Sidebar({
   onSelectChat,
   isOpen = true,
   onClose,
+  refreshTrigger = 0,
 }: {
   activeChatId: string | null;
   onSelectChat: (id: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
+  refreshTrigger?: number;
 }) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export default function Sidebar({
 
   useEffect(() => {
     loadSessions();
-  }, [loadSessions, activeChatId]);
+  }, [loadSessions, activeChatId, refreshTrigger]);
 
   const handleNewChat = () => {
     onSelectChat("");
