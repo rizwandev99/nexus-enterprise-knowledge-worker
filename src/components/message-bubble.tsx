@@ -46,6 +46,28 @@ export default function MessageBubble({ message, isUser }: MessageBubbleProps) {
     (Array.isArray(parts) && parts.some((p) => p.type === "tool-invocation"));
   if (!hasContent) return null;
 
+  // Helper to format user messages with attached documents cleanly
+  const renderTextContent = (text: string) => {
+    if (isUser && text.includes("--- ATTACHED DOCUMENT CONTENT")) {
+      const match = text.match(/\[ATTACHED DOCUMENT:\s*([^\]]+)\]/);
+      const docName = match ? match[1] : "Document";
+      const userPrompt = text.split("\n\n[ATTACHED DOCUMENT:")[0].trim();
+
+      return (
+        <div className="space-y-2">
+          {userPrompt && <div>{userPrompt}</div>}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono bg-white/10 border border-white/20 text-teal-200">
+            <svg className="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+            </svg>
+            <span>Attached: {docName}</span>
+          </div>
+        </div>
+      );
+    }
+    return <span>{text}</span>;
+  };
+
   return (
     <div className={`flex msg-animate ${isUser ? "justify-end" : "justify-start"}`}>
       {/* Avatar for AI */}
@@ -97,7 +119,7 @@ export default function MessageBubble({ message, isUser }: MessageBubbleProps) {
         <div className={`text-sm leading-relaxed whitespace-pre-wrap prose-dark`}>
           {Array.isArray(parts) && parts.length > 0 ? (
             parts.map((part, index) => {
-              if (part.type === "text") return <span key={index}>{part.text}</span>;
+              if (part.type === "text") return <div key={index}>{renderTextContent(part.text)}</div>;
 
               if (part.type === "tool-invocation") {
                 const isDone = part.toolInvocation.state === "result";
@@ -143,7 +165,7 @@ export default function MessageBubble({ message, isUser }: MessageBubbleProps) {
               return null;
             })
           ) : (
-            <span>{partsText}</span>
+            renderTextContent(partsText)
           )}
         </div>
       </div>

@@ -61,6 +61,7 @@ export async function createAgentGraph() {
       `You are a helpful enterprise knowledge assistant.\n\n` +
         `Retrieved context from internal documents:\n${contextStr}\n\n` +
         `When using retrieved facts, insert exact inline citation footnotes like [Doc-1].\n\n` +
+        `DOCUMENT INGESTION: If a message contains attached document content (e.g., [ATTACHED DOCUMENT: ...]), you MUST call the 'add_document' tool with the document title and the full extracted text content to ingest it into PostgreSQL. Then, summarize or answer the query directly using that text.\n\n` +
         `DATABASE SCHEMA: You have access to a PostgreSQL database. The main table is 'documents' with columns: id (UUID), title (Text), content (Text).\n` +
         `When a user asks to view, search, delete, update, or modify a document, you MUST formulate the correct SQL query using the 'documents' table.\n` +
         `Use execute_sql_query for SELECT statements (e.g., viewing all saved docs). Use execute_sql_mutation for INSERT, UPDATE, or DELETE.\n\n` +

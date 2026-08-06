@@ -24,7 +24,7 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 
 ### Current Status
 - **Phase**: Production Live — Portfolio Grade
-- **Current Step**: Step 9 complete. Full Linear.app-style dark glassmorphism UI redesign applied and deployed.
+- **Current Step**: Step 11 complete. Real document parsing & full text attachment ingestion engine implemented and synced to git.
 
 ### Completed Steps
 - [x] Project requirements defined (`prd.md`).
@@ -83,6 +83,12 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 10.4: Input box redesign matching reference screenshot (top-left ✦ sparkle icon, attach file pill, teal `↑` send button).
   - [x] 10.5: Left vertical icon rail in `sidebar.tsx` with top teal `↗` logo button, nav stack (Home, Chat, History), bottom nodes/settings icons, & session drawer.
   - [x] 10.6: Top-right user profile pill ("User Account ∨").
+- [x] **Step 11: Real Document Ingestion Engine & Git Sync**
+  - [x] 11.1: Build `/api/parse-document` server API route supporting PDF (via `pdf-parse`), Text, Markdown, CSV, JSON, and source code document parsing.
+  - [x] 11.2: Update `ChatInput` with real file parsing, attached file badge, size formatting, and text extraction before message sending.
+  - [x] 11.3: Update `MessageBubble` to cleanly format user prompts with attached document metadata pills without UI clutter.
+  - [x] 11.4: Enhance `addDocumentTool` in `tools.ts` to insert into both `documents` and `document_chunks` for full RAG & SQL vector search capability.
+  - [x] 11.5: Update LangGraph `reasoningNode` system prompt to mandate `add_document` invocation whenever attached document text is present.
 
 ### Remaining Steps
 - [ ] (Optional) Record video demo / Loom.
