@@ -76,6 +76,13 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 9.7: Redesigned `Toast` — glass card, left accent bar, icon, dismiss button, spring slide-in animation.
   - [x] 9.8: Redesigned `page.tsx` — ambient glow layers, glass header, status streaming pill, message count, sidebar toggle tooltip.
   - [x] 9.9: Zero TypeScript errors confirmed after redesign.
+- [x] **Step 10: Inspiration Design Match & Interactive Feature Showcase**
+  - [x] 10.1: Fluid glass orb background animation + subtle dark grid overlay (`bg-grid-pattern`).
+  - [x] 10.2: Typography hero greeting ("Hey! Enterprise Worker / What can I help with?").
+  - [x] 10.3: 4 Feature Bento cards with colorful pill badges showcasing all capabilities (Hybrid RAG, SQL HITL, Self-Correction Graph, OTel Telemetry) — clicking populates prompt automatically.
+  - [x] 10.4: Input box redesign matching reference screenshot (top-left ✦ sparkle icon, attach file pill, teal `↑` send button).
+  - [x] 10.5: Left vertical icon rail in `sidebar.tsx` with top teal `↗` logo button, nav stack (Home, Chat, History), bottom nodes/settings icons, & session drawer.
+  - [x] 10.6: Top-right user profile pill ("User Account ∨").
 
 ### Remaining Steps
 - [ ] (Optional) Record video demo / Loom.
