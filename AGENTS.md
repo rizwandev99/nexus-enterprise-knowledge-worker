@@ -75,8 +75,8 @@ To prevent errors caused by outdated base training data, all agents MUST strictl
    - **`dev` Branch**: The default workspace branch for daily active development. All working files, agent logs, prompt instructions, scratch files, test scripts, and dev notes reside on `dev`.
    - **`main` Branch**: The production branch visible to interviewers on GitHub. `main` must remain 100% clean, containing only industry-standard production code, clean comments, structured modular architecture, and formal documentation.
 2. **Publishing to `main` Protocol**:
-   - When the user explicitly requests to "publish", "deploy", or "sync to main", agents MUST only migrate production code, clean comments, and standard project documentation to `main`.
-   - All internal AI agent files (`.agents/`, `AGENTS.md`, `skills-lock.json`), temporary test scripts, and scratch notes MUST be excluded from `main`.
+   - **Automatic Sync**: Whenever a feature, fix, or update is finalized and polished on `dev`, the AI MUST automatically commit the changes, switch to the `main` branch, merge the changes, and push to `origin main` to ensure the live Vercel production server is always up to date with the polished version.
+   - The AI MUST ensure that all internal AI agent files (`.agents/`, `AGENTS.md`, `skills-lock.json`), temporary test scripts (`scratch/`), and scratch notes are EXCLUDED from the `main` branch so that the interviewer only sees a clean, industry-standard project structure.
 3. **Temporary Test Script & Isolation Rules**:
    - **Isolated Folder Creation**: Any temporary test script or utility snippet created during development MUST be placed inside an isolated scratch directory (e.g., `scratch/`). Never place temporary test scripts directly in the repository root.
    - **Auto-Deletion**: All temporary test scripts MUST be deleted immediately after their diagnostic or test execution is complete, keeping the codebase clean.
