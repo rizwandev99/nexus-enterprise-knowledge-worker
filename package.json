@@ -25,6 +25,7 @@
     "@langchain/core": "^1.2.4",
     "@langchain/groq": "^1.3.1",
     "@langchain/langgraph": "^1.4.8",
+    "@langchain/langgraph-checkpoint-postgres": "^1.0.4",
     "@langchain/openai": "^1.5.5",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/sdk-node": "^0.221.0",
@@ -43,5 +44,8 @@
     "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3",
     "zod": "^4.4.3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }
