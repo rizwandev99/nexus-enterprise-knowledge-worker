@@ -175,7 +175,8 @@ export async function POST(req: Request) {
             console.log("[route] HITL detected. Last message tool_calls:", lastStateMsg?.tool_calls);
 
             if (lastStateMsg?.tool_calls?.length > 0) {
-              writeApprovalNotice(writer, lastStateMsg.tool_calls[0]);
+              const sensitiveCall = lastStateMsg.tool_calls.find((tc: { name: string }) => tc.name.includes("execute_sql_mutation")) || lastStateMsg.tool_calls[0];
+              writeApprovalNotice(writer, sensitiveCall);
             }
           }
 
@@ -200,7 +201,8 @@ export async function POST(req: Request) {
               const lastStateMsg = allMessages[allMessages.length - 1];
 
               if (lastStateMsg?.tool_calls?.length > 0) {
-                writeApprovalNotice(writer, lastStateMsg.tool_calls[0]);
+                const sensitiveCall = lastStateMsg.tool_calls.find((tc: { name: string }) => tc.name.includes("execute_sql_mutation")) || lastStateMsg.tool_calls[0];
+                writeApprovalNotice(writer, sensitiveCall);
               } else {
                 // Interrupt without a specific tool call — show generic notice
                 writeApprovalNotice(writer, {

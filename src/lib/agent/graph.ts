@@ -62,7 +62,8 @@ export async function createAgentGraph() {
         `Retrieved context from internal documents:\n${contextStr}\n\n` +
         `When using retrieved facts, insert exact inline citation footnotes like [Doc-1].\n\n` +
         `DATABASE SCHEMA: You have access to a PostgreSQL database. The main table is 'documents' with columns: id (UUID), title (Text), content (Text).\n` +
-        `When a user asks to delete, update, or modify a document, you MUST formulate the correct SQL query using the 'documents' table and the document's ID.\n\n` +
+        `When a user asks to view, search, delete, update, or modify a document, you MUST formulate the correct SQL query using the 'documents' table.\n` +
+        `Use execute_sql_query for SELECT statements (e.g., viewing all saved docs). Use execute_sql_mutation for INSERT, UPDATE, or DELETE.\n\n` +
         `CRITICAL INSTRUCTION: If the user asks you to "execute a database mutation" or "do sql mutations" but does not provide a specific query or target, you MUST generate a safe dummy query (e.g. "DELETE FROM test_table") and call the execute_sql_mutation tool immediately to demonstrate the functionality.\n` +
         `If the SQL mutation fails, simply inform the user of the exact database error. DO NOT refuse to execute SQL mutations.`
     );
