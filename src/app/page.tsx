@@ -28,6 +28,20 @@ function ChatApp() {
 
   const { messages, setMessages, sendMessage, status } = useChat();
   const loadedChatIdRef = useRef<string | null>(null);
+  const prevStatusRef = useRef(status);
+  const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
+
+  // When streaming finishes, refresh the sidebar so auto-renamed titles appear.
+  // We delay slightly because generateChatTitle runs as a detached promise in
+  // the route and typically takes ~1-2 s (Groq LLM round-trip) to write the
+  // new title to the DB.
+  useEffect(() => {
+    if (prevStatusRef.current !== "idle" && status === "idle") {
+      const timer = setTimeout(() => setSidebarRefreshTrigger((n) => n + 1), 2000);
+      return () => clearTimeout(timer);
+    }
+    prevStatusRef.current = status;
+  }, [status]);
 
   useEffect(() => {
     if (loadedChatIdRef.current === activeChatId) return;
@@ -88,7 +102,8 @@ function ChatApp() {
         activeChatId={activeChatId} 
         onSelectChat={(id) => { setActiveChatId(id); if (typeof window !== 'undefined' && window.innerWidth < 768) setIsSidebarOpen(false); }} 
         isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)} 
+        onClose={() => setIsSidebarOpen(false)}
+        refreshTrigger={sidebarRefreshTrigger}
       />
       <main className="flex-1 flex flex-col h-full bg-canvas-soft min-w-0">
         <header className="flex h-16 items-center px-6 bg-canvas border-b border-hairline shrink-0 justify-between">

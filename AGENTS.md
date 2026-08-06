@@ -23,8 +23,8 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 - **Terminal**: Git Bash (Always provide standard Unix/Linux Bash commands, NEVER PowerShell commands).
 
 ### Current Status
-- **Phase**: Production Live
-- **Current Step**: MVP deployed and stabilized. Resolved critical production UI bugs (chat display and HITL graph resumption).
+- **Phase**: Production Live — Portfolio Grade
+- **Current Step**: All MVP fixes complete. Project is now portfolio-ready for high-paying remote job applications.
 
 ### Completed Steps
 - [x] Project requirements defined (`prd.md`).
@@ -53,11 +53,24 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 7.1: Fix `useChat` append deprecation by migrating to `sendMessage` (v4+ API).
   - [x] 7.2: Update message fetching to map DB messages to `UIMessage` payload format with `parts` array to prevent rendering hydration failures.
   - [x] 7.3: Fix HITL graph resumption by ensuring `chatId` is passed in the request body during approval/rejection.
+- [x] **Step 8: Portfolio Hardening (Comprehensive Code Quality)**
+  - [x] 8.1: Implement real Hybrid RAG in `hybrid-search.ts` — pgvector cosine similarity + PostgreSQL `tsvector` full-text search + Reciprocal Rank Fusion (RRF).
+  - [x] 8.2: Replace in-memory `MemorySaver` with `@langchain/langgraph-checkpoint-postgres` for true persistent state across serverless requests.
+  - [x] 8.3: Add SQL validation/allowlisting to `execute_sql_mutation` tool (DML-only, blocks DDL and injection patterns).
+  - [x] 8.4: Remove all debug/test routes (`/api/debug`, `/api/test`, `/api/test_stream`) and the `seedDummyData` server action.
+  - [x] 8.5: Eliminate all `any` types across the entire codebase — backend (graph, tools, route, chat-actions) and frontend (page, sidebar, components).
+  - [x] 8.6: Break `page.tsx` god component into 6 focused components: `ChatInput`, `MessageList`, `MessageBubble`, `ApprovalModal`, `Toast`, and a lean `page.tsx`.
+  - [x] 8.7: Replace 5-second `setInterval` polling in sidebar with optimistic mutation-driven updates.
+  - [x] 8.8: Replace all `window.alert/confirm` with custom `Toast` and inline confirmation UI.
+  - [x] 8.9: Apply design system tokens (`bg-primary`, `text-ink`, etc.) consistently across all components.
+  - [x] 8.10: Add proper `<form>` semantics, `aria-label` attributes, and `useCallback` memoization to input components.
+  - [x] 8.11: Create premium `README.md` with shields.io badges, Mermaid architecture diagram, setup guide.
+  - [x] 8.12: Add `.env.example`, MIT `LICENSE`, and GitHub Actions CI workflow.
 
 ### Remaining Steps
-- [ ] No remaining technical steps for the MVP.
 - [ ] (Optional) Record video demo / Loom.
-- [ ] (Optional) Finalize and polish README.md for portfolio showcasing.
+- [ ] (Optional) Add message virtualization with `@tanstack/react-virtual` for very long chats.
+- [ ] (Optional) Seed real document chunks with OpenAI embeddings for a live RAG demo.
 
 ---
 
