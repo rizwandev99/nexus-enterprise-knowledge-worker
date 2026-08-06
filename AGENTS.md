@@ -24,7 +24,7 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 
 ### Current Status
 - **Phase**: Production Live
-- **Current Step**: Application is successfully deployed, and all E2E tests have passed.
+- **Current Step**: MVP deployed and stabilized. Resolved critical production UI bugs (chat display and HITL graph resumption).
 
 ### Completed Steps
 - [x] Project requirements defined (`prd.md`).
@@ -49,6 +49,10 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 6.1: Provision cloud database (Prisma Postgres).
   - [x] 6.2: Link and deploy application to Vercel global edge network.
   - [x] 6.3: Perform E2E Live Testing via Playwright to verify UI, DB, and AI tracing integrations.
+- [x] **Step 7: Production Stabilization & Bug Fixes**
+  - [x] 7.1: Fix `useChat` append deprecation by migrating to `sendMessage` (v4+ API).
+  - [x] 7.2: Update message fetching to map DB messages to `UIMessage` payload format with `parts` array to prevent rendering hydration failures.
+  - [x] 7.3: Fix HITL graph resumption by ensuring `chatId` is passed in the request body during approval/rejection.
 
 ### Remaining Steps
 - [ ] No remaining technical steps for the MVP.
