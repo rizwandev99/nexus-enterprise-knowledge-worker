@@ -9,8 +9,8 @@ import Sidebar from "@/components/sidebar";
 export default function ChatPage() {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
 
-  const chatHelpers: any = useChat();
-  const { messages, setMessages, append, status } = chatHelpers;
+  const chatHelpers = useChat();
+  const { messages, setMessages, sendMessage, status } = chatHelpers;
 
   const loadedChatIdRef = useRef<string | null>(null);
 
@@ -62,13 +62,13 @@ export default function ChatPage() {
   const handleApprove = async () => {
     if (!pendingApproval || !approvalId) return;
     setResolvedApprovals((prev) => new Set(prev).add(approvalId));
-    append({ role: "user", content: "[HUMAN_APPROVAL_YES]" });
+    sendMessage({ role: "user", parts: [{ type: "text", text: "[HUMAN_APPROVAL_YES]" }] });
   };
 
   const handleReject = async () => {
     if (!pendingApproval || !approvalId) return;
     setResolvedApprovals((prev) => new Set(prev).add(approvalId));
-    append({ role: "user", content: "[HUMAN_APPROVAL_NO]" });
+    sendMessage({ role: "user", parts: [{ type: "text", text: "[HUMAN_APPROVAL_NO]" }] });
   };
 
   const handleSend = async () => {
@@ -88,7 +88,7 @@ export default function ChatPage() {
       }
 
       setInput("");
-      append({ role: "user", content: text }, { body: { chatId: currentChatId } });
+      sendMessage({ role: "user", parts: [{ type: "text", text: text }] }, { body: { chatId: currentChatId } });
     } catch (err: any) {
       console.error("[handleSend] Failed to send message:", err);
       alert("Failed to send message: " + (err?.message || String(err)));
