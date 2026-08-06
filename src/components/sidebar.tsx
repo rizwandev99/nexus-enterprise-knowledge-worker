@@ -5,7 +5,8 @@ import {
   getChatSessions, 
   createChatSession, 
   deleteChatSession, 
-  renameChatSession 
+  renameChatSession,
+  deleteAllChatSessions
 } from "../app/chat-actions";
 
 type ChatSession = {
@@ -54,6 +55,15 @@ export default function Sidebar({
     }
   };
 
+  const handleDeleteAll = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm("Are you sure you want to delete ALL chats? This action cannot be undone.")) {
+      await deleteAllChatSessions();
+      await loadSessions();
+      onSelectChat("");
+    }
+  };
+
   const startRename = (e: React.MouseEvent, session: ChatSession) => {
     e.stopPropagation();
     setEditingId(session.id);
@@ -87,7 +97,20 @@ export default function Sidebar({
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-1">
-        <div className="font-mono text-[12px] text-neutral-400 px-3 pt-2 pb-2 uppercase tracking-wider">Chat History</div>
+        <div className="flex items-center justify-between px-3 pt-2 pb-2">
+          <div className="font-mono text-[12px] text-neutral-400 uppercase tracking-wider">Chat History</div>
+          {sessions.length > 0 && (
+            <button 
+              onClick={handleDeleteAll}
+              className="p-1 text-neutral-400 hover:text-red-600 rounded hover:bg-neutral-200 transition-colors"
+              title="Delete All Chats"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
+        </div>
         
         {sessions.map(session => (
           <div 

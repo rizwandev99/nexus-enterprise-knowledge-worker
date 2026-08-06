@@ -3,6 +3,7 @@
 import { prisma } from "../lib/db/prisma";
 import { ChatGroq } from "@langchain/groq";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+import { revalidatePath } from "next/cache";
 
 export async function getChatSessions() {
   return await prisma.chatSession.findMany({
@@ -14,11 +15,17 @@ export async function createChatSession() {
   const session = await prisma.chatSession.create({
     data: { title: "New Chat" },
   });
+  revalidatePath("/");
   return session;
 }
 
 export async function deleteChatSession(id: string) {
   await prisma.chatSession.delete({ where: { id } });
+  revalidatePath("/");
+}
+
+export async function deleteAllChatSessions() {
+  await prisma.chatSession.deleteMany({});
 }
 
 export async function renameChatSession(id: string, title: string) {
@@ -26,6 +33,7 @@ export async function renameChatSession(id: string, title: string) {
     where: { id },
     data: { title },
   });
+  revalidatePath("/");
 }
 
 export async function getChatMessages(chatId: string) {
