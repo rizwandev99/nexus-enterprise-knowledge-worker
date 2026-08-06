@@ -33,12 +33,15 @@ export async function getChatMessages(chatId: string) {
     where: { chatId },
     orderBy: { createdAt: "asc" },
   });
+  // Return in UIMessage format compatible with @ai-sdk/react v4 useChat hook
   return messages.map((m: any) => ({
     id: m.id,
     role: m.role as "user" | "assistant" | "system" | "tool",
-    content: m.content,
+    parts: [{ type: "text" as const, text: m.content }],
+    content: m.content, // keep as fallback for rendering
   }));
 }
+
 
 export async function saveMessage(chatId: string, role: string, content: string) {
   return await prisma.message.create({
