@@ -32,16 +32,20 @@ function ChatApp() {
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
 
   // When streaming finishes, refresh the sidebar so auto-renamed titles appear.
-  // We delay slightly because generateChatTitle runs as a detached promise in
-  // the route and typically takes ~1-2 s (Groq LLM round-trip) to write the
-  // new title to the DB.
+  // generateChatTitle runs as a detached promise in the route and takes ~1-3 s
+  // (Groq LLM round-trip) to write the new title to the DB, so we wait 3 s.
   useEffect(() => {
     if (prevStatusRef.current !== "idle" && status === "idle") {
-      const timer = setTimeout(() => setSidebarRefreshTrigger((n) => n + 1), 2000);
+      const timer = setTimeout(() => setSidebarRefreshTrigger((n) => n + 1), 3000);
       return () => clearTimeout(timer);
     }
-    prevStatusRef.current = status;
   }, [status]);
+
+  // Track the previous status in a separate effect so the comparison above
+  // always sees the *previous* value, not the current one.
+  useEffect(() => {
+    prevStatusRef.current = status;
+  });
 
   useEffect(() => {
     if (loadedChatIdRef.current === activeChatId) return;
@@ -87,6 +91,7 @@ function ChatApp() {
         if (!session?.id) throw new Error("Could not create chat session");
         loadedChatIdRef.current = session.id;
         setActiveChatId(session.id);
+        setSidebarRefreshTrigger((n) => n + 1); // show "New Chat" entry immediately
         currentChatId = session.id;
       }
       sendMessage({ role: "user", parts: [{ type: "text", text }] }, { body: { chatId: currentChatId } });
