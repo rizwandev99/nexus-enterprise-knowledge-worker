@@ -62,13 +62,19 @@ export default function ChatPage() {
   const handleApprove = async () => {
     if (!pendingApproval || !approvalId) return;
     setResolvedApprovals((prev) => new Set(prev).add(approvalId));
-    sendMessage({ role: "user", parts: [{ type: "text", text: "[HUMAN_APPROVAL_YES]" }] });
+    sendMessage(
+      { role: "user", parts: [{ type: "text", text: "[HUMAN_APPROVAL_YES]" }] },
+      { body: { chatId: activeChatId } }
+    );
   };
 
   const handleReject = async () => {
     if (!pendingApproval || !approvalId) return;
     setResolvedApprovals((prev) => new Set(prev).add(approvalId));
-    sendMessage({ role: "user", parts: [{ type: "text", text: "[HUMAN_APPROVAL_NO]" }] });
+    sendMessage(
+      { role: "user", parts: [{ type: "text", text: "[HUMAN_APPROVAL_NO]" }] },
+      { body: { chatId: activeChatId } }
+    );
   };
 
   const handleSend = async () => {
