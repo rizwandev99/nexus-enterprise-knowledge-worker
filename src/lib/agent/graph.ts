@@ -1,16 +1,24 @@
 // src/lib/agent/graph.ts
-import { SystemMessage, AIMessage } from "@langchain/core/messages";
-import { StateGraph, END, START, interrupt, MemorySaver } from "@langchain/langgraph";
+import { SystemMessage, AIMessage, BaseMessage, ToolCall } from "@langchain/core/messages";
+import { StateGraph, END, START, interrupt } from "@langchain/langgraph";
+import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 import { ChatGroq } from "@langchain/groq";
 import { AgentState } from "./state";
 import { executeHybridSearch } from "../db/hybrid-search";
 import { nativeTools } from "./tools";
+import { pool } from "../db/prisma";
 
 // ✅ Module-level singleton — persists across HTTP requests so paused HITL
 // checkpoints are not lost between the initial request and the resume request.
-const memory = new MemorySaver();
+const checkpointer = new PostgresSaver(pool);
+let checkpointerInitialized = false;
 
 export async function createAgentGraph() {
+  if (!checkpointerInitialized) {
+    await checkpointer.setup();
+    checkpointerInitialized = true;
+  }
+
   // ==========================================
   // 1. PREPARING THE AI BRAIN WITH NATIVE TOOLS
   // ==========================================
@@ -59,8 +67,8 @@ export async function createAgentGraph() {
         `If the SQL mutation fails, simply inform the user of the exact database error. DO NOT refuse to execute SQL mutations.`
     );
 
-    const conversationHistory = state.messages.filter((m: any) => {
-      const type = typeof m._getType === "function" ? m._getType() : (m.role ?? "");
+    const conversationHistory = state.messages.filter((m: BaseMessage) => {
+      const type = typeof m._getType === "function" ? m._getType() : "";
       return type !== "system";
     });
 
@@ -75,7 +83,7 @@ export async function createAgentGraph() {
     const lastMsg = state.messages[state.messages.length - 1] as AIMessage;
     const toolCalls = lastMsg.tool_calls || [];
 
-    const sensitiveCall = toolCalls.find((tc: any) =>
+    const sensitiveCall = toolCalls.find((tc: ToolCall) =>
       tc.name.includes("execute_sql_mutation")
     );
 
@@ -112,18 +120,20 @@ export async function createAgentGraph() {
         const targetTool = nativeTools.find((t) => t.name === call.name);
         if (!targetTool) throw new Error(`Tool ${call.name} not available.`);
 
-        const output = await (targetTool as any).invoke(call.args);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const output = await (targetTool as { invoke: (args: Record<string, unknown>) => Promise<string> }).invoke(call.args);
 
         results.push({
           role: "tool",
           tool_call_id: call.id,
           content: typeof output === "string" ? output : JSON.stringify(output),
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
         results.push({
           role: "tool",
           tool_call_id: call.id,
-          content: `RUNTIME EXCEPTION: ${err.message}`,
+          content: `RUNTIME EXCEPTION: ${errMsg}`,
           isError: true,
         });
       }
@@ -164,5 +174,5 @@ export async function createAgentGraph() {
       return "reasoning";
     });
 
-  return workflow.compile({ checkpointer: memory });
+  return workflow.compile({ checkpointer });
 }

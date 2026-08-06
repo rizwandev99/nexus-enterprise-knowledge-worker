@@ -42,7 +42,7 @@ export async function getChatMessages(chatId: string) {
     orderBy: { createdAt: "asc" },
   });
   // Return in UIMessage format compatible with @ai-sdk/react v4 useChat hook
-  return messages.map((m: any) => ({
+  return messages.map((m: Awaited<ReturnType<typeof prisma.message.findMany>>[0]) => ({
     id: m.id,
     role: m.role as "user" | "assistant" | "system" | "tool",
     parts: [{ type: "text" as const, text: m.content }],

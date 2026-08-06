@@ -26,6 +26,34 @@ export const addDocumentTool = tool(
 export const executeSqlMutationTool = tool(
   async ({ query }: { query: string }) => {
     const sqlString = typeof query === "string" ? query : String(query);
+    const upperQuery = sqlString.trim().toUpperCase();
+
+    // 1. Only allow DML
+    if (
+      !upperQuery.startsWith("INSERT") &&
+      !upperQuery.startsWith("UPDATE") &&
+      !upperQuery.startsWith("DELETE")
+    ) {
+      throw new Error("Validation Error: Only INSERT, UPDATE, and DELETE statements are allowed.");
+    }
+
+    // 2. Block DDL
+    const ddlKeywords = ["DROP ", "CREATE ", "ALTER ", "TRUNCATE ", "GRANT ", "REVOKE "];
+    if (ddlKeywords.some((keyword) => upperQuery.includes(keyword))) {
+      throw new Error("Validation Error: DDL statements are not allowed.");
+    }
+
+    // 3. Block dangerous patterns
+    if (sqlString.includes("--")) {
+      throw new Error("Validation Error: SQL comments (--) are not allowed.");
+    }
+    
+    // Block multi-statement queries (semicolon followed by anything other than whitespace)
+    const statements = sqlString.split(";").filter(s => s.trim().length > 0);
+    if (statements.length > 1) {
+      throw new Error("Validation Error: Multiple statements are not allowed.");
+    }
+
     await pool.query(sqlString);
     return `Successfully executed mutation: ${query}`;
   },

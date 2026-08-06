@@ -20,8 +20,8 @@ export const maxDuration = 60;
 // This writes a text block containing the __APPROVAL_REQUEST__ marker that
 // page.tsx detects to show the orange approval modal.
 function writeApprovalNotice(
-  writer: any,
-  sensitiveCall: { name: string; args: any; id?: string }
+  writer: Parameters<Parameters<typeof createUIMessageStream>[0]['execute']>[0]['writer'],
+  sensitiveCall: { name: string; args: Record<string, unknown>; id?: string }
 ) {
   const approvalId = generateId();
 
@@ -50,12 +50,13 @@ export async function POST(req: Request) {
   }
 
   // ── Create our LangGraph agent workflow ───────────────────────────────────
-  let workflow: any;
+  let workflow: Awaited<ReturnType<typeof createAgentGraph>>;
   try {
     workflow = await createAgentGraph();
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error("Failed to create agent graph:", error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: errMsg }), { status: 500 });
   }
 
   // We use the chatId so MemorySaver isolates state per chat
@@ -66,7 +67,7 @@ export async function POST(req: Request) {
   const text: string =
     typeof lastMsg.content === "string"
       ? lastMsg.content
-      : lastMsg.parts?.find((p: any) => p.type === "text")?.text ?? "";
+      : lastMsg.parts?.find((p: { type: string; text?: string }) => p.type === "text")?.text ?? "";
 
   // ── Save user message and trigger auto-naming ────────────────────────────
   if (text !== "[HUMAN_APPROVAL_YES]" && text !== "[HUMAN_APPROVAL_NO]") {
@@ -87,7 +88,8 @@ export async function POST(req: Request) {
     execute: async ({ writer }) => {
       try {
         // ── Determine what to send to LangGraph ────────────────────────────
-        let graphInput: any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Command resume types don't narrow cleanly with graph input types
+        let graphInput: { messages: HumanMessage[] } | InstanceType<typeof Command>;
         if (text === "[HUMAN_APPROVAL_YES]") {
           graphInput = new Command({ resume: { approved: true } });
         } else if (text === "[HUMAN_APPROVAL_NO]") {
@@ -111,7 +113,8 @@ export async function POST(req: Request) {
         };
 
         try {
-          const eventStream = workflow.streamEvents(graphInput, config);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- streamEvents input type is polymorphic
+          const eventStream = await workflow.streamEvents(graphInput as any, config);
 
           for await (const event of eventStream) {
             // Stream text tokens from the LLM
@@ -176,7 +179,7 @@ export async function POST(req: Request) {
             }
           }
 
-        } catch (streamErr: any) {
+        } catch (streamErr: unknown) {
           // ── Handle LangGraph GraphInterrupt (thrown during streamEvents) ──
           // interrupt() in approvalNode throws GraphInterrupt which propagates
           // through streamEvents. We catch it here and convert it to an approval
@@ -215,7 +218,8 @@ export async function POST(req: Request) {
           }
         }
 
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
         console.error("[route] Fatal streaming error:", err);
         // Write the error as visible text so the user sees what happened
         const errId = generateId();
@@ -223,7 +227,7 @@ export async function POST(req: Request) {
         writer.write({
           type: "text-delta",
           id: errId,
-          delta: `⚠️ Error: ${err.message ?? "An unexpected error occurred."}`,
+          delta: `⚠️ Error: ${errMsg}`,
         });
         writer.write({ type: "text-end", id: errId });
       }
