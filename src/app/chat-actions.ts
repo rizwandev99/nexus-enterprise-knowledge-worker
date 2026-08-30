@@ -61,7 +61,7 @@ export async function saveMessage(chatId: string, role: string, content: string)
 export async function generateChatTitle(chatId: string, firstMessageContent: string) {
   try {
     const model = new ChatGroq({
-      model: "llama-3.3-70b-versatile",
+      model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
       temperature: 0,
     });
     
@@ -97,7 +97,7 @@ export async function getSystemMetrics() {
       sessionCount,
       messageCount,
       vectorEngine: "pgvector + tsvector RRF (k=60)",
-      llmModel: "Groq Llama-3.3-70B Versatile",
+      llmModel: "Groq (openai/gpt-oss-120b)",
       stateMachine: "LangGraph.js Directed Cyclic Graph",
     };
   } catch (error) {
@@ -108,7 +108,7 @@ export async function getSystemMetrics() {
       sessionCount: 0,
       messageCount: 0,
       vectorEngine: "pgvector + tsvector RRF",
-      llmModel: "Groq Llama-3.3-70B",
+      llmModel: "Groq",
       stateMachine: "LangGraph.js",
     };
   }
