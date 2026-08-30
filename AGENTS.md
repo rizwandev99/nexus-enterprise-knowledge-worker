@@ -101,7 +101,10 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 13.1: Enhanced `executeHybridSearch` with intelligent token extraction, stop word pruning, and ranked prefix `to_tsquery` matching (`title || ' ' || content`).
   - [x] 13.2: Upgraded fallback logic when vector embeddings are unconfigured to prevent false-negative 0-match results on natural language questions.
   - [x] 13.3: Updated `prisma/seed.ts` and confirmed enterprise governance document persistence.
-
+- [x] **Step 14: High-ROI Interview Navigation Streamlining**
+  - [x] 14.1: Streamlined the vertical rail: consolidated 3 duplicate new-chat/home buttons into one crisp `+` New Thread trigger.
+  - [x] 14.2: Removed placeholder/dummy buttons (removed static Settings toast button, replaced mock user avatar badge with direct GitHub source link).
+  - [x] 14.3: Refined rail to 5 high-signal, high-ROI architectural actions: New Chat (`+`), PostgreSQL Checkpointer History (`📂`), Live LangGraph State & OTel Traces (`⚡`), One-Click Demo KB Seeder (`📦`), and GitHub Repository (`🐙`).
 
 ### Remaining Steps
 - [ ] (Optional) Record video demo / Loom.
