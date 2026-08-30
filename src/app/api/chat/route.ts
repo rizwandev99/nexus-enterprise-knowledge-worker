@@ -64,10 +64,11 @@ export async function POST(req: Request) {
 
   // ── Extract the latest message text ──────────────────────────────────────
   const lastMsg = messages[messages.length - 1];
-  const text: string =
+  const rawText: string =
     typeof lastMsg.content === "string"
       ? lastMsg.content
       : lastMsg.parts?.find((p: { type: string; text?: string }) => p.type === "text")?.text ?? "";
+  const text = rawText.replace(/\0/g, "").replace(/\u0000/g, "");
 
   // ── Save user message and trigger auto-naming ────────────────────────────
   if (text !== "[HUMAN_APPROVAL_YES]" && text !== "[HUMAN_APPROVAL_NO]") {

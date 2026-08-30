@@ -52,8 +52,9 @@ export async function getChatMessages(chatId: string) {
 
 
 export async function saveMessage(chatId: string, role: string, content: string) {
+  const cleanContent = (content || "").replace(/\0/g, "").replace(/\u0000/g, "");
   return await prisma.message.create({
-    data: { chatId, role, content },
+    data: { chatId, role, content: cleanContent },
   });
 }
 

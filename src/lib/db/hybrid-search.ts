@@ -2,11 +2,15 @@ import { pool } from "./prisma";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
 export async function executeHybridSearch(query: string) {
+  // Strip attachment metadata blocks and cap search query length to 500 chars to avoid PostgreSQL plainto_tsquery stack overflow
+  const cleanQuery = (query || "").split("[ATTACHED DOCUMENT:")[0].trim().slice(0, 500);
+  if (!cleanQuery) return [];
+
   let vectorResults: Array<{ id: string; score: number }> = [];
 
   try {
     const embeddings = new OpenAIEmbeddings();
-    const queryEmbedding = await embeddings.embedQuery(query);
+    const queryEmbedding = await embeddings.embedQuery(cleanQuery);
     
     // Step 2: Vector search using the match_hybrid_chunks function
     const vectorRes = await pool.query(
@@ -24,7 +28,7 @@ export async function executeHybridSearch(query: string) {
      FROM documents 
      WHERE to_tsvector('english', content) @@ plainto_tsquery('english', $1)
      ORDER BY score DESC LIMIT 20`,
-    [query]
+    [cleanQuery]
   );
   
   // Step 4: Reciprocal Rank Fusion (RRF)

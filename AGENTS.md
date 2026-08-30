@@ -89,6 +89,8 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 11.3: Update `MessageBubble` to cleanly format user prompts with attached document metadata pills without UI clutter.
   - [x] 11.4: Enhance `addDocumentTool` in `tools.ts` to insert into both `documents` and `document_chunks` for full RAG & SQL vector search capability.
   - [x] 11.5: Update LangGraph `reasoningNode` system prompt to mandate `add_document` invocation whenever attached document text is present.
+  - [x] 11.6: Fix PostgreSQL `invalid byte sequence for encoding "UTF8": 0x00` error by sanitizing null bytes (`\0` / `\u0000`) across `/api/parse-document`, `/api/chat`, `addDocumentTool`, and `saveMessage`.
+  - [x] 11.7: Fix PostgreSQL `stack depth limit exceeded` error by isolating RAG search query extraction, capping query string lengths for `plainto_tsquery`, capping extracted document text at 50,000 chars, and preventing recursive `add_document` tool invocation loops in `reasoningNode`.
 
 ### Remaining Steps
 - [ ] (Optional) Record video demo / Loom.
