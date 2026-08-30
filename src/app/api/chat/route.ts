@@ -5,6 +5,7 @@
 // on the client understands natively.
 
 import { createAgentGraph } from "@/lib/agent/graph";
+import { estimateTokenCost, estimateTokenCount, TelemetryMetrics, TelemetryCitation } from "@/lib/agent/pricing";
 import { HumanMessage } from "@langchain/core/messages";
 import { Command, isGraphInterrupt } from "@langchain/langgraph";
 import {
@@ -23,12 +24,10 @@ function writeApprovalNotice(
   writer: Parameters<Parameters<typeof createUIMessageStream>[0]['execute']>[0]['writer'],
   sensitiveCall: { name: string; args: Record<string, unknown>; id?: string }
 ) {
-  const approvalId = generateId();
-
   // We skip emitting native `tool-approval-request` because it requires a preceding `tool-call` event.
   // We handle approval purely through text parsing in the client instead.
 
-  // 2. A visible text block so the modal detector in page.tsx can find it
+  // Visible text block so the modal detector in page.tsx can find it
   const noticeId = generateId();
   writer.write({ type: "text-start", id: noticeId });
   writer.write({
@@ -44,22 +43,23 @@ export async function POST(req: Request) {
   const jsonBody = await req.json();
   const { messages } = jsonBody;
   const chatId = url.searchParams.get("chatId") || jsonBody.chatId || jsonBody.body?.chatId;
+  const modelId = jsonBody.modelId || jsonBody.body?.modelId || url.searchParams.get("modelId") || "groq-llama-3.3-70b";
 
   if (!chatId) {
     return new Response(JSON.stringify({ error: "Missing chatId" }), { status: 400 });
   }
 
-  // ── Create our LangGraph agent workflow ───────────────────────────────────
+  // ── Create our LangGraph agent workflow with dynamic model routing ───────
   let workflow: Awaited<ReturnType<typeof createAgentGraph>>;
   try {
-    workflow = await createAgentGraph();
+    workflow = await createAgentGraph({ modelId });
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : String(error);
     console.error("Failed to create agent graph:", error);
     return new Response(JSON.stringify({ error: errMsg }), { status: 500 });
   }
 
-  // We use the chatId so MemorySaver isolates state per chat
+  // We use the chatId so MemorySaver / PostgresSaver isolates state per chat
   const config = { configurable: { thread_id: chatId }, version: "v2" as const };
 
   // ── Extract the latest message text ──────────────────────────────────────
@@ -84,9 +84,15 @@ export async function POST(req: Request) {
     }
   }
 
-  // ── Build the AI SDK v7 UIMessageStream ───────────────────────────────────
+  // ── Build the AI SDK v7 UIMessageStream with live telemetry streaming ─────
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
+      const startTime = performance.now();
+      let firstTokenTime: number | null = null;
+      let promptTokens = estimateTokenCount(text);
+      let assistantContent = "";
+      let retrievedCitations: TelemetryCitation[] = [];
+
       try {
         // ── Determine what to send to LangGraph ────────────────────────────
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Command resume types don't narrow cleanly with graph input types
@@ -104,7 +110,6 @@ export async function POST(req: Request) {
         // Tool-call-only responses (like HITL triggers) produce no text, so
         // we must not emit an empty text block that would confuse the detector.
         let textBlockId: string | null = null;
-        let assistantContent = "";
 
         const ensureTextBlockOpen = () => {
           if (!textBlockId) {
@@ -118,8 +123,12 @@ export async function POST(req: Request) {
           const eventStream = await workflow.streamEvents(graphInput as any, config);
 
           for await (const event of eventStream) {
-            // Stream text tokens from the LLM
+            // Stream text tokens from the LLM & record Time to First Token (TTFT)
             if (event.event === "on_chat_model_stream" && event.data?.chunk?.content) {
+              if (firstTokenTime === null) {
+                firstTokenTime = performance.now();
+              }
+
               const delta = typeof event.data.chunk.content === "string"
                 ? event.data.chunk.content
                 : String(event.data.chunk.content);
@@ -128,6 +137,17 @@ export async function POST(req: Request) {
                 ensureTextBlockOpen();
                 writer.write({ type: "text-delta", id: textBlockId!, delta });
               }
+
+              // Update token counts if model reports usage metadata in stream chunks
+              const chunkUsage = event.data?.chunk?.usage_metadata;
+              if (chunkUsage?.input_tokens) {
+                promptTokens = chunkUsage.input_tokens;
+              }
+            }
+
+            // Capture structured citations from ragNode
+            if (event.event === "on_chain_end" && event.name === "rag" && event.data?.output?.citations) {
+              retrievedCitations = event.data.output.citations;
             }
 
             // Signal tool start to the frontend
@@ -156,6 +176,44 @@ export async function POST(req: Request) {
             writer.write({ type: "text-end", id: textBlockId });
           }
 
+          const endTime = performance.now();
+          const ttftMs = firstTokenTime !== null ? Math.round(firstTokenTime - startTime) : Math.round(endTime - startTime);
+          const totalDurationMs = Math.round(endTime - startTime);
+          const completionTokens = estimateTokenCount(assistantContent);
+          const costEstimate = estimateTokenCost(modelId, promptTokens, completionTokens);
+
+          // If citations were not captured from event stream, fetch from graph state
+          const finalState = await workflow.getState(config);
+          if (retrievedCitations.length === 0 && finalState.values?.citations?.length > 0) {
+            retrievedCitations = finalState.values.citations;
+          }
+
+          // Stream custom telemetry event with latency, token count, estimated cost, and citations
+          const telemetryPayload: TelemetryMetrics = {
+            modelId,
+            ttftMs,
+            totalDurationMs,
+            tokens: {
+              prompt: promptTokens,
+              completion: completionTokens,
+              total: promptTokens + completionTokens,
+            },
+            costUsd: costEstimate.totalCost,
+            citations: retrievedCitations,
+            timestamp: new Date().toISOString(),
+          };
+
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            writer.write({
+              type: "custom",
+              name: "telemetry",
+              value: telemetryPayload,
+            } as any);
+          } catch (telemetryErr) {
+            console.warn("[route] Telemetry event stream write skipped:", telemetryErr);
+          }
+
           if (assistantContent.trim()) {
             try {
               await saveMessage(chatId, "assistant", assistantContent);
@@ -165,9 +223,6 @@ export async function POST(req: Request) {
           }
 
           // ── Check if LangGraph paused at an interrupt (HITL) ─────────────
-          // After the stream ends normally (no exception), check if the graph
-          // is waiting at an interrupt node.
-          const finalState = await workflow.getState(config);
           console.log("[route] finalState.next:", finalState.next);
 
           if (finalState.next.length > 0) {

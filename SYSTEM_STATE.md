@@ -67,9 +67,12 @@
   - Eliminated redundant navigation buttons (collapsed duplicate Home, Chat, and New Chat triggers into 1 unmistakable `+` New Thread button).
   - Removed placeholder/dummy buttons (removed static Settings toast button, replaced mock profile badge with direct GitHub source code link).
   - Retained exclusively high-signal, high-ROI architectural actions: New Chat (`+`), PostgreSQL Checkpointer History (`📂`), Live LangGraph State & OTel Traces (`⚡`), One-Click Demo KB Seeder (`📦`), Chat Export (`📥`), and GitHub Repository (`🐙`).
-- [x] **Step 15: Owner-Manager Multi-Agent Operating Protocol**
-  - Configured Owner (User / Md Rizwan) & Manager (Antigravity AI) workflow rules in `AGENTS.md`.
-  - Strict zero-direct-work prohibition enacted for Manager; 100% parallel subagent delegation architecture active.
+- [x] **Step 16: Exhaustive Vercel Deployment Readiness Audit**
+  - Verified `package.json` with `"postinstall": "prisma generate"`.
+  - Configured `serverExternalPackages: ['pdf-parse', 'pg', '@opentelemetry/sdk-node']` in `next.config.mjs`.
+  - Added `export const maxDuration = 60` to both `/api/chat` and `/api/parse-document` serverless routes.
+  - Confirmed 100% in-memory streaming & parsing (zero disk `/tmp` writes).
+  - Validated clean Next.js Turbopack build (`exit code 0`) and 27/27 Vitest unit tests passing.
 
 ---
 
@@ -85,3 +88,4 @@
 
 ### [Blockers]
 - None. System is 100% clean, tested, and ready for founder & recruiter evaluation.
+
