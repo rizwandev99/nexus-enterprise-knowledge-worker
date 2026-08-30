@@ -22,12 +22,16 @@ export default function Sidebar({
   isOpen = true,
   onClose,
   refreshTrigger = 0,
+  onOpenTelemetry,
+  onExportChat,
 }: {
   activeChatId: string | null;
   onSelectChat: (id: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
   refreshTrigger?: number;
+  onOpenTelemetry?: () => void;
+  onExportChat?: () => void;
 }) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -194,18 +198,18 @@ export default function Sidebar({
           {/* Bottom Settings & Graph Nodes Stack */}
           <div className="flex flex-col items-center gap-4">
             <button
-              onClick={() => showToast("LangGraph cyclic agent machine active", "info")}
-              className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-              title="LangGraph Graph Inspector"
+              onClick={() => onOpenTelemetry?.()}
+              className="p-2.5 rounded-xl text-teal-400 hover:text-white hover:bg-teal-500/20 border border-teal-500/30 transition-all shadow-[0_0_12px_rgba(20,184,166,0.2)]"
+              title="Open Live Agent Telemetry & Graph State Inspector"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </button>
             <button
-              onClick={() => showToast("Nexus Enterprise Knowledge Worker v1.0", "info")}
+              onClick={() => showToast("Nexus Enterprise Knowledge Worker v1.0 • Connected to PostgreSQL pgvector", "info")}
               className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-              title="Settings"
+              title="System Information"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -229,15 +233,30 @@ export default function Sidebar({
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 font-mono">
                 Chat Sessions
               </span>
-              {sessions.length > 0 && (
-                <button
-                  onClick={handleDeleteAll}
-                  className="p-1 rounded text-gray-500 hover:text-red-400 hover:bg-white/5 transition-colors text-xs"
-                  title="Delete All"
-                >
-                  Clear all
-                </button>
-              )}
+              <div className="flex items-center gap-1">
+                {activeChatId && onExportChat && (
+                  <button
+                    onClick={onExportChat}
+                    className="p-1 rounded text-gray-400 hover:text-teal-300 hover:bg-white/5 transition-colors text-xs"
+                    title="Export Current Chat to Markdown"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                  </button>
+                )}
+                {sessions.length > 0 && (
+                  <button
+                    onClick={handleDeleteAll}
+                    className="p-1 rounded text-gray-500 hover:text-red-400 hover:bg-white/5 transition-colors text-xs"
+                    title="Delete All"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Session items */}

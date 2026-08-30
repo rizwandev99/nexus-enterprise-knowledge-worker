@@ -4,18 +4,21 @@ import { prisma, pool } from "../db/prisma";
 
 export const addDocumentTool = tool(
   async ({ title, content }: { title: string; content: string }) => {
+    const cleanTitle = (title || "").replace(/\0/g, "").replace(/\u0000/g, "");
+    const cleanContent = (content || "").replace(/\0/g, "").replace(/\u0000/g, "");
+
     const doc = await prisma.document.create({
       data: {
-        title,
-        content,
+        title: cleanTitle,
+        content: cleanContent,
       },
     });
 
     try {
       // Chunk content into ~1000 char blocks for chunk search indexing
       const chunkSize = 1000;
-      for (let i = 0; i < content.length; i += chunkSize) {
-        const chunkText = content.slice(i, i + chunkSize);
+      for (let i = 0; i < cleanContent.length; i += chunkSize) {
+        const chunkText = cleanContent.slice(i, i + chunkSize);
         await pool.query(
           `INSERT INTO document_chunks ("id", "documentId", "content", "createdAt") VALUES (gen_random_uuid(), $1, $2, NOW())`,
           [doc.id, chunkText]

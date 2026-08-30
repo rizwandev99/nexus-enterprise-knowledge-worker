@@ -34,7 +34,9 @@ export async function createAgentGraph() {
   // STATION 1: The Researcher (ragNode)
   const ragNode = async (state: typeof AgentState.State) => {
     const lastMessage = state.messages[state.messages.length - 1];
-    const query = lastMessage.content.toString();
+    const rawContent = lastMessage?.content?.toString() || "";
+    // Clean user query by stripping attached document block so search engine doesn't receive giant text blobs
+    const query = rawContent.split("[ATTACHED DOCUMENT:")[0].trim() || rawContent.slice(0, 300);
 
     const searchResults = await executeHybridSearch(query);
 
@@ -61,7 +63,7 @@ export async function createAgentGraph() {
       `You are a helpful enterprise knowledge assistant.\n\n` +
         `Retrieved context from internal documents:\n${contextStr}\n\n` +
         `When using retrieved facts, insert exact inline citation footnotes like [Doc-1].\n\n` +
-        `DOCUMENT INGESTION: If a message contains attached document content (e.g., [ATTACHED DOCUMENT: ...]), you MUST call the 'add_document' tool with the document title and the full extracted text content to ingest it into PostgreSQL. Then, summarize or answer the query directly using that text.\n\n` +
+        `DOCUMENT INGESTION RULE: If a message contains attached document content (e.g., [ATTACHED DOCUMENT: ...]) AND the 'add_document' tool has NOT been executed yet in the conversation history for this document, you MUST call 'add_document' ONCE with the document title and content to ingest it into PostgreSQL. If 'add_document' was ALREADY executed in this conversation history, DO NOT call 'add_document' again — simply summarize or answer the query directly using that text.\n\n` +
         `DATABASE SCHEMA: You have access to a PostgreSQL database. The main table is 'documents' with columns: id (UUID), title (Text), content (Text).\n` +
         `When a user asks to view, search, delete, update, or modify a document, you MUST formulate the correct SQL query using the 'documents' table.\n` +
         `Use execute_sql_query for SELECT statements (e.g., viewing all saved docs). Use execute_sql_mutation for INSERT, UPDATE, or DELETE.\n\n` +

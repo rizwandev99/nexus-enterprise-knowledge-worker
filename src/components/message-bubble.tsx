@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { UIMessage } from "@ai-sdk/react";
 
 interface MessageBubbleProps {
@@ -24,6 +25,7 @@ interface ToolInvocationPart {
 type MessagePart = TextPart | ToolInvocationPart;
 
 export default function MessageBubble({ message, isUser }: MessageBubbleProps) {
+  const [copied, setCopied] = useState(false);
   const parts = message.parts as MessagePart[] | undefined;
 
   const partsText = Array.isArray(parts)
@@ -46,12 +48,19 @@ export default function MessageBubble({ message, isUser }: MessageBubbleProps) {
     (Array.isArray(parts) && parts.some((p) => p.type === "tool-invocation"));
   if (!hasContent) return null;
 
-  // Helper to format user messages with attached documents cleanly
-  const renderTextContent = (text: string) => {
-    if (isUser && text.includes("--- ATTACHED DOCUMENT CONTENT")) {
-      const match = text.match(/\[ATTACHED DOCUMENT:\s*([^\]]+)\]/);
+  const handleCopy = (textToCopy: string) => {
+    navigator.clipboard.writeText(textToCopy);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Helper to format citations [Doc-1], [Doc-2] and text content
+  const renderFormattedText = (raw: string) => {
+    // Check for attached document header in user message
+    if (isUser && raw.includes("--- ATTACHED DOCUMENT CONTENT")) {
+      const match = raw.match(/\[ATTACHED DOCUMENT:\s*([^\]]+)\]/);
       const docName = match ? match[1] : "Document";
-      const userPrompt = text.split("\n\n[ATTACHED DOCUMENT:")[0].trim();
+      const userPrompt = raw.split("\n\n[ATTACHED DOCUMENT:")[0].trim();
 
       return (
         <div className="space-y-2">
@@ -65,15 +74,37 @@ export default function MessageBubble({ message, isUser }: MessageBubbleProps) {
         </div>
       );
     }
-    return <span>{text}</span>;
+
+    // Highlight [Doc-X] citations as high-tech pills
+    const citationRegex = /(\[Doc-\d+\])/g;
+    const partsWithCitations = raw.split(citationRegex);
+
+    return (
+      <span>
+        {partsWithCitations.map((token, i) => {
+          if (citationRegex.test(token)) {
+            return (
+              <span
+                key={i}
+                className="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded text-[11px] font-mono font-semibold bg-teal-500/20 text-teal-300 border border-teal-500/40 select-all"
+                title="Verified Hybrid RAG Footnote Citation"
+              >
+                {token}
+              </span>
+            );
+          }
+          return <span key={i}>{token}</span>;
+        })}
+      </span>
+    );
   };
 
   return (
-    <div className={`flex msg-animate ${isUser ? "justify-end" : "justify-start"}`}>
+    <div className={`group flex msg-animate relative ${isUser ? "justify-end" : "justify-start"}`}>
       {/* Avatar for AI */}
       {!isUser && (
         <div
-          className="shrink-0 w-7 h-7 rounded-lg mr-3 flex items-center justify-center text-xs font-bold mt-1 self-start"
+          className="shrink-0 w-7 h-7 rounded-lg mr-3 flex items-center justify-center text-xs font-bold mt-1 self-start select-none"
           style={{
             background: "linear-gradient(135deg, #6366f1, #a78bfa)",
             color: "#fff",
@@ -86,7 +117,7 @@ export default function MessageBubble({ message, isUser }: MessageBubbleProps) {
       )}
 
       <div
-        className={`max-w-[78%] rounded-2xl ${isUser ? "rounded-tr-sm" : "rounded-tl-sm"}`}
+        className={`relative max-w-[80%] rounded-2xl transition-all ${isUser ? "rounded-tr-sm" : "rounded-tl-sm"}`}
         style={
           isUser
             ? {
@@ -104,22 +135,45 @@ export default function MessageBubble({ message, isUser }: MessageBubbleProps) {
               }
         }
       >
-        {/* Role badge */}
-        <div
-          className="text-[10px] font-semibold uppercase tracking-widest mb-2 font-mono"
-          style={{
-            color: isUser ? "rgba(255,255,255,0.55)" : "var(--color-brand-hover)",
-            letterSpacing: "0.12em",
-          }}
-        >
-          {isUser ? "You" : "Nexus AI"}
+        {/* Header row with role badge + Copy Button */}
+        <div className="flex items-center justify-between gap-4 mb-2">
+          <div
+            className="text-[10px] font-semibold uppercase tracking-widest font-mono"
+            style={{
+              color: isUser ? "rgba(255,255,255,0.6)" : "var(--color-brand-hover)",
+              letterSpacing: "0.12em",
+            }}
+          >
+            {isUser ? "You" : "Nexus AI"}
+          </div>
+
+          <button
+            onClick={() => handleCopy(partsText)}
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white flex items-center gap-1 text-[11px]"
+            title="Copy message"
+            aria-label="Copy message"
+          >
+            {copied ? (
+              <>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-teal-400">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span className="text-teal-400 font-mono">Copied</span>
+              </>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            )}
+          </button>
         </div>
 
         {/* Content */}
-        <div className={`text-sm leading-relaxed whitespace-pre-wrap prose-dark`}>
+        <div className="text-sm leading-relaxed whitespace-pre-wrap prose-dark">
           {Array.isArray(parts) && parts.length > 0 ? (
             parts.map((part, index) => {
-              if (part.type === "text") return <div key={index}>{renderTextContent(part.text)}</div>;
+              if (part.type === "text") return <div key={index}>{renderFormattedText(part.text)}</div>;
 
               if (part.type === "tool-invocation") {
                 const isDone = part.toolInvocation.state === "result";
@@ -148,7 +202,7 @@ export default function MessageBubble({ message, isUser }: MessageBubbleProps) {
                       className="font-mono text-xs"
                       style={{ color: isDone ? "var(--color-success)" : "var(--color-text-secondary)" }}
                     >
-                      {isDone ? "Completed" : "Running"}{" "}
+                      {isDone ? "Executed Tool" : "Invoking Tool"}:{" "}
                       <span
                         style={{
                           color: isDone ? "var(--color-success)" : "var(--color-brand-hover)",
@@ -165,7 +219,7 @@ export default function MessageBubble({ message, isUser }: MessageBubbleProps) {
               return null;
             })
           ) : (
-            renderTextContent(partsText)
+            renderFormattedText(partsText)
           )}
         </div>
       </div>
@@ -173,7 +227,7 @@ export default function MessageBubble({ message, isUser }: MessageBubbleProps) {
       {/* Avatar for User */}
       {isUser && (
         <div
-          className="shrink-0 w-7 h-7 rounded-lg ml-3 flex items-center justify-center text-xs font-bold mt-1 self-start"
+          className="shrink-0 w-7 h-7 rounded-lg ml-3 flex items-center justify-center text-xs font-bold mt-1 self-start select-none"
           style={{
             background: "var(--color-surface-3)",
             border: "1px solid var(--color-border-strong)",
@@ -187,3 +241,4 @@ export default function MessageBubble({ message, isUser }: MessageBubbleProps) {
     </div>
   );
 }
+

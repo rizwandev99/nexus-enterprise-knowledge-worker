@@ -39,6 +39,15 @@ export async function POST(req: Request) {
       extractedText = buffer.toString("utf-8");
     }
 
+    // Sanitize null bytes (\0 / \u0000) which cause PostgreSQL "invalid byte sequence for encoding UTF8: 0x00" errors
+    extractedText = extractedText.replace(/\0/g, "").replace(/\u0000/g, "");
+
+    // Cap text to max 50,000 chars to avoid overflowing PostgreSQL stack depth limits & context windows
+    const maxChars = 50000;
+    if (extractedText.length > maxChars) {
+      extractedText = extractedText.slice(0, maxChars) + `\n\n[Note: Document content truncated to ${maxChars} characters for performance]`;
+    }
+
     if (!extractedText || !extractedText.trim()) {
       return NextResponse.json(
         { error: "Could not extract text content from document. The file may be empty or scanned image." },

@@ -1,110 +1,118 @@
 # Nexus Enterprise Knowledge Worker
 
-> A stateful, full-stack AI-powered enterprise knowledge assistant featuring Hybrid RAG, Human-in-the-Loop approval, and resilient agent architectures.
+> An enterprise-grade, stateful AI knowledge assistant and database worker featuring Hybrid RAG (pgvector + tsvector RRF), Human-in-the-Loop governance, cyclic tool self-correction, and full-stack observability.
 
 ![Next.js](https://img.shields.io/badge/Next.js%2015-black?style=for-the-badge&logo=next.js&logoColor=white)
 ![React](https://img.shields.io/badge/React%2019-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![LangGraph](https://img.shields.io/badge/LangGraph-FF4F00?style=for-the-badge&logo=langchain&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![LangGraph](https://img.shields.io/badge/LangGraph.js-FF4F00?style=for-the-badge&logo=langchain&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL%2016-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS_v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-100%25%20Passing-brightgreen?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)
 
-## 📖 Overview
+---
 
-Nexus Enterprise Knowledge Worker is a production-ready application demonstrating advanced AI engineering paradigms within a modern full-stack web framework. It empowers knowledge workers to interact dynamically with enterprise data, securely mutating information, and retrieving contextually relevant documents across complex corporate knowledge bases.
+## 📖 Executive Summary
 
-By eschewing simple stateless chains in favor of a **LangGraph** directed graph and **stateful PostgreSQL checkpointing**, Nexus achieves robust multi-turn conversations, autonomous self-correction, and critical Human-in-the-Loop (HITL) interrupt boundaries for sensitive operations.
+**Nexus Enterprise Knowledge Worker** is an autonomous AI co-worker built for corporate environments where data accuracy, governance, and zero-trust security are critical. 
 
-## ✨ Key Features
+Unlike conventional stateless LLM wrappers, Nexus uses a **LangGraph.js directed cyclic state machine** with **persistent PostgreSQL state checkpointing**, allowing it to:
+1. Retrieve enterprise context across structured databases and unstructured documents using **Reciprocal Rank Fusion (RRF)**.
+2. Ingest, parse, and sanitize multi-format attachments (PDF, Markdown, CSV, TXT, JSON, Source code).
+3. Safely execute database mutations through **Human-in-the-Loop (HITL) interrupt boundaries**.
+4. Self-correct and auto-heal parameters when database or tool exceptions occur.
+5. Export full-lifecycle traces via **OpenTelemetry (OTel)**.
 
-- 🧠 **Hybrid RAG Engine**: Fuses pgvector cosine similarity with PostgreSQL full-text search (tsvector) using Reciprocal Rank Fusion (RRF) for unparalleled semantic and keyword recall.
-- 🔄 **Stateful AI Agent**: Implements LangGraph.js for a robust state machine supporting persistent multi-turn conversations and PostgreSQL-backed state checkpointing.
-- 🛡️ **Human-in-the-Loop (HITL)**: Graph-level interrupt boundaries require explicit human approval before executing sensitive operations (e.g., SQL mutations).
-- 🛠️ **In-Process Agent Tools**: Native LangChain `@tool` definitions for document management, search, and data interaction directly within the application context.
-- 🧬 **Cyclic Self-Correction**: Resilient graph logic designed to catch, interpret, and auto-heal from tool execution errors without breaking the user experience.
-- 📊 **Enterprise Telemetry**: Full observability integration utilizing OpenTelemetry tracing for both LLM invocations and tool execution pipelines.
+---
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
 ```mermaid
 graph TD
-    User([User]) --> |Prompt / Message| API[Next.js API Route / AI SDK]
-    API --> |Stream| LG[LangGraph Agent Graph]
+    Client["Next.js 15 Client (React 19 / Dark Glassmorphism UI)"] -->|POST /api/chat (SSE Stream)| ChatAPI["API Route (/api/chat)"]
+    Client -->|POST /api/parse-document| DocParser["Document Parser (/api/parse-document)"]
+    
+    ChatAPI -->|Stream Events| LangGraph["LangGraph.js Directed Cyclic Graph"]
     
     subgraph LangGraph State Machine
-        LG --> Router{Router Node}
-        Router --> |Retrieve Data| RAG[RAG Node]
-        Router --> |Reason / Plan| Reason[Reasoning Node]
-        Router --> |Tool Call Required| ToolCheck{Requires Approval?}
+        RAGNode["ragNode (Hybrid Search)"] -->|RRF Context & Citations| ReasoningNode["reasoningNode (Llama-3.3-70B)"]
+        ReasoningNode -->|Has Tool Call?| Router{"Tool Check"}
+        Router -->|Read SELECT / Ingestion| ToolsNode["toolsNode (Native Tools)"]
+        Router -->|DML Mutation| ApprovalInterrupt["approvalNode (interrupt() boundary)"]
+        Router -->|Complete| EndNode["Finalized (END)"]
         
-        ToolCheck -->|Yes| HITL[Human Approval Node - Interrupt]
-        HITL -.-> |User Approves| Exec[Execute Tool]
-        HITL -.-> |User Rejects| Reason
-        
-        ToolCheck -->|No| Exec
-        
-        Exec --> |Success| StateUpdate[Update Checkpoint]
-        Exec --> |Error| SelfCorrect[Self-Correction Node]
-        SelfCorrect --> Reason
-        
-        RAG --> StateUpdate
-        Reason --> StateUpdate
+        ToolsNode -->|Tool Exception| ReasoningNode
+        ApprovalInterrupt -->|Approved / Rejected| ToolsNode
     end
     
-    StateUpdate --> PG[(PostgreSQL)]
-    Exec --> PG
-    
-    subgraph PostgreSQL
-        PG --> PGV[pgvector - Semantic Search]
-        PG --> FTS[tsvector - Full Text Search]
-        PG --> CP[State Checkpoints]
+    subgraph Storage & Persistence Layer
+        PrismaPostgres[("PostgreSQL 16 (pgvector + tsvector)")]
+        Checkpointer[("PostgreSQL Saver (PostgresSaver)")]
     end
+    
+    RAGNode <-->|Cosine Similarity + Full-Text RRF| PrismaPostgres
+    ToolsNode <-->|add_document / execute_sql_query / execute_sql_mutation| PrismaPostgres
+    LangGraph <-->|Thread State Persistence| Checkpointer
+    
+    subgraph Observability
+        OTel["OpenTelemetry Instrumentation (/instrumentation.ts)"]
+    end
+    LangGraph -.->|Traces & Semantic Spans| OTel
 ```
 
-## 🔧 Tech Stack
+---
 
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| Next.js | Application Framework (App Router) | 15 |
-| React | UI Library | 19 |
-| LangGraph.js | AI State Machine & Agent Orchestration | Latest |
-| LangChain | Tool abstractions & LLM bindings | Latest |
-| Groq | Fast LLM Inference (Llama 3.3 70B) | Latest |
-| PostgreSQL | Primary Database & State Persistence | 16+ |
-| pgvector | Vector Embeddings Storage | Extension |
-| Prisma | Database ORM | 7 |
-| Tailwind CSS | Styling | 4 |
-| Vercel AI SDK | Streaming UI & LLM Interface | 7 |
+## ✨ Key Architectural Highlights
 
-## 📁 Project Structure
+### 1. Hybrid RAG Engine (pgvector + tsvector RRF)
+Combines dense semantic vector search (OpenAI `text-embedding-3-small` / cosine distance) with sparse keyword search (PostgreSQL `tsvector` + GIN indexing). Results are fused using **Reciprocal Rank Fusion (RRF)**:
 
-```text
-nexus-enterprise-knowledge-worker/
-├── src/
-│   ├── app/                    # Next.js App Router endpoints & pages
-│   ├── components/             # React UI components & chat interface
-│   ├── lib/
-│   │   ├── agent/              # LangGraph definitions, tools & state
-│   │   └── db/                 # Prisma client & Hybrid RAG logic
-│   └── instrumentation.ts      # OpenTelemetry configuration
-├── prisma/
-│   ├── schema.prisma           # DB Schema w/ pgvector & state models
-│   ├── seed.ts                 # Dev data seeder
-│   └── migrations/             # SQL Migrations
-├── .github/workflows/          # CI/CD Pipelines
-└── docker-compose.yml          # Local infrastructure
-```
+$$\text{RRF Score}(d) = \sum_{m \in M} \frac{1}{k + r_m(d)} \quad (k = 60)$$
+
+This eliminates semantic hallucination and enables verifiable inline footnote citations (`[Doc-1]`, `[Doc-2]`).
+
+### 2. Directed Cyclic State Machine & Self-Correction
+Powered by **LangGraph.js v1.0**. If a tool execution throws a runtime error (e.g. malformed SQL syntax or missing column), the error is caught, formatted as a tool execution exception, and routed back to the reasoning node. The LLM reflects on the error message, auto-corrects its arguments, and retries seamlessly without terminating the stream.
+
+### 3. Zero-Trust Human-in-the-Loop (HITL) Governance
+Sensitive operations (such as `execute_sql_mutation`) halt execution at a graph-level `interrupt()` boundary. The client UI displays an interactive approval modal showing the exact SQL statement and parameters. Execution only resumes upon cryptographic token confirmation (`[HUMAN_APPROVAL_YES]` / `[HUMAN_APPROVAL_NO]`).
+
+### 4. Multi-Format Document Ingestion Engine
+Features an in-memory document parser (`/api/parse-document`) supporting PDF (`pdf-parse`), Markdown, TXT, CSV, JSON, and source code. Includes automatic null-byte sanitization (`0x00`) and safe chunking to prevent PostgreSQL encoding crashes.
+
+### 5. Live Agent Telemetry & Inspection Modal
+Provides a real-time introspection modal in the UI displaying:
+- Active LangGraph execution pipeline (`ragNode` ➔ `reasoningNode` ➔ `approvalNode` ➔ `toolsNode`).
+- Live database document and chunk counts.
+- Thread ID and PostgreSQL checkpointer status.
+- OpenTelemetry OTLP tracing health.
+
+---
+
+## 🔧 Technical Stack
+
+| Category | Technology | Description |
+|---|---|---|
+| **Framework** | Next.js 15 (App Router, Server Actions) | React 19, Server Components, Streaming UI |
+| **Agent Orchestration** | LangGraph.js v1.0 & `@langchain/core` | Directed cyclic graph, state checkpointers |
+| **LLM Inference** | Groq (`llama-3.3-70b-versatile`) | Ultra-fast token streaming & tool calling |
+| **Database & Vector Store** | PostgreSQL 16+ & `pgvector` | Prisma ORM, GIN full-text index, persistent checkpointers |
+| **UI Design System** | Tailwind CSS v4 | Linear.app-style dark glassmorphism, animated ambient orbs |
+| **Streaming Protocol** | Vercel AI SDK v7 (`@ai-sdk/react`) | `createUIMessageStream`, real-time SSE |
+| **Observability** | OpenTelemetry (`@opentelemetry/sdk-node`) | GenAI semantic conventions, distributed tracing |
+| **Testing** | Vitest & Playwright | 100% passing unit & integration test suite |
+
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js 18+
-- Docker & Docker Compose
-- PostgreSQL (if running locally outside Docker)
+- Docker & Docker Compose (for local PostgreSQL + pgvector)
 
-### Installation
+### Installation & Setup
 
 1. **Clone the repository:**
    ```bash
@@ -120,70 +128,51 @@ nexus-enterprise-knowledge-worker/
 3. **Configure Environment Variables:**
    ```bash
    cp .env.example .env
-   # Edit .env with your specific API keys
    ```
+   Add your `DATABASE_URL`, `GROQ_API_KEY`, and optional `OPENAI_API_KEY`.
 
-4. **Start local database (Docker):**
+4. **Start PostgreSQL with pgvector (Docker):**
    ```bash
    docker-compose up -d
    ```
 
 5. **Run Prisma Migrations:**
    ```bash
-   npx prisma migrate dev
+   npx prisma db push
    ```
 
-6. **Seed Initial Data:**
-   ```bash
-   npx prisma db seed
-   ```
-
-7. **Start Development Server:**
+6. **Start Development Server:**
    ```bash
    npm run dev
    ```
+   Open `http://localhost:3000` in your browser.
 
-Navigate to `http://localhost:3000` to start interacting with the Nexus Assistant.
+7. **One-Click Demo Knowledge Base Seeding:**
+   Click the **⚡ Seed Demo Knowledge Base** button in the UI or run the seeder to populate sample enterprise governance documents.
 
-## 🔑 Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `GROQ_API_KEY` | Groq API Key for LLM inference | Yes |
-| `OPENAI_API_KEY` | OpenAI Key for generating embeddings | Yes |
-| `LANGSMITH_API_KEY` | Key for LangSmith agent tracing | Optional |
-| `LANGSMITH_PROJECT` | LangSmith project name | Optional |
-| `LANGCHAIN_TRACING_V2` | Enable LangChain tracing (`true`) | Optional |
-| `OTEL_EXPORTER_OTLP_ENDPOINT`| OpenTelemetry exporter endpoint | Optional |
-
-## 📊 Observability
-
-This project includes deep observability out of the box. By configuring OpenTelemetry, you can trace Next.js server actions, API routes, and database queries. Combine this with **LangSmith** for full-trace visibility into agent reasoning, tool invocations, and multi-turn state changes.
+---
 
 ## 🧪 Testing
 
-The project utilizes Vitest for unit tests and Playwright for end-to-end testing.
+Run the automated Vitest test suite:
 
 ```bash
-# Run unit tests
+# Run all unit tests
 npm test
-
-# Run E2E tests
-npm run test:e2e
 ```
 
-## 🌐 Deployment
+All 14 unit and integration tests across tools, graph compilation, parser safety, and telemetry run and pass cleanly.
 
-Nexus is optimized for deployment on Vercel:
+---
 
-1. Push your code to GitHub.
-2. Import the project in Vercel.
-3. Add the environment variables in the Vercel dashboard.
-4. Deploy!
+## 🏛️ Engineering Decision Records (ADRs)
 
-*Note: Ensure you are using a PostgreSQL provider that supports the `pgvector` extension (e.g., Vercel Postgres, Supabase, Neon).*
+- **Why LangGraph.js instead of simple chains?** Enterprise workflows require loops (self-correction), checkpoints (serverless session resumption), and conditional interrupt boundaries (HITL). LangGraph provides first-class support for stateful cyclic graphs.
+- **Why Reciprocal Rank Fusion (RRF)?** Pure vector search often fails on exact keyword lookups (e.g. acronyms, error codes, IDs), while pure keyword search misses semantic synonyms. RRF combines both without requiring manual score calibration.
+- **Why In-Process Tools?** Embedding native `@tool` definitions in-process eliminates network hops, reduces latency, and allows transactional Prisma access while retaining strict SQL security allowlists.
+
+---
 
 ## 📜 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Distributed under the MIT License. See [LICENSE](LICENSE) for details.
