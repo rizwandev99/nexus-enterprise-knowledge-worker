@@ -101,6 +101,7 @@ src/
 │   ├── MessageBubble.tsx  # Linear-style message cards, inline citation tags, markdown formatting
 │   ├── Sidebar.tsx        # Vertical icon navigation rail, session history drawer, new chat trigger
 │   ├── ApprovalModal.tsx  # Human-in-the-loop action approval modal for SQL mutations
+│   ├── TelemetryModal.tsx # Live LangGraph execution traces & state machine inspector
 │   └── Toast.tsx          # Non-intrusive floating feedback alerts
 └── lib/
     ├── agent/

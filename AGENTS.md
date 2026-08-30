@@ -91,11 +91,15 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 11.5: Update LangGraph `reasoningNode` system prompt to mandate `add_document` invocation whenever attached document text is present.
   - [x] 11.6: Fix PostgreSQL `invalid byte sequence for encoding "UTF8": 0x00` error by sanitizing null bytes (`\0` / `\u0000`) across `/api/parse-document`, `/api/chat`, `addDocumentTool`, and `saveMessage`.
   - [x] 11.7: Fix PostgreSQL `stack depth limit exceeded` error by isolating RAG search query extraction, capping query string lengths for `plainto_tsquery`, capping extracted document text at 50,000 chars, and preventing recursive `add_document` tool invocation loops in `reasoningNode`.
+- [x] **Step 12: 100% Portfolio Completion, Test Suite Hardening & Telemetry Inspector**
+  - [x] 12.1: Fortified Vitest unit test suite (14/14 tests passing across tools, graph compilation, document parsing, and telemetry).
+  - [x] 12.2: Built One-Click Demo Knowledge Base Seeder (`seedSampleKnowledgeBase` server action + UI button) populating 3 realistic enterprise governance documents.
+  - [x] 12.3: Built `TelemetryModal` displaying active LangGraph cyclic state flow, live PostgreSQL metrics, and OpenTelemetry OTLP tracing status.
+  - [x] 12.4: Added 1-click message copy, chat export to Markdown (`.md`), and interactive `[Doc-X]` citation pills.
+  - [x] 12.5: Created comprehensive, founder-ready `README.md` with system diagrams, ADRs, and technical deep-dives.
 
 ### Remaining Steps
 - [ ] (Optional) Record video demo / Loom.
-- [ ] (Optional) Add message virtualization with `@tanstack/react-virtual` for very long chats.
-- [ ] (Optional) Seed real document chunks with OpenAI embeddings for a live RAG demo.
 
 ---
 

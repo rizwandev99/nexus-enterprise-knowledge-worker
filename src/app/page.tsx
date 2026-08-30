@@ -2,11 +2,12 @@
 
 import { useChat, type UIMessage } from "@ai-sdk/react";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getChatMessages, createChatSession } from "./chat-actions";
+import { getChatMessages, createChatSession, seedSampleKnowledgeBase } from "./chat-actions";
 import Sidebar from "@/components/sidebar";
 import ChatInput from "@/components/chat-input";
 import MessageList from "@/components/message-list";
 import ApprovalModal from "@/components/approval-modal";
+import TelemetryModal from "@/components/telemetry-modal";
 import { ToastProvider, useToast } from "@/components/toast";
 
 /* ─── Status pill colours ─── */
@@ -20,6 +21,7 @@ const STATUS_PILL = {
 function ChatApp() {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isTelemetryOpen, setIsTelemetryOpen] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>(undefined);
   const { showToast } = useToast();
 
@@ -65,6 +67,48 @@ function ChatApp() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  /* One-click Demo Knowledge Base Seeding */
+  const handleSeedKnowledgeBase = useCallback(async () => {
+    try {
+      showToast("Seeding PostgreSQL with sample enterprise documents…", "info");
+      const result = await seedSampleKnowledgeBase();
+      showToast(result.message, result.success ? "success" : "info");
+      setSidebarRefreshTrigger((n) => n + 1);
+    } catch (err: unknown) {
+      showToast("Failed to seed knowledge base: " + (err instanceof Error ? err.message : String(err)), "error");
+    }
+  }, [showToast]);
+
+  /* Export active chat to Markdown */
+  const handleExportChat = useCallback(() => {
+    if (!messages || messages.length === 0) {
+      showToast("No messages to export in this session", "info");
+      return;
+    }
+    const markdownContent = messages
+      .map((m) => {
+        const role = m.role === "user" ? "### 👤 User" : "### 🤖 Nexus AI";
+        const content =
+          m.parts
+            ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
+            .map((p) => p.text)
+            .join("") || "";
+        return `${role}\n\n${content}\n\n---\n`;
+      })
+      .join("\n");
+
+    const blob = new Blob([markdownContent], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `nexus-chat-${activeChatId || "session"}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast("Chat session exported as Markdown", "success");
+  }, [messages, activeChatId, showToast]);
 
   /* HITL approval detection */
   const approvalMarkerMsg = [...messages].reverse().find(
@@ -135,6 +179,13 @@ function ChatApp() {
         onReject={handleReject}
       />
 
+      {/* Live Telemetry & Inspector Modal */}
+      <TelemetryModal
+        isOpen={isTelemetryOpen}
+        onClose={() => setIsTelemetryOpen(false)}
+        activeChatId={activeChatId}
+      />
+
       {/* Sidebar with icon rail & session drawer */}
       <Sidebar
         activeChatId={activeChatId}
@@ -145,6 +196,8 @@ function ChatApp() {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         refreshTrigger={sidebarRefreshTrigger}
+        onOpenTelemetry={() => setIsTelemetryOpen(true)}
+        onExportChat={handleExportChat}
       />
 
       {/* Main Container */}
@@ -194,8 +247,17 @@ function ChatApp() {
             )}
           </div>
 
-          {/* Right: User Profile Avatar Badge (From Inspiration Image) */}
+          {/* Right: Telemetry Trigger + User Profile Avatar Badge */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsTelemetryOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 text-teal-300 text-xs font-medium transition-all shadow-[0_0_15px_rgba(20,184,166,0.15)]"
+              title="View Live LangGraph Execution Traces & State Machine Health"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+              <span>Telemetry & Traces</span>
+            </button>
+
             <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-white/20 cursor-pointer transition-all">
               <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-teal-500 to-emerald-400 flex items-center justify-center text-[10px] font-bold text-slate-950">
                 U
@@ -215,6 +277,7 @@ function ChatApp() {
           messages={messages as UIMessage[]}
           messagesEndRef={messagesEndRef}
           onSelectPrompt={(prompt) => setSelectedPrompt(prompt)}
+          onSeedKnowledgeBase={handleSeedKnowledgeBase}
         />
 
         {/* Input matching inspiration design */}
