@@ -141,7 +141,7 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
 
             <div className="flex items-center gap-1 text-indigo-300 bg-indigo-950/60 px-2.5 py-1 rounded border border-indigo-800/60">
               <span>reasoningNode</span>
-              <span className="text-[10px] text-indigo-400">(Llama-3.3)</span>
+              <span className="text-[10px] text-indigo-400">(Groq 120B)</span>
             </div>
             <span className="text-gray-500">→</span>
 

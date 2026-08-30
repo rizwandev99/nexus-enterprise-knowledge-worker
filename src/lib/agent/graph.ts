@@ -23,7 +23,7 @@ export async function createAgentGraph() {
   // 1. PREPARING THE AI BRAIN WITH NATIVE TOOLS
   // ==========================================
   const model = new ChatGroq({
-    model: "llama-3.3-70b-versatile",
+    model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
     temperature: 0,
   }).bindTools(nativeTools);
 
