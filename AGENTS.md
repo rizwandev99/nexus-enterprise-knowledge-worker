@@ -97,6 +97,11 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 12.3: Built `TelemetryModal` displaying active LangGraph cyclic state flow, live PostgreSQL metrics, and OpenTelemetry OTLP tracing status.
   - [x] 12.4: Added 1-click message copy, chat export to Markdown (`.md`), and interactive `[Doc-X]` citation pills.
   - [x] 12.5: Created comprehensive, founder-ready `README.md` with system diagrams, ADRs, and technical deep-dives.
+- [x] **Step 13: Hybrid Search Multi-Token Keyword Ranking & Auto-Recovery**
+  - [x] 13.1: Enhanced `executeHybridSearch` with intelligent token extraction, stop word pruning, and ranked prefix `to_tsquery` matching (`title || ' ' || content`).
+  - [x] 13.2: Upgraded fallback logic when vector embeddings are unconfigured to prevent false-negative 0-match results on natural language questions.
+  - [x] 13.3: Updated `prisma/seed.ts` and confirmed enterprise governance document persistence.
+
 
 ### Remaining Steps
 - [ ] (Optional) Record video demo / Loom.
