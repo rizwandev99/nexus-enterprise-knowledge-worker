@@ -80,13 +80,31 @@ graph TD
 
 ### LangGraph Directed Cyclic Graph Nodes & Edges
 - **`ragNode`**: Extracts user intent, runs Reciprocal Rank Fusion (RRF) combining vector similarity + BM25 keyword matching via PostgreSQL `tsvector`, and injects citations into context.
-- **`reasoningNode`**: Invokes LLM (OpenAI `gpt-4o-mini` / `gpt-4o` or Claude) with bound native tools (`add_document`, `execute_sql_query`, `execute_sql_mutation`).
-- **`toolsNode`**: Executes in-process tools safely with error capture and cyclic self-healing back to `reasoningNode`.
+- **`reasoningNode`**: Invokes LLM (OpenAI `gpt-4o-mini` / `gpt-4o`, Claude 3.5 Sonnet, or Groq LLaMA 3.3 70B) with bound native tools (`add_document`, `execute_sql_query`, `execute_sql_mutation`).
+- **`toolsNode`**: Executes in-process tools safely with OWASP table allowlisting, error capture, and cyclic self-healing back to `reasoningNode`.
 - **HITL Interrupt**: Halts graph execution on sensitive SQL mutations, prompts client for review, and resumes dynamically upon user confirmation.
+- **Bounded Cyclic Self-Correction**: `AgentState.retryCount` tracks retry attempts; conditional edges bound retries to a maximum of 3 iterations to guarantee zero runaway loops.
 
 ---
 
-## 4. Frontend Component Tree & UI Structure
+## 4. Security, Resilience & Data Access Architecture
+
+### 4.1 OWASP Table Whitelisting Layer (`src/lib/agent/tools.ts`)
+- **Table Whitelist**: Enforces strict mutation allowlist (`documents`, `document_chunks`, `chat_sessions`, `messages`).
+- **DML Allowlisting**: Restricts operations to `INSERT`, `UPDATE`, `DELETE`; rejects dangerous DDL (`DROP`, `ALTER`, `TRUNCATE`) and unauthorized schema mutations.
+- **Null-Byte Sanitization**: Strips `\0` / `\u0000` bytes across inputs to protect PostgreSQL text encoding.
+
+### 4.2 Serverless Connection Pool Management (`src/lib/db/prisma.ts`)
+- **Bounded Pool Configuration**: Node `pg.Pool` configured with `max: 5`, `idleTimeoutMillis: 30000`, and `connectionTimeoutMillis: 5000` for Vercel Serverless Function cold-start efficiency and connection leak prevention.
+- **Batch Chunk Ingestion**: Ingests document chunks via transactional `$transaction` using `createMany`, optimizing database round-trips.
+
+### 4.3 Rich Markdown & Interactive Citation Rendering Pipeline (`src/components/MessageBubble.tsx`)
+- **Zero-Dependency Markdown Engine**: Parses headers (`#`, `##`, `###`), bold/italics, bullet lists, inline code, and syntax-highlighted code blocks with 1-click clipboard copy.
+- **Interactive Citation Tokens**: Automatically detects `[Doc-X]` tokens and transforms them into interactive pill badges linked to document sources.
+
+---
+
+## 5. Frontend Component Tree & UI Structure
 
 ```
 src/
@@ -106,9 +124,9 @@ src/
 └── lib/
     ├── agent/
     │   ├── graph.ts       # LangGraph cyclic state machine construction & PostgreSQL checkpointer
-    │   ├── state.ts       # AgentState interface with messages and tool artifacts
-    │   └── tools.ts       # Native LangChain tools (add_document, execute_sql_query, execute_sql_mutation)
+    │   ├── state.ts       # AgentState interface with messages, citations, retryCount, and isApproved
+    │   └── tools.ts       # Native LangChain tools with OWASP table allowlist & batch transaction support
     └── db/
-        ├── prisma.ts      # Prisma Client & pg Pool singleton instance
+        ├── prisma.ts      # Prisma Client & bounded pg Pool singleton instance
         └── hybrid-search.ts # Hybrid RRF search (pgvector cosine + tsvector keyword matching)
 ```

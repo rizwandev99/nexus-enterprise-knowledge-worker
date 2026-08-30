@@ -17,18 +17,27 @@ vi.mock('pg', () => {
   };
 });
 
-// Mock PrismaClient module
+// Mock PrismaClient module with vi.hoisted so variables are accessible after hoisting
+const { mockCreate, mockCreateManyChunks } = vi.hoisted(() => {
+  return {
+    mockCreate: vi.fn().mockResolvedValue({
+      id: 'test-doc-id-123',
+      title: 'Test Title',
+      content: 'Test Content',
+      createdAt: new Date(),
+    }),
+    mockCreateManyChunks: vi.fn().mockResolvedValue({ count: 1 }),
+  };
+});
+
 vi.mock('../../../../generated/prisma/client', () => {
-  const mockCreate = vi.fn().mockResolvedValue({
-    id: 'test-doc-id-123',
-    title: 'Test Title',
-    content: 'Test Content',
-    createdAt: new Date(),
-  });
   function PrismaClientMock() {
     return {
       document: {
         create: mockCreate,
+      },
+      documentChunk: {
+        createMany: mockCreateManyChunks,
       },
     };
   }
@@ -48,13 +57,27 @@ describe('Native Agent Tools (Milestone 2)', () => {
       expect(addDocumentTool.description).toBe('Add a new document to the enterprise knowledge base');
     });
 
-    it('should successfully invoke and add a document', async () => {
+    it('should successfully invoke and add a document with batch chunk indexing', async () => {
       const result = await addDocumentTool.invoke({
         title: 'Test Title',
-        content: 'Test Document Content',
+        content: 'Test Document Content that will be chunked and indexed.',
       });
 
       expect(result).toContain('Successfully added document "Test Title" with ID: test-doc-id-123');
+      expect(mockCreate).toHaveBeenCalledWith({
+        data: {
+          title: 'Test Title',
+          content: 'Test Document Content that will be chunked and indexed.',
+        },
+      });
+      expect(mockCreateManyChunks).toHaveBeenCalledWith({
+        data: [
+          {
+            documentId: 'test-doc-id-123',
+            content: 'Test Document Content that will be chunked and indexed.',
+          },
+        ],
+      });
     });
   });
 
@@ -64,24 +87,80 @@ describe('Native Agent Tools (Milestone 2)', () => {
       expect(executeSqlMutationTool.description).toBe('Execute a direct SQL mutation on the database (DANGEROUS)');
     });
 
-    it('should successfully invoke and execute a SQL mutation', async () => {
+    it('should successfully invoke and execute a SQL mutation on documents table', async () => {
       const result = await executeSqlMutationTool.invoke({
-        query: 'UPDATE users SET status = "active" WHERE id = 1',
+        query: "UPDATE documents SET content = 'updated content' WHERE id = 'test-doc-123'",
       });
 
-      expect(result).toBe('Successfully executed mutation: UPDATE users SET status = "active" WHERE id = 1');
+      expect(result).toBe("Successfully executed mutation: UPDATE documents SET content = 'updated content' WHERE id = 'test-doc-123'");
+    });
+
+    it('should successfully invoke and execute a SQL mutation on document_chunks table', async () => {
+      const result = await executeSqlMutationTool.invoke({
+        query: "DELETE FROM document_chunks WHERE id = 'chunk-123'",
+      });
+
+      expect(result).toBe("Successfully executed mutation: DELETE FROM document_chunks WHERE id = 'chunk-123'");
+    });
+
+    it('should reject mutations on non-whitelisted tables (e.g., users)', async () => {
+      await expect(
+        executeSqlMutationTool.invoke({ query: 'UPDATE users SET status = "active" WHERE id = 1' })
+      ).rejects.toThrow(/Security Error: Table 'users' is not permitted/i);
+    });
+
+    it('should explicitly block mutations targeting system or state tables (checkpoints, messages, etc.)', async () => {
+      await expect(
+        executeSqlMutationTool.invoke({ query: "UPDATE checkpoints SET metadata = '{}' WHERE thread_id = '1'" })
+      ).rejects.toThrow(/Security Error: Access to system or state table/i);
+
+      await expect(
+        executeSqlMutationTool.invoke({ query: "DELETE FROM messages WHERE id = '123'" })
+      ).rejects.toThrow(/Security Error: Access to system or state table/i);
+
+      await expect(
+        executeSqlMutationTool.invoke({ query: "UPDATE chat_sessions SET title = 'hacked' WHERE id = '1'" })
+      ).rejects.toThrow(/Security Error: Access to system or state table/i);
+
+      await expect(
+        executeSqlMutationTool.invoke({ query: "INSERT INTO checkpoint_blobs (id) VALUES ('1')" })
+      ).rejects.toThrow(/Security Error: Access to system or state table/i);
+
+      await expect(
+        executeSqlMutationTool.invoke({ query: "UPDATE information_schema.tables SET table_name = 'x'" })
+      ).rejects.toThrow(/Security Error: Access to system or state table/i);
+
+      await expect(
+        executeSqlMutationTool.invoke({ query: "UPDATE pg_catalog.pg_tables SET tablename = 'x'" })
+      ).rejects.toThrow(/Security Error: Access to system or state table/i);
+    });
+
+    it('should reject C-style multi-line comments and single-line comments', async () => {
+      await expect(
+        executeSqlMutationTool.invoke({ query: "UPDATE documents " + "/* inject comment */" + " SET content = 'hack'" })
+      ).rejects.toThrow(/Security Error: SQL comments/i);
+
+      await expect(
+        executeSqlMutationTool.invoke({ query: "UPDATE documents SET content = 'test' -- comment" })
+      ).rejects.toThrow(/Security Error: SQL comments/i);
+    });
+
+    it('should reject dollar-quoted strings ($$)', async () => {
+      await expect(
+        executeSqlMutationTool.invoke({ query: "UPDATE documents SET content = " + "$$evil payload$$" + " WHERE id = '1'" })
+      ).rejects.toThrow(/Security Error: Dollar-quoted strings/i);
     });
 
     it('should reject DDL statements (e.g., DROP TABLE)', async () => {
       await expect(
         executeSqlMutationTool.invoke({ query: 'DROP TABLE documents;' })
-      ).rejects.toThrow('Validation Error:');
+      ).rejects.toThrow(/Security Error:/i);
     });
 
     it('should reject multiple semicolon-separated SQL statements', async () => {
       await expect(
-        executeSqlMutationTool.invoke({ query: 'UPDATE users SET name = "test"; DELETE FROM users;' })
-      ).rejects.toThrow('Validation Error: Multiple statements are not allowed.');
+        executeSqlMutationTool.invoke({ query: "UPDATE documents SET title = 'test'; DELETE FROM documents;" })
+      ).rejects.toThrow(/Security Error: Multiple statements are not allowed/i);
     });
   });
 

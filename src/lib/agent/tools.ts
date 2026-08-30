@@ -17,12 +17,18 @@ export const addDocumentTool = tool(
     try {
       // Chunk content into ~1000 char blocks for chunk search indexing
       const chunkSize = 1000;
+      const chunkRecords: { documentId: string; content: string }[] = [];
       for (let i = 0; i < cleanContent.length; i += chunkSize) {
-        const chunkText = cleanContent.slice(i, i + chunkSize);
-        await pool.query(
-          `INSERT INTO document_chunks ("id", "documentId", "content", "createdAt") VALUES (gen_random_uuid(), $1, $2, NOW())`,
-          [doc.id, chunkText]
-        );
+        chunkRecords.push({
+          documentId: doc.id,
+          content: cleanContent.slice(i, i + chunkSize),
+        });
+      }
+
+      if (chunkRecords.length > 0) {
+        await prisma.documentChunk.createMany({
+          data: chunkRecords,
+        });
       }
     } catch (chunkErr) {
       console.warn("Notice: Document saved, chunk indexing skipped:", chunkErr);
@@ -40,10 +46,25 @@ export const addDocumentTool = tool(
   }
 );
 
+const BLOCKED_SYSTEM_TARGETS = [
+  "checkpoints",
+  "checkpoint_blobs",
+  "checkpoint_writes",
+  "checkpoint_migrations",
+  "chat_sessions",
+  "messages",
+  "information_schema",
+  "pg_",
+];
+
+const ALLOWED_TABLES = ["documents", "document_chunks"];
+
 export const executeSqlMutationTool = tool(
   async ({ query }: { query: string }) => {
     const sqlString = typeof query === "string" ? query : String(query);
-    const upperQuery = sqlString.trim().toUpperCase();
+    const trimmedQuery = sqlString.trim();
+    const upperQuery = trimmedQuery.toUpperCase();
+    const lowerQuery = trimmedQuery.toLowerCase();
 
     // 1. Only allow DML
     if (
@@ -51,24 +72,45 @@ export const executeSqlMutationTool = tool(
       !upperQuery.startsWith("UPDATE") &&
       !upperQuery.startsWith("DELETE")
     ) {
-      throw new Error("Validation Error: Only INSERT, UPDATE, and DELETE statements are allowed.");
+      throw new Error("Security Error: Only INSERT, UPDATE, and DELETE statements are allowed.");
     }
 
-    // 2. Block DDL
+    // 2. Block DDL keywords
     const ddlKeywords = ["DROP ", "CREATE ", "ALTER ", "TRUNCATE ", "GRANT ", "REVOKE "];
     if (ddlKeywords.some((keyword) => upperQuery.includes(keyword))) {
-      throw new Error("Validation Error: DDL statements are not allowed.");
+      throw new Error("Security Error: DDL statements are not allowed.");
     }
 
-    // 3. Block dangerous patterns
-    if (sqlString.includes("--")) {
-      throw new Error("Validation Error: SQL comments (--) are not allowed.");
+    // 3. Block SQL comments (-- and /* */) and dollar-quoted strings ($$)
+    if (sqlString.includes("--") || sqlString.includes("/*") || sqlString.includes("*/")) {
+      throw new Error("Security Error: SQL comments are not allowed.");
     }
-    
-    // Block multi-statement queries (semicolon followed by anything other than whitespace)
-    const statements = sqlString.split(";").filter(s => s.trim().length > 0);
+    if (sqlString.includes("$$")) {
+      throw new Error("Security Error: Dollar-quoted strings ($$) are not allowed.");
+    }
+
+    // 4. Block multi-statement queries
+    const statements = sqlString.split(";").filter((s) => s.trim().length > 0);
     if (statements.length > 1) {
-      throw new Error("Validation Error: Multiple statements are not allowed.");
+      throw new Error("Security Error: Multiple statements are not allowed.");
+    }
+
+    // 5. Block explicit system or state tables
+    for (const blocked of BLOCKED_SYSTEM_TARGETS) {
+      if (lowerQuery.includes(blocked)) {
+        throw new Error(`Security Error: Access to system or state table/schema '${blocked}' is strictly prohibited.`);
+      }
+    }
+
+    // 6. Enforce Table Whitelisting: target table MUST be documents or document_chunks
+    const match = trimmedQuery.match(/^(?:INSERT\s+INTO|UPDATE|DELETE\s+(?:FROM\s+)?)\s*["`']?([a-zA-Z0-9_]+)["`']?/i);
+    if (!match) {
+      throw new Error("Security Error: Could not determine valid target table for mutation.");
+    }
+
+    const targetTable = match[1].toLowerCase();
+    if (!ALLOWED_TABLES.includes(targetTable)) {
+      throw new Error(`Security Error: Table '${targetTable}' is not permitted. Mutations are strictly restricted to 'documents' and 'document_chunks'.`);
     }
 
     await pool.query(sqlString);

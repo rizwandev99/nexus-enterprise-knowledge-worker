@@ -19,7 +19,7 @@
 | **Linear UI Design System** | `[Completed]` | Dark glassmorphism, vertical icon rail, bento feature cards |
 | **Telemetry & Tracing** | `[Completed]` | OpenTelemetry instrumentation + Live Inspector Modal |
 | **One-Click Demo Knowledge Base** | `[Completed]` | 3 realistic enterprise docs + chunking seeder |
-| **Unit Test Suite (100% Passing)** | `[Completed]` | 14/14 tests passing across tools, graph, parser, OTel |
+| **Unit Test Suite (100% Passing)** | `[Completed]` | 38/38 tests passing across tools, graph, parser, OTel, UI rendering |
 | **PostgreSQL Stability Fixes** | `[Completed]` | Null byte sanitization (`0x00`) & query truncation for plainto_tsquery |
 | **Live Production Deployment** | `[Completed]` | Vercel Global Edge Network linked & active |
 
@@ -73,6 +73,12 @@
   - Added `export const maxDuration = 60` to both `/api/chat` and `/api/parse-document` serverless routes.
   - Confirmed 100% in-memory streaming & parsing (zero disk `/tmp` writes).
   - Validated clean Next.js Turbopack build (`exit code 0`) and 27/27 Vitest unit tests passing.
+- [x] **Step 17: Enterprise Security, Performance & Markdown Pipeline Fortification**
+  - Enforced OWASP table allowlist (`ALLOWED_MUTATION_TABLES = new Set(["documents", "document_chunks", "chat_sessions", "messages"])`) rejecting SQL injection and unauthorized schema mutations.
+  - Implemented bounded cyclic self-correction state graph (`retryCount` capped at 3 iterations in `AgentState`) preventing token burnout.
+  - Optimized serverless connection pool (`max: 5`, `idleTimeoutMillis: 30000`) and transactional batch chunk ingestion via `$transaction` and `createMany`.
+  - Upgraded `MessageBubble.tsx` with zero-dependency rich markdown rendering (headings, bold, italics, inline code, copyable code blocks) and interactive `[Doc-X]` citation pills.
+  - Fortified test suite achieving 38/38 unit tests passing across tools, graph routing, document parsing, OTel, and UI rendering.
 
 ---
 

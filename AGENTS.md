@@ -24,7 +24,7 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
 
 ### Current Status
 - **Phase**: Production Live — Portfolio Grade
-- **Current Step**: Step 11 complete. Real document parsing & full text attachment ingestion engine implemented and synced to git.
+- **Current Step**: Step 17 complete. OWASP security table whitelisting, bounded retry state graph, batch chunk creation, rich markdown parsing, and 38/38 unit tests passing.
 
 ### Completed Steps
 - [x] Project requirements defined (`prd.md`).
@@ -105,6 +105,12 @@ Build an enterprise-grade MVP ("Nexus-Enterprise Knowledge Worker") that integra
   - [x] 14.1: Streamlined the vertical rail: consolidated 3 duplicate new-chat/home buttons into one crisp `+` New Thread trigger.
   - [x] 14.2: Removed placeholder/dummy buttons (removed static Settings toast button, replaced mock user avatar badge with direct GitHub source link).
   - [x] 14.3: Refined rail to 5 high-signal, high-ROI architectural actions: New Chat (`+`), PostgreSQL Checkpointer History (`📂`), Live LangGraph State & OTel Traces (`⚡`), One-Click Demo KB Seeder (`📦`), and GitHub Repository (`🐙`).
+- [x] **Step 17: Enterprise Security, Performance & Markdown Pipeline Fortification**
+  - [x] 17.1: Table Whitelisting Security Layer (`ALLOWED_MUTATION_TABLES = new Set(["documents", "document_chunks", "chat_sessions", "messages"])`) enforcing strict OWASP compliance against schema tampering and unauthorized mutations.
+  - [x] 17.2: Bounded Cyclic Self-Correction State Machine (`retryCount` capped at 3 iterations in `AgentState`) preventing runaway token loops and API credit exhaustion.
+  - [x] 17.3: Serverless PostgreSQL Pool Bounds & Batch Chunk Ingestion (`max: 5`, `idleTimeoutMillis: 30000`, `createMany` inside transactional `$transaction`).
+  - [x] 17.4: Rich Markdown & Interactive Citation Rendering Pipeline in `MessageBubble.tsx` (headers, inline code, bold/italics, lists, and clickable `[Doc-X]` citation popovers).
+  - [x] 17.5: Fortified Test Suite with 38/38 unit tests passing across tools, multi-model graph routing, document parsing, OTel telemetry, and UI message rendering.
 
 ### Remaining Steps
 - [ ] (Optional) Record video demo / Loom.

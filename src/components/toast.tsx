@@ -149,6 +149,11 @@ function ToastBubble({
 
 export function useToast() {
   const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error("useToast must be used within ToastProvider");
+  if (!ctx) {
+    return {
+      showToast: () => {},
+    };
+  }
   return ctx;
 }
+

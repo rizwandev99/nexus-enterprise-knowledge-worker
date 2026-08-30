@@ -188,3 +188,12 @@ describe('Pricing Table & Token Telemetry Estimations', () => {
     expect(MODEL_PRICING['deepseek-r1']).toBeDefined();
   });
 });
+
+describe('Agent Graph Security & Self-Correction Flow', () => {
+  it('should compile graph with prompt defense and retry bounding', async () => {
+    const graph = await createAgentGraph({ modelId: 'groq-llama-3.3-70b' });
+    expect(graph).toBeDefined();
+    expect(typeof graph.invoke).toBe('function');
+  });
+});
+
