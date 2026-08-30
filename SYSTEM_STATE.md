@@ -63,11 +63,13 @@
   - Enhanced `executeHybridSearch` with intelligent token extraction, stop word pruning, and ranked prefix `to_tsquery` matching (`title || ' ' || content`).
   - Seamless fallback when vector embeddings are unavailable without breaking natural language phrase retrieval.
   - Verified 100% precision on benchmark enterprise prompts and citations.
-- [x] **Step 10: High-ROI Interview Navigation Streamlining**
+- [x] **Step 14: High-ROI Interview Navigation Streamlining**
   - Eliminated redundant navigation buttons (collapsed duplicate Home, Chat, and New Chat triggers into 1 unmistakable `+` New Thread button).
   - Removed placeholder/dummy buttons (removed static Settings toast button, replaced mock profile badge with direct GitHub source code link).
   - Retained exclusively high-signal, high-ROI architectural actions: New Chat (`+`), PostgreSQL Checkpointer History (`📂`), Live LangGraph State & OTel Traces (`⚡`), One-Click Demo KB Seeder (`📦`), Chat Export (`📥`), and GitHub Repository (`🐙`).
-
+- [x] **Step 15: Owner-Manager Multi-Agent Operating Protocol**
+  - Configured Owner (User / Md Rizwan) & Manager (Antigravity AI) workflow rules in `AGENTS.md`.
+  - Strict zero-direct-work prohibition enacted for Manager; 100% parallel subagent delegation architecture active.
 
 ---
 

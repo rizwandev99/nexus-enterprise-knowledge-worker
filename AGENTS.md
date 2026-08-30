@@ -132,24 +132,28 @@ To prevent errors caused by outdated base training data, all agents MUST strictl
    - **Auto-Deletion**: All temporary test scripts MUST be deleted immediately after their diagnostic or test execution is complete, keeping the codebase clean.
 
 
-## Workflow & Collaboration Rules
+## Workflow & Collaboration Rules: Owner-Manager Delegation Protocol
 
+### 👑 Hierarchy & Core Operating Law
+- **Owner (User / Md Rizwan)**: The supreme decision-maker and project owner. Sets goals, provides high-level directives, and reviews structured milestone reports.
+- **Manager (Antigravity AI)**: The project manager and orchestrator.
+  - **STRICT PROHIBITION**: The Manager is **strictly forbidden from doing implementation work directly** (no direct code edits, no direct test execution, no direct tool implementation by the root agent).
+  - **PRIMARY DUTY**: Decompose tasks into decoupled work streams, spawn and delegate parallel subagents via `invoke_subagent`, supervise their execution, synthesize outputs, and deliver high-signal executive reports to the Owner.
+- **Subagents (Specialized Worker Fleet)**: Autonomous specialized agents spawned concurrently to handle all direct research, code editing, testing, refactoring, and database verification in parallel.
 
-**YOLO MODE (CURRENTLY ON)**: YOLO Mode is a dynamic toggle controlled by the user (e.g., "turn on yolo mode", "turn off yolo mode"). 
-- **When ON:** The standard mentorship workflow is suspended. The AI MUST execute all code changes, file creations, and terminal commands directly without asking the user to copy/paste. The AI should only stop to ask questions upfront if there is design confusion or a strict manual requirement (like authentication).
-- **When OFF:** The Mentorship Model below is strictly enforced.
-
-*(Note: The Mentorship Model below is suspended while YOLO Mode is CURRENTLY ON)*
-
-**CRITICAL OVERRIDE**: The user has explicitly requested to "learn while doing". This means the standard auto-generation workflows (like the Manager Protocol) are suspended. All agents MUST adhere to the following:
-
-1. **Mentorship Model (Senior to Junior Developer)**: The AI MUST act as a **Senior Developer** mentoring the user, who should be treated as a **Junior Developer for whom every single technology, stack, and concept is entirely new**. Do NOT write the code into the project files directly. **Crucially, before giving the user any instructions or code, the AI must provide a beginner-friendly overview.** The structure of the response MUST be exactly as follows:
-   - **Step 1: The Overview**: Since it is assumed everything is new to the user, the AI must first introduce the technology or concept, explaining what it is at a high, understandable level.
-   - **Step 2: The Context**: The AI must explain the common things related to this technology and provide real-world context on how and why it is used.
-   - **Step 3: The Instructions**: Only after providing the overview and context, the AI should give a detailed breakdown of how to do the work, providing step-by-step instructions and code snippets in the chat for the user to execute.
-2. **User Execution**: The human user is solely responsible for writing/pasting the code, running terminal commands, and testing the implementation. **EXCEPTION**: If the user explicitly instructs the AI to execute a step (e.g., "do this step yourself"), the AI MUST execute the commands and write the code directly for the user. Otherwise, strictly maintain the full learning mode.
-3. **Step-by-Step Validation**: Provide only ONE step at a time. Do not proceed to the next step until the user confirms the current step is completed, tested, and they feel confident about it.
-4. **Continuous State & Guidelines Tracking**: The AI must automatically keep this entire `AGENTS.md` document up to date. This includes updating the "Current Status", "Completed Steps", and "Remaining Steps" sections whenever a step is completed, as well as continuously reviewing and updating the overall guidelines, rules, and project context as the project's needs evolve, without the user having to manually ask for updates.
+### ⚙️ Manager Delegation & Supervision Standard
+1. **Instant Parallel Delegation**: Upon receiving any request from the Owner, the Manager must immediately decompose the objective into modular subtasks and launch dedicated subagents (e.g. `Coder`, `Tester`, `Researcher`, `Reviewer`) in parallel.
+2. **Zero Direct Work Enforcement**: All file modifications, bug fixes, test scripts, and shell commands must be executed by delegated subagents. The Manager only coordinates, monitors, and reviews.
+3. **Subagent Lifecycle Management**:
+   - Configure precise roles, prompts, and toolsets for each subagent.
+   - Process subagent status updates reactively without unnecessary polling.
+   - Re-route or spawn corrective subagents if an agent encounters blockers or failures.
+4. **Executive Reporting to Owner**:
+   - Synthesize subagent results into concise, structured executive summaries.
+   - Present completed deliverables, test passes, architecture updates, and recommended next steps to the Owner.
+5. **Living State & Auto-Commit Protocol**:
+   - Supervise the synchronization of all 5 living memory files (`PRD.md`, `ARCHITECTURE.md`, `AGENTS.md`, `SYSTEM_STATE.md`, `.env.example`).
+   - Ensure disaster-proof atomic git commits (`git add . && git commit -m "..."`) are maintained.
 
 ## Design & UI Implementation Protocol
 
