@@ -28,13 +28,6 @@ By eschewing simple stateless chains in favor of a **LangGraph** directed graph 
 
 ## 🏗️ Architecture
 
-<p align="center">
-  <img src="./assets/architecture.svg" alt="Nexus Architecture Diagram" width="100%" />
-</p>
-
-<details>
-<summary>🔍 <b>Click to expand Mermaid.js Source Code</b></summary>
-
 ```mermaid
 graph TD
     User([User]) --> |Prompt / Message| API[Next.js API Route / AI SDK]
@@ -69,8 +62,6 @@ graph TD
         PG --> CP[State Checkpoints]
     end
 ```
-
-</details>
 
 ## 🔧 Tech Stack
 
