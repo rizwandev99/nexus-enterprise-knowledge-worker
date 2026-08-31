@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import type { UIMessage } from "@ai-sdk/react";
-import MessageBubble from "./message-bubble";
+import MessageBubble from "./MessageBubble";
 
-interface MessageListProps {
+export interface MessageListProps {
   messages: UIMessage[];
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   onSelectPrompt?: (prompt: string) => void;
   onSeedKnowledgeBase?: () => Promise<void>;
+  onSelectCitation?: (docIndex: number) => void;
+  selectedModel?: string;
 }
 
 export default function MessageList({
@@ -16,6 +18,8 @@ export default function MessageList({
   messagesEndRef,
   onSelectPrompt,
   onSeedKnowledgeBase,
+  onSelectCitation,
+  selectedModel,
 }: MessageListProps) {
   const [isSeeding, setIsSeeding] = useState(false);
 
@@ -62,7 +66,7 @@ export default function MessageList({
 
   return (
     <div className="flex-1 overflow-y-auto relative bg-grid-pattern">
-      {/* Top Floating Glass Orb (Visual from Inspiration Image) */}
+      {/* Top Floating Glass Orb */}
       <div className="fluid-orb" aria-hidden="true" />
 
       <div className="max-w-4xl mx-auto w-full px-6 py-8 flex flex-col gap-6 relative z-10">
@@ -105,7 +109,7 @@ export default function MessageList({
                 <div
                   key={card.badge}
                   onClick={() => onSelectPrompt?.(card.prompt)}
-                  className="group relative rounded-2xl p-4 cursor-pointer transition-all duration-200 flex flex-col justify-between"
+                  className="group relative rounded-2xl p-4 cursor-pointer transition-all duration-200 flex flex-col justify-between hover:border-teal-500/30 hover:scale-[1.02]"
                   style={{
                     background: "rgba(18, 20, 27, 0.75)",
                     border: "1px solid rgba(255, 255, 255, 0.08)",
@@ -149,7 +153,13 @@ export default function MessageList({
 
         {/* Message history */}
         {messages.map((m) => (
-          <MessageBubble key={m.id} message={m} isUser={m.role === "user"} />
+          <MessageBubble
+            key={m.id}
+            message={m}
+            isUser={m.role === "user"}
+            onSelectCitation={onSelectCitation}
+            selectedModel={selectedModel}
+          />
         ))}
 
         <div ref={messagesEndRef} className="h-2" />
@@ -157,4 +167,3 @@ export default function MessageList({
     </div>
   );
 }
-

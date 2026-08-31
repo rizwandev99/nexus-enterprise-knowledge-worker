@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import ModelSelector from "./ModelSelector";
 
-interface ChatInputProps {
+export interface ChatInputProps {
   onSend: (text: string) => void;
   isLoading: boolean;
   selectedPrompt?: string;
   onClearSelectedPrompt?: () => void;
+  selectedModel?: string;
+  onSelectModel?: (model: string) => void;
 }
 
 interface AttachedFile {
@@ -20,6 +23,8 @@ export default function ChatInput({
   isLoading,
   selectedPrompt,
   onClearSelectedPrompt,
+  selectedModel = "groq-llama-3.3-70b",
+  onSelectModel,
 }: ChatInputProps) {
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -72,7 +77,6 @@ export default function ChatInput({
       setParseError(errMsg);
     } finally {
       setIsParsingFile(false);
-      // Reset input element value so re-selecting same file works
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -116,15 +120,15 @@ export default function ChatInput({
         <div
           className="relative rounded-2xl p-4 transition-all duration-200"
           style={{
-            background: "rgba(18, 20, 27, 0.9)",
-            border: `1px solid ${isFocused ? "var(--color-brand)" : "rgba(255, 255, 255, 0.1)"}`,
-            backdropFilter: "blur(20px)",
+            background: "rgba(18, 20, 27, 0.92)",
+            border: `1px solid ${isFocused ? "#14b8a6" : "rgba(255, 255, 255, 0.1)"}`,
+            backdropFilter: "blur(24px)",
             boxShadow: isFocused
               ? "0 0 0 3px rgba(20, 184, 166, 0.2), 0 12px 36px rgba(0, 0, 0, 0.6)"
               : "0 8px 32px rgba(0, 0, 0, 0.5)",
           }}
         >
-          {/* Top Left Sparkle Icon ✦ & Attached File Badge */}
+          {/* Top Row: Sparkle Icon + Attached File Badge + Parsing Indicator */}
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-gray-400">
               <svg
@@ -134,6 +138,9 @@ export default function ChatInput({
               >
                 <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
               </svg>
+              <span className="text-[11px] font-mono text-gray-400 font-medium">
+                Enterprise Knowledge Worker
+              </span>
             </div>
 
             {/* Attached File Pill Badge */}
@@ -193,7 +200,7 @@ export default function ChatInput({
                 ? "Nexus agent processing query…"
                 : isParsingFile
                 ? "Extracting document content…"
-                : "Ask me anything or attach a document..."
+                : "Ask anything, search internal docs, or attach files..."
             }
             value={input}
             onChange={(e) => {
@@ -221,32 +228,45 @@ export default function ChatInput({
             onChange={handleFileChange}
           />
 
-          {/* Bottom Bar inside Input Box */}
+          {/* Bottom Bar: Model Selector + Attach Button + Send Button */}
           <div className="flex items-center justify-between pt-3 mt-1 border-t border-white/5">
-            {/* Left Action: Attach File Pill Button */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading || isParsingFile}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#1a1d26] text-gray-300 border border-white/10 hover:border-teal-500/40 hover:text-white transition-all active:scale-95 disabled:opacity-50"
-            >
-              <svg
-                className="w-3.5 h-3.5 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
+            {/* Left Actions: Attach File Pill + ModelSelector */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading || isParsingFile}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#1a1d26] text-gray-300 border border-white/10 hover:border-teal-500/40 hover:text-white transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                title="Attach Document (.pdf, .txt, .md, .csv)"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                />
-              </svg>
-              {attachedFile ? "Change file" : "Attach file"}
-            </button>
+                <svg
+                  className="w-3.5 h-3.5 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                  />
+                </svg>
+                <span className="hidden xs:inline">{attachedFile ? "Change file" : "Attach file"}</span>
+                <span className="xs:hidden">{attachedFile ? "File" : "Attach"}</span>
+              </button>
 
-            {/* Right Action: Teal Upward Arrow Submit Button ↑ */}
+              {/* ModelSelector Component */}
+              {onSelectModel && (
+                <ModelSelector
+                  selectedModel={selectedModel}
+                  onSelectModel={onSelectModel}
+                  align="top"
+                />
+              )}
+            </div>
+
+            {/* Right Action: Submit Button */}
             <button
               type="submit"
               disabled={!canSend}
@@ -258,6 +278,7 @@ export default function ChatInput({
                 cursor: canSend ? "pointer" : "default",
               }}
               aria-label="Send message"
+              title="Send message (Enter)"
             >
               {isLoading || isParsingFile ? (
                 <div className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />

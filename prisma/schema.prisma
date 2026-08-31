@@ -30,6 +30,7 @@ model DocumentChunk {
   
   document   Document               @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
+  @@index([documentId])
   @@map("document_chunks")
 }
 
@@ -40,6 +41,7 @@ model ChatSession {
   updatedAt DateTime  @updatedAt
   messages  Message[]
 
+  @@index([updatedAt])
   @@map("chat_sessions")
 }
 
@@ -52,5 +54,6 @@ model Message {
 
   chat      ChatSession @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
+  @@index([chatId, createdAt])
   @@map("messages")
 }

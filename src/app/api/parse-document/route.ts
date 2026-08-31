@@ -1,12 +1,52 @@
 import { NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+export const maxDuration = 60;
+
+// Document parsing is CPU/memory-intensive — stricter limit than the chat endpoint.
+const PARSE_MAX_REQUESTS = 10; // 10 uploads per minute per IP
 
 export async function POST(req: Request) {
+  // ── Rate limiting ────────────────────────────────────────────────────────
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "anonymous";
+
+  const rl = checkRateLimit(`parse-document:${ip}`, PARSE_MAX_REQUESTS);
+
+  if (!rl.allowed) {
+    return new Response(
+      JSON.stringify({
+        error: "Rate limit exceeded. Please wait before uploading more documents.",
+        resetAt: rl.resetAt,
+      }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "X-RateLimit-Limit": String(PARSE_MAX_REQUESTS),
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": String(rl.resetAt),
+          "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)),
+        },
+      }
+    );
+  }
+
+  // ── Shared RateLimit headers for successful responses ────────────────────
+  const rateLimitHeaders = {
+    "X-RateLimit-Limit": String(PARSE_MAX_REQUESTS),
+    "X-RateLimit-Remaining": String(rl.remaining),
+    "X-RateLimit-Reset": String(rl.resetAt),
+  };
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+      return NextResponse.json({ error: "No file provided" }, { status: 400, headers: rateLimitHeaders });
     }
 
     const arrayBuffer = await file.arrayBuffer();
@@ -51,17 +91,20 @@ export async function POST(req: Request) {
     if (!extractedText || !extractedText.trim()) {
       return NextResponse.json(
         { error: "Could not extract text content from document. The file may be empty or scanned image." },
-        { status: 422 }
+        { status: 422, headers: rateLimitHeaders }
       );
     }
 
-    return NextResponse.json({
-      filename: file.name,
-      text: extractedText.trim(),
-      size: file.size,
-    });
+    return NextResponse.json(
+      {
+        filename: file.name,
+        text: extractedText.trim(),
+        size: file.size,
+      },
+      { headers: rateLimitHeaders }
+    );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to parse document";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500, headers: rateLimitHeaders });
   }
 }
