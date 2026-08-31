@@ -16,6 +16,11 @@ type ChatSession = {
   updatedAt: Date;
 };
 
+type DeleteTarget =
+  | { type: "single"; id: string; title: string }
+  | { type: "all" }
+  | null;
+
 export default function Sidebar({
   activeChatId,
   onSelectChat,
@@ -40,8 +45,8 @@ export default function Sidebar({
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isSeeding, setIsSeeding] = useState(false);
   const { showToast } = useToast();
@@ -74,39 +79,36 @@ export default function Sidebar({
     }
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
+  const openDeleteModal = (e: React.MouseEvent, session: ChatSession) => {
     e.stopPropagation();
-    if (confirmDeleteId === id) {
-      try {
-        await deleteChatSession(id);
-        await loadSessions();
-        if (activeChatId === id) onSelectChat("");
-        setConfirmDeleteId(null);
-        showToast("Chat deleted", "success");
-      } catch {
-        showToast("Failed to delete chat", "error");
-      }
-    } else {
-      setConfirmDeleteId(id);
-      setTimeout(() => setConfirmDeleteId(null), 3000);
-    }
+    setDeleteTarget({ type: "single", id: session.id, title: session.title || "Untitled Session" });
   };
 
-  const handleDeleteAll = async (e: React.MouseEvent) => {
+  const openClearAllModal = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirmDeleteAll) {
-      try {
+    setDeleteTarget({ type: "all" });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      if (deleteTarget.type === "single") {
+        await deleteChatSession(deleteTarget.id);
+        await loadSessions();
+        if (activeChatId === deleteTarget.id) onSelectChat("");
+        showToast("Chat deleted", "success");
+      } else {
         await deleteAllChatSessions();
         await loadSessions();
         onSelectChat("");
-        setConfirmDeleteAll(false);
         showToast("All chats deleted", "success");
-      } catch {
-        showToast("Failed to delete chats", "error");
       }
-    } else {
-      setConfirmDeleteAll(true);
-      setTimeout(() => setConfirmDeleteAll(false), 3000);
+    } catch {
+      showToast("Failed to delete", "error");
+    } finally {
+      setIsDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -150,8 +152,8 @@ export default function Sidebar({
               aria-label="Start New Chat Session"
               title="Start New Thread"
             >
-              <svg className="w-4 h-4 fill-slate-950" viewBox="0 0 32 32">
-                <path d="M16 3.5C14.3 3.5 13.1 5.8 12.5 8.8 11.7 12.3 8.8 15.2 5.2 15.9c-1.2.2-1.2 2 0 2.2 3.6.7 6.5 3.6 7.1.6 3 1.8 5.3 3.5 5.3s2.9-2.3 3.5-5.3c.8-3.5 3.7-6.4 7.3-7.1 1.2-.2 1.2-2 0-2.2-3.6-.7-6.5-3.6-7.3-7.1-.6-3-1.8-5.3-3.5-5.3z" />
+              <svg className="w-4 h-4 fill-slate-950" viewBox="0 0 24 24">
+                <path d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4772 12 22C12 16.4772 16.4772 12 22 12C16.4772 12 12 7.52285 12 2Z" />
               </svg>
             </button>
 
@@ -259,11 +261,11 @@ export default function Sidebar({
                 {sessions.length > 0 && (
                   <button
                     type="button"
-                    onClick={handleDeleteAll}
-                    className={"px-2 py-0.5 rounded-lg transition-all text-[11px] font-mono cursor-pointer " + (confirmDeleteAll ? "text-rose-300 bg-rose-500/20 border border-rose-500/30 animate-pulse font-medium" : "text-slate-400 hover:text-rose-400 hover:bg-white/[0.06]")}
-                    title={confirmDeleteAll ? "Click again to confirm delete all chats" : "Delete all chat sessions"}
+                    onClick={openClearAllModal}
+                    className="px-2 py-0.5 rounded-lg transition-all text-[11px] font-mono cursor-pointer text-slate-400 hover:text-rose-400 hover:bg-white/[0.06]"
+                    title="Clear all chat sessions"
                   >
-                    {confirmDeleteAll ? "Confirm?" : "Clear all"}
+                    Clear all
                   </button>
                 )}
               </div>
@@ -320,9 +322,9 @@ export default function Sidebar({
                           </button>
                           <button
                             type="button"
-                            onClick={(e) => handleDelete(e, session.id)}
-                            className={"p-1 rounded-md transition-colors " + (confirmDeleteId === session.id ? "text-rose-300 bg-rose-500/20 border border-rose-500/30" : "text-slate-400 hover:text-rose-400 hover:bg-white/[0.08]")}
-                            title={confirmDeleteId === session.id ? "Click again to confirm delete" : "Delete chat"}
+                            onClick={(e) => openDeleteModal(e, session)}
+                            className="p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-white/[0.08] transition-colors"
+                            title="Delete chat"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="3 6 5 6 21 6" />
@@ -341,6 +343,65 @@ export default function Sidebar({
           </div>
         </aside>
       </div>
+
+      {/* Linear-grade Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => !isDeleting && setDeleteTarget(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-[#121622]/95 border border-white/[0.1] p-5 shadow-2xl backdrop-blur-2xl text-left relative animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shrink-0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <line x1="10" y1="11" x2="10" y2="17" />
+                  <line x1="14" y1="11" x2="14" y2="17" />
+                </svg>
+              </div>
+              <h3 className="text-sm font-semibold text-white tracking-tight">
+                {deleteTarget.type === "all" ? "Clear All Conversations?" : "Delete Conversation?"}
+              </h3>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed mb-5">
+              {deleteTarget.type === "all"
+                ? "Are you sure you want to delete all chat sessions? This action cannot be undone."
+                : "Are you sure you want to delete this chat session? This action cannot be undone."}
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setDeleteTarget(null)}
+                className="bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 rounded-xl px-4 py-2 text-xs font-medium border border-white/[0.08] transition-all cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="bg-red-600 hover:bg-red-500 text-white rounded-xl px-4 py-2 text-xs font-medium shadow-lg shadow-red-600/30 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Delete</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

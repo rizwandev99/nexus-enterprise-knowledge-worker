@@ -149,8 +149,8 @@ export default function MessageList({
             {/* 1. Brand Mark: Clean, refined 48x48px white squircle with precision black vector aperture/star glyph */}
             <div className="mb-4">
               <div className="w-12 h-12 rounded-2xl bg-white shadow-[0_4px_20px_rgba(255,255,255,0.15)] flex items-center justify-center">
-                <svg className="w-6 h-6 fill-black" viewBox="0 0 24 24">
-                  <path d="M12 2C11.5 7.5 7.5 11.5 2 12c5.5.5 9.5 4.5 10 10 .5-5.5 4.5-9.5 10-10-5.5-.5-9.5-4.5-10-10z" />
+                <svg className="w-6 h-6 fill-slate-950" viewBox="0 0 24 24">
+                  <path d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4772 12 22C12 16.4772 16.4772 12 22 12C16.4772 12 12 7.52285 12 2Z" />
                 </svg>
               </div>
             </div>
