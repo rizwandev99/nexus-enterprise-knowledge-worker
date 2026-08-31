@@ -29,6 +29,7 @@ export default function ChatInput({
 }: ChatInputProps) {
   const [input, setInput] = useState("");
   const [isSearchActive, setIsSearchActive] = useState(true);
+  const [isToolsPopoverOpen, setIsToolsPopoverOpen] = useState(false);
   const [attachedFile, setAttachedFile] = useState<{
     name: string;
     content: string;
@@ -38,6 +39,33 @@ export default function ChatInput({
   const [parseError, setParseError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const toolsPopoverRef = useRef<HTMLDivElement>(null);
+
+  // Close tools popover on outside click or Escape
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        toolsPopoverRef.current &&
+        !toolsPopoverRef.current.contains(e.target as Node)
+      ) {
+        setIsToolsPopoverOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isToolsPopoverOpen) {
+        setIsToolsPopoverOpen(false);
+      }
+    };
+
+    if (isToolsPopoverOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isToolsPopoverOpen]);
 
   useEffect(() => {
     if (selectedPrompt) {
@@ -198,7 +226,7 @@ export default function ChatInput({
               }}
               placeholder={
                 isLoading
-                  ? "Sense AI processing query..."
+                  ? "Nexus AI processing query..."
                   : isParsingFile
                   ? "Extracting document content..."
                   : "Ask me anything, search knowledge base, or run SQL mutations..."
@@ -278,26 +306,137 @@ export default function ChatInput({
                   {isSearchActive && <span className="text-xs font-medium">Globe Search</span>}
                 </button>
 
-                <button
-                  type="button"
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer inline-flex items-center justify-center"
-                  title="Canvas Workspace"
-                  aria-label="Canvas Workspace"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                {/* Enterprise Tools & Integrations Popover on Layers button */}
+                <div className="relative" ref={toolsPopoverRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsToolsPopoverOpen((p) => !p)}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer inline-flex items-center justify-center ${
+                      isToolsPopoverOpen
+                        ? "bg-white/15 text-white border border-white/20 shadow-sm"
+                        : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                    }`}
+                    title="Enterprise Tools & Integrations"
+                    aria-label="Enterprise Tools & Integrations"
+                    aria-expanded={isToolsPopoverOpen}
                   >
-                    <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
-                    <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
-                    <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
-                  </svg>
-                </button>
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
+                      <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
+                      <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
+                    </svg>
+                  </button>
+
+                  {isToolsPopoverOpen && (
+                    <div
+                      className="absolute bottom-full mb-3 left-0 z-50 w-72 sm:w-80 rounded-2xl p-3 bg-[#121622]/95 backdrop-blur-2xl border border-white/[0.1] shadow-2xl animate-in fade-in zoom-in-95 space-y-2.5"
+                      style={{
+                        boxShadow: "0 20px 50px rgba(0,0,0,0.7), 0 0 25px rgba(99,102,241,0.15)",
+                      }}
+                    >
+                      {/* Header */}
+                      <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-mono font-semibold text-white">
+                            Enterprise Tools & Integrations
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
+                          4 Active
+                        </span>
+                      </div>
+
+                      {/* Integration Cards List */}
+                      <div className="space-y-1.5">
+                        {/* 1. PostgreSQL pgvector (Hybrid RAG) */}
+                        <div className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors flex items-center justify-between">
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div className="w-7 h-7 rounded-lg bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center text-indigo-400 shrink-0">
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                                <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+                                <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" />
+                              </svg>
+                            </div>
+                            <div className="truncate">
+                              <div className="text-xs font-medium text-slate-200 truncate">PostgreSQL pgvector</div>
+                              <div className="text-[10px] text-slate-400 font-mono">Hybrid RAG • RRF Ranked</div>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
+                            Active
+                          </span>
+                        </div>
+
+                        {/* 2. LangGraph Stateful Graph */}
+                        <div className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors flex items-center justify-between">
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div className="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/25 flex items-center justify-center text-violet-400 shrink-0">
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="18" cy="5" r="3" />
+                                <circle cx="6" cy="12" r="3" />
+                                <circle cx="18" cy="19" r="3" />
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                              </svg>
+                            </div>
+                            <div className="truncate">
+                              <div className="text-xs font-medium text-slate-200 truncate">LangGraph Stateful Graph</div>
+                              <div className="text-[10px] text-slate-400 font-mono">Cyclic Machine • HITL Interrupt</div>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
+                            Active
+                          </span>
+                        </div>
+
+                        {/* 3. Groq GPT-OSS Fast Inference */}
+                        <div className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors flex items-center justify-between">
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-amber-400 shrink-0">
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                              </svg>
+                            </div>
+                            <div className="truncate">
+                              <div className="text-xs font-medium text-slate-200 truncate">Groq GPT-OSS Inference</div>
+                              <div className="text-[10px] text-slate-400 font-mono">Ultra Fast • ~850 tok/s</div>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
+                            Active
+                          </span>
+                        </div>
+
+                        {/* 4. OpenTelemetry Distributed Tracing */}
+                        <div className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors flex items-center justify-between">
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div className="w-7 h-7 rounded-lg bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center text-cyan-400 shrink-0">
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                              </svg>
+                            </div>
+                            <div className="truncate">
+                              <div className="text-xs font-medium text-slate-200 truncate">OpenTelemetry Tracing</div>
+                              <div className="text-[10px] text-slate-400 font-mono">Distributed • OTLP Exporter</div>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
+                            Active
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Bottom Bar Right: Model Selector badge / dropdown, Send Button */}

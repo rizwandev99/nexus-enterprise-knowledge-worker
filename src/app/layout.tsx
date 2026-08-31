@@ -15,12 +15,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sense AI — Enterprise Knowledge Worker",
+  title: "Nexus AI — Enterprise Knowledge Worker",
   description:
     "Autonomous LangGraph.js RAG & Stateful Enterprise AI with Hybrid Search (pgvector + tsvector RRF), Human-in-the-Loop governance, cyclic self-correction, and OpenTelemetry observability.",
   keywords: [
     "AI agent",
-    "Sense AI",
+    "Nexus AI",
     "RAG",
     "LangGraph",
     "enterprise",
@@ -31,16 +31,16 @@ export const metadata: Metadata = {
     "Next.js",
   ],
   openGraph: {
-    title: "Sense AI — Enterprise Knowledge Worker",
+    title: "Nexus AI — Enterprise Knowledge Worker",
     description: "Autonomous LangGraph.js RAG & Stateful Enterprise AI",
     url: "https://nexus-enterprise-knowledge-worker.vercel.app",
-    siteName: "Sense AI — Enterprise Knowledge Worker",
+    siteName: "Nexus AI — Enterprise Knowledge Worker",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Sense AI — Enterprise Knowledge Worker",
+        alt: "Nexus AI — Enterprise Knowledge Worker",
       },
     ],
     locale: "en_US",
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sense AI — Enterprise Knowledge Worker",
+    title: "Nexus AI — Enterprise Knowledge Worker",
     description: "Autonomous LangGraph.js RAG & Stateful Enterprise AI",
     images: ["/og-image.jpg"],
     creator: "@rizwandev99",
