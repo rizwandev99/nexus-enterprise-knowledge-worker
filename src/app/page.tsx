@@ -145,14 +145,14 @@ function ChatApp() {
     }
 
     const mdContent = [
-      "# Nexus Sense AI — Chat Export",
+      "# Nexus AI — Chat Export",
       "Date: " + new Date().toLocaleString(),
       "Session ID: " + (activeChatId || "new-session"),
       "Model: " + selectedModel,
       "---",
       "",
       ...messages.map((m) => {
-        const role = m.role === "user" ? "### User" : "### Sense AI";
+        const role = m.role === "user" ? "### User" : "### Nexus AI";
         const content = m.parts?.map((p) => (p.type === "text" ? p.text : "")).join("\n") || "";
         return role + "\n" + content + "\n";
       }),
@@ -162,7 +162,7 @@ function ChatApp() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "sense-ai-session-" + (activeChatId || "export").slice(0, 8) + ".md";
+    a.download = "nexus-ai-session-" + (activeChatId || "export").slice(0, 8) + ".md";
     a.click();
     URL.revokeObjectURL(url);
     showToast("Chat session exported to Markdown (.md)", "success");
@@ -255,66 +255,80 @@ function ChatApp() {
         onSeedKnowledgeBase={handleSeedKnowledgeBase}
       />
 
-      {/* Main Container */ }
-      <main className="flex-1 flex flex-col h-full min-w-0 relative z-10 bg-[#141720]">
-        {/* Top Header matching Reference Video */ }
+      {/* Main Container */}
+      <main className="flex-1 flex flex-col h-full min-w-0 relative z-10 bg-[#0b0f19]">
+        {/* Top Header matching Linear.app */}
         <header
-          className="flex h-14 items-center px-6 shrink-0 justify-between relative z-20 bg-[#181c26]/80 backdrop-blur-md border-b border-slate-700/50"
+          className="h-12 border-b border-white/[0.06] bg-[#0d0f15]/60 backdrop-blur-xl px-4 flex items-center justify-between relative z-20"
         >
-          {/* Left: White Squircle + Sense AI in crisp white text */ }
-          <div className="flex items-center gap-3">
+          {/* Left: Brand squircle (New Thread) + Sidebar Toggle Button + Nexus AI */}
+          <div className="flex items-center gap-2.5">
             <button
-              onClick={() => setIsSidebarOpen((p) => !p)}
-              className="w-8 h-8 rounded-xl bg-white flex items-center justify-center shadow-md transition-transform active:scale-95 cursor-pointer"
-              aria-label="Toggle Sessions Drawer"
-              title="Toggle Chat Sessions (Ctrl+B)"
+              onClick={() => {
+                setActiveChatId(null);
+                setMessages([]);
+              }}
+              className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+              aria-label="New Chat Thread"
+              title="Start New Thread"
             >
-              <svg className="w-4 h-4 fill-slate-950" viewBox="0 0 32 32">
+              <svg className="w-3.5 h-3.5 fill-slate-950" viewBox="0 0 32 32">
                 <path d="M16 3.5C14.3 3.5 13.1 5.8 12.5 8.8 11.7 12.3 8.8 15.2 5.2 15.9c-1.2.2-1.2 2 0 2.2 3.6.7 6.5 3.6 7.3 7.1.6 3 1.8 5.3 3.5 5.3s2.9-2.3 3.5-5.3c.8-3.5 3.7-6.4 7.3-7.1 1.2-.2 1.2-2 0-2.2-3.6-.7-6.5-3.6-7.3-7.1-.6-3-1.8-5.3-3.5-5.3z" />
               </svg>
             </button>
 
-            <span className="text-sm font-semibold text-white tracking-tight">
-              Sense AI
+            <button
+              onClick={() => setIsSidebarOpen((p) => !p)}
+              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+              aria-label="Toggle Sessions Drawer"
+              title="Toggle Chat Sessions (Ctrl+B)"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <path d="M9 3v18" />
+              </svg>
+            </button>
+
+            <span className="text-xs font-medium text-slate-300 tracking-wide">
+              Nexus AI
             </span>
 
-            {/* Status Indicator */ }
+            {/* Status Indicator */}
             {isLoading && (
-              <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-slate-800/80 border border-slate-700/60 text-slate-300">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono bg-white/[0.04] border border-white/[0.08] text-slate-300">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                 <span>Generating...</span>
               </div>
             )}
           </div>
 
-          {/* Right: Minimal 4-dots Circle Button + Telemetry Trigger */ }
+          {/* Right: Telemetry trigger pill + GitHub link */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsTelemetryOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800/60 border border-slate-700/50 hover:bg-slate-700/60 text-slate-300 hover:text-white text-xs font-mono transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] text-slate-300 hover:text-white text-xs font-mono transition-all cursor-pointer"
               title="View Live LangGraph Execution Traces & State Machine"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               <span>Telemetry</span>
             </button>
 
-            <button
-              onClick={() => setIsSidebarOpen((p) => !p)}
-              className="w-8 h-8 rounded-full bg-slate-800/60 border border-slate-700/50 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700/60 transition-colors cursor-pointer"
-              title="More Actions"
-              aria-label="Menu"
+            <a
+              href="https://github.com/rizwandev99/nexus-enterprise-knowledge-worker"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all flex items-center justify-center cursor-pointer"
+              title="View Source Code on GitHub"
+              aria-label="GitHub Repository"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="7" cy="7" r="2.5" />
-                <circle cx="17" cy="7" r="2.5" />
-                <circle cx="7" cy="17" r="2.5" />
-                <circle cx="17" cy="17" r="2.5" />
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
               </svg>
-            </button>
+            </a>
           </div>
         </header>
 
-        {/* Message List area */ }
+        {/* Message List area */}
         <MessageList
           messages={displayMessages as UIMessage[]}
           messagesEndRef={messagesEndRef}
@@ -326,7 +340,7 @@ function ChatApp() {
           isStreaming={status === "streaming"}
         />
 
-        {/* Floating Omni-Input Bar */ }
+        {/* Floating Omni-Input Bar */}
         <ChatInput
           onSend={handleSend}
           isLoading={isLoading}
@@ -336,10 +350,10 @@ function ChatApp() {
           onSelectModel={setSelectedModel}
         />
 
-        {/* Monospace Footer Disclaimer matching Reference */ }
+        {/* Minimal Monospace Footer Disclaimer */}
         <footer className="text-center pb-3 px-4 select-none">
-          <p className="font-mono text-xs text-slate-500">
-            Sense AI may contain errors. We recommend checking important information.
+          <p className="text-[11px] font-mono text-slate-500/80">
+            Nexus AI may contain errors. We recommend checking important information.
           </p>
         </footer>
       </main>

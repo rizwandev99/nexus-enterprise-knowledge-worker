@@ -90,7 +90,7 @@ export default function MessageBubble({
   }, [partsText, selectedModel, isStreaming]);
 
   const renderFormattedContent = (content: string) => {
-    const codeBlockRegex = /`([a-zA-Z0-9_-]*)\n([\s\S]*?)`/g;
+    const codeBlockRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
     const blocks: { type: "text" | "code"; content: string; language?: string }[] = [];
 
     let lastIdx = 0;
@@ -292,7 +292,7 @@ export default function MessageBubble({
       <div className="flex items-center gap-2.5 px-1">
         {isUser ? (
           <div className="w-7 h-7 rounded-xl bg-slate-800 border border-white/[0.08] flex items-center justify-center text-slate-300 font-mono text-xs font-semibold shadow-sm">
-            MR
+            U
           </div>
         ) : (
           <div className="w-7 h-7 rounded-xl bg-white flex items-center justify-center shadow-md">
@@ -302,7 +302,7 @@ export default function MessageBubble({
           </div>
         )}
         <span className="text-xs font-mono text-slate-400">
-          {isUser ? "Md Rizwan • 2:40 pm" : "Sense AI • 2:40 pm"}
+          {isUser ? "User • 2:40 pm" : "Nexus AI • 2:40 pm"}
         </span>
       </div>
 

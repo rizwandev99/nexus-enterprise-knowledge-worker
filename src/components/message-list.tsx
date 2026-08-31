@@ -155,9 +155,9 @@ export default function MessageList({
               </div>
             </div>
 
-            {/* 2. Greeting: Hi, Md Rizwan */}
+            {/* 2. Greeting: Hi, User */}
             <p className="text-xs font-mono tracking-widest text-slate-400 uppercase font-medium mb-3">
-              Hi, Md Rizwan
+              Hi, User
             </p>
 
             {/* 3. Heading: Can I help you with anything? */}
