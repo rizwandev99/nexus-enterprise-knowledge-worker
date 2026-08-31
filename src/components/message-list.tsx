@@ -41,42 +41,75 @@ export default function MessageList({
     {
       id: "rag",
       icon: (
-        <svg className="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          className="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          <path d="m21 21-4.3-4.3" />
         </svg>
       ),
       badge: "Hybrid RAG Engine",
       title: "Hybrid Search RAG",
-      subtitle: "pgvector cosine similarity + PostgreSQL tsvector keyword ranking with RRF",
+      description:
+        "pgvector cosine similarity + PostgreSQL tsvector keyword ranking with RRF",
       actionText: "Try: Search enterprise password policies",
-      prompt: "What is our company policy on password rotation and API key security?",
+      prompt:
+        "What is our company policy on password rotation and API key security?",
       isActionPrompt: true,
     },
     {
       id: "sql-hitl",
       icon: (
-        <svg className="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <svg
+          className="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+          <path d="m9 12 2 2 4-4" />
         </svg>
       ),
       badge: "LangGraph interrupt()",
       title: "SQL Agent + HITL Approval",
-      subtitle: "Two-phase human authorization boundary for safe database mutations",
+      description:
+        "Two-phase human authorization boundary for safe database mutations",
       actionText: "Try: Mutate document status to ARCHIVED",
-      prompt: "Execute a database mutation to update document title in documents table to ARCHIVED",
+      prompt:
+        "Execute a database mutation to update document title in documents table to ARCHIVED",
       isActionPrompt: true,
     },
     {
       id: "self-correct",
       icon: (
-        <svg className="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+        <svg
+          className="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5" />
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+          <path d="M8 16H3v5" />
         </svg>
       ),
       badge: "Auto-Retry (Max 3)",
       title: "Cyclic Self-Correction",
-      subtitle: "Automatic runtime exception catching & query healing across cyclic graph edges",
+      description:
+        "Automatic runtime exception catching & query healing across cyclic graph edges",
       actionText: "Try: Test query with deliberate schema typo",
       prompt: "Demonstrate self-correction on database tool call error",
       isActionPrompt: true,
@@ -84,13 +117,22 @@ export default function MessageList({
     {
       id: "telemetry",
       icon: (
-        <svg className="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        <svg
+          className="w-4 h-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.48 12H2" />
         </svg>
       ),
       badge: "OpenTelemetry + OTLP",
       title: "State & Telemetry Inspector",
-      subtitle: "Inspect live LangGraph cyclic DAG flow, checkpointer state, and P95 latency",
+      description:
+        "Inspect live LangGraph cyclic DAG flow, checkpointer state, and P95 latency",
       actionText: "Open State & Telemetry Inspector",
       onClick: () => onOpenTelemetry?.(),
       isActionPrompt: false,
@@ -98,65 +140,61 @@ export default function MessageList({
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto relative bg-[#141720]">
+    <div className="flex-1 overflow-y-auto relative bg-[#0b0f19]">
       <div className="ambient-radial-glow" aria-hidden="true" />
 
       <div className="max-w-3xl mx-auto w-full px-5 sm:px-6 pt-10 pb-6 flex flex-col gap-6 relative z-10">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center text-center mt-4 mb-4 select-none max-w-xl mx-auto w-full">
-            {/* Center Floating White Squircle (52x52px, rounded-2xl) */ }
-            <div className="mb-6">
-              <div className="w-[52px] h-[52px] rounded-2xl bg-white flex items-center justify-center shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
-                <svg className="w-7 h-7 fill-slate-950" viewBox="0 0 32 32">
-                  <path d="M16 3.5C14.3 3.5 13.1 5.8 12.5 8.8 11.7 12.3 8.8 15.2 5.2 15.9c-1.2.2-1.2 2 0 2.2 3.6.7 6.5 3.6 7.3 7.1.6 3 1.8 5.3 3.5 5.3s2.9-2.3 3.5-5.3c.8-3.5 3.7-6.4 7.3-7.1 1.2-.2 1.2-2 0-2.2-3.6-.7-6.5-3.6-7.3-7.1-.6-3-1.8-5.3-3.5-5.3z" />
+          <div className="flex flex-col items-center text-center mt-4 mb-4 select-none max-w-2xl mx-auto w-full">
+            {/* 1. Brand Mark: Clean, refined 48x48px white squircle with precision black vector aperture/star glyph */}
+            <div className="mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-white shadow-[0_4px_20px_rgba(255,255,255,0.15)] flex items-center justify-center">
+                <svg className="w-6 h-6 fill-black" viewBox="0 0 24 24">
+                  <path d="M12 2C11.5 7.5 7.5 11.5 2 12c5.5.5 9.5 4.5 10 10 .5-5.5 4.5-9.5 10-10-5.5-.5-9.5-4.5-10-10z" />
                 </svg>
               </div>
             </div>
 
-            {/* Monospace Greeting */ }
-            <p className="text-slate-300 font-mono text-sm md:text-base font-medium mb-2">
-              Hi, Tommy Radison
+            {/* 2. Greeting: Hi, Md Rizwan */}
+            <p className="text-xs font-mono tracking-widest text-slate-400 uppercase font-medium mb-3">
+              Hi, Md Rizwan
             </p>
 
-            {/* Main Title */ }
-            <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-3">
+            {/* 3. Heading: Can I help you with anything? */}
+            <h1 className="text-3xl md:text-5xl font-semibold tracking-[-0.03em] text-white mb-3 text-center">
               Can I help you with anything?
             </h1>
 
-            {/* Subtitle */ }
-            <p className="text-slate-400 font-mono text-xs md:text-sm leading-relaxed max-w-lg mx-auto mb-8 whitespace-pre-line text-center">
-              Ready to assist you with anything you need?\nFrom answering questions, generation to providing recommendations. Let's get started!
+            {/* 4. Subtitle */}
+            <p className="text-sm text-slate-400/90 max-w-lg mx-auto text-center mb-8 leading-relaxed font-normal">
+              Ready to assist you with anything you need — from enterprise knowledge retrieval to safe database mutations.
             </p>
 
-            {/* Demo Knowledge Base Ingestion Strip */ }
+            {/* 5. Knowledge Base Seeder Chip */}
             {onSeedKnowledgeBase && (
-              <div className="mb-8 flex items-center gap-2 p-1.5 pl-3 pr-2 rounded-full bg-[#202736]/70 border border-slate-700/50 backdrop-blur-md shadow-md">
+              <button
+                type="button"
+                onClick={handleSeedClick}
+                disabled={isSeeding}
+                className="text-xs font-mono text-slate-300 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] rounded-full px-3.5 py-1.5 transition-all flex items-center gap-2 mx-auto mb-8 cursor-pointer disabled:opacity-50"
+                title="Seed sample governance and architecture docs into PostgreSQL"
+              >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs text-slate-300 font-mono">
-                  Enterprise Knowledge Base:
-                </span>
-                <button
-                  type="button"
-                  onClick={handleSeedClick}
-                  disabled={isSeeding}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium bg-slate-700/60 hover:bg-slate-600/70 border border-slate-600/50 text-slate-200 transition-all cursor-pointer disabled:opacity-50"
-                  title="Seed sample governance and architecture docs into PostgreSQL"
-                >
-                  {isSeeding ? (
-                    <>
-                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Ingesting pgvector Chunks...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Seed Knowledge Base</span>
-                    </>
-                  )}
-                </button>
-              </div>
+                <span className="text-slate-400">Enterprise KB:</span>
+                {isSeeding ? (
+                  <span className="inline-flex items-center gap-1.5 text-slate-200">
+                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Ingesting pgvector Chunks...
+                  </span>
+                ) : (
+                  <span className="text-slate-200 hover:text-white transition-colors">
+                    Seed Knowledge Base
+                  </span>
+                )}
+              </button>
             )}
 
-            {/* 2x2 Feature Cards Grid */ }
+            {/* 6. Bento Grid (4 Cards in 2x2 grid) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full text-left">
               {featureCards.map((card) => (
                 <div
@@ -168,30 +206,29 @@ export default function MessageList({
                       card.onClick();
                     }
                   }}
-                  className="group relative rounded-2xl p-4 cursor-pointer transition-all duration-200 flex flex-col justify-between bg-[#202736]/70 border border-slate-700/50 hover:bg-[#283144]/90 hover:border-slate-600/70 shadow-lg text-left"
+                  className="bg-[#121622]/60 hover:bg-[#161b2a]/80 border border-white/[0.07] hover:border-white/[0.15] rounded-2xl p-5 transition-all duration-200 hover:-translate-y-0.5 group text-left cursor-pointer shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
                 >
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-slate-800/80 border border-slate-700/50 flex items-center justify-center text-slate-300">
-                        {card.icon}
-                      </div>
-                      <span className="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-mono font-medium tracking-wide bg-slate-800/80 border border-slate-700/60 text-slate-300">
-                        {card.badge}
-                      </span>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-slate-300">
+                      {card.icon}
                     </div>
-
-                    <h3 className="text-sm font-semibold text-white group-hover:text-white transition-colors mb-1">
-                      {card.title}
-                    </h3>
-
-                    <p className="text-xs text-slate-400 font-mono leading-relaxed mb-3">
-                      {card.subtitle}
-                    </p>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.04] text-slate-400 border border-white/[0.06]">
+                      {card.badge}
+                    </span>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-700/40">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-mono font-medium text-slate-300 group-hover:text-white transition-colors">
-                      {card.actionText} →
+                  <h3 className="text-sm font-medium text-white tracking-tight mt-3 mb-1">
+                    {card.title}
+                  </h3>
+
+                  <p className="text-xs text-slate-400/90 leading-relaxed">
+                    {card.description}
+                  </p>
+
+                  <div className="text-xs font-mono text-indigo-300/90 hover:text-indigo-200 flex items-center gap-1.5 mt-3.5 pt-3 border-t border-white/[0.04] group-hover:text-indigo-300 transition-colors">
+                    <span>{card.actionText}</span>
+                    <span className="transition-transform duration-150 group-hover:translate-x-0.5">
+                      →
                     </span>
                   </div>
                 </div>
