@@ -1,7 +1,9 @@
 // src/lib/agent/pricing.ts
 
 export type SupportedModelId =
+  | "groq-gpt-oss-120b"
   | "groq-llama-3.3-70b"
+  | "groq-qwen-3.8-27b"
   | "gpt-4o"
   | "claude-3-5-sonnet"
   | "deepseek-r1";
@@ -12,9 +14,17 @@ export interface ModelPricing {
 }
 
 export const MODEL_PRICING: Record<SupportedModelId | string, ModelPricing> = {
+  "groq-gpt-oss-120b": {
+    inputPerMillion: 0.59,
+    outputPerMillion: 0.79,
+  },
   "groq-llama-3.3-70b": {
     inputPerMillion: 0.59,
     outputPerMillion: 0.79,
+  },
+  "groq-qwen-3.8-27b": {
+    inputPerMillion: 0.20,
+    outputPerMillion: 0.60,
   },
   "gpt-4o": {
     inputPerMillion: 2.50,

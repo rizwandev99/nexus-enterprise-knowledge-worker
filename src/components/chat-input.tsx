@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import ModelSelector from "./ModelSelector";
+import ModelSelector from "./model-selector";
 
 export interface ChatInputProps {
   onSend: (text: string) => void;
@@ -23,7 +23,7 @@ export default function ChatInput({
   isLoading,
   selectedPrompt,
   onClearSelectedPrompt,
-  selectedModel = "groq-llama-3.3-70b",
+  selectedModel = "groq-gpt-oss-120b",
   onSelectModel,
 }: ChatInputProps) {
   const [input, setInput] = useState("");

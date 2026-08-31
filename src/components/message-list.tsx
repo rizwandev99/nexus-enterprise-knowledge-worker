@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { UIMessage } from "@ai-sdk/react";
-import MessageBubble from "./MessageBubble";
+import MessageBubble from "./message-bubble";
 
 export interface MessageListProps {
   messages: UIMessage[];

@@ -74,7 +74,7 @@ export async function POST(req: Request) {
   const jsonBody = await req.json();
   const { messages } = jsonBody;
   const chatId = url.searchParams.get("chatId") || jsonBody.chatId || jsonBody.body?.chatId;
-  const modelId = jsonBody.modelId || jsonBody.body?.modelId || url.searchParams.get("modelId") || "groq-llama-3.3-70b";
+  const modelId = jsonBody.modelId || jsonBody.body?.modelId || url.searchParams.get("modelId") || "groq-gpt-oss-120b";
 
   if (!chatId) {
     return new Response(JSON.stringify({ error: "Missing chatId" }), { status: 400 });
@@ -160,9 +160,18 @@ export async function POST(req: Request) {
                 firstTokenTime = performance.now();
               }
 
-              const delta = typeof event.data.chunk.content === "string"
-                ? event.data.chunk.content
-                : String(event.data.chunk.content);
+              const rawContent = event.data.chunk.content;
+              let delta = "";
+              if (typeof rawContent === "string") {
+                delta = rawContent;
+              } else if (Array.isArray(rawContent)) {
+                delta = rawContent
+                  .map((p) => (typeof p === "string" ? p : (p as { text?: string })?.text || ""))
+                  .join("");
+              } else if (rawContent && typeof rawContent === "object") {
+                delta = (rawContent as { text?: string }).text || "";
+              }
+
               if (delta) {
                 assistantContent += delta;
                 ensureTextBlockOpen();
@@ -328,5 +337,14 @@ export async function POST(req: Request) {
     },
   });
 
-  return createUIMessageStreamResponse({ stream });
+  return createUIMessageStreamResponse({
+    stream,
+    headers: {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "Connection": "keep-alive",
+      "X-Accel-Buffering": "no",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }

@@ -98,8 +98,13 @@ graph TD
 - **Bounded Pool Configuration**: Node `pg.Pool` configured with `max: 5`, `idleTimeoutMillis: 30000`, and `connectionTimeoutMillis: 5000` for Vercel Serverless Function cold-start efficiency and connection leak prevention.
 - **Batch Chunk Ingestion**: Ingests document chunks via transactional `$transaction` using `createMany`, optimizing database round-trips.
 
-### 4.3 Rich Markdown & Interactive Citation Rendering Pipeline (`src/components/MessageBubble.tsx`)
+### 4.3 Anti-Buffering Stream Response Pipeline (`src/app/api/chat/route.ts`)
+- **SSE Anti-Buffering Headers**: Enforces `X-Accel-Buffering: no` and `Cache-Control: no-cache, no-transform` on the HTTP response stream to prevent Nginx, Cloudflare, and Vercel Edge proxies from compressing or batching in-flight tokens.
+- **Polymorphic Chunk Delta Extraction**: Handles both `on_chat_model_stream` and `chat_model` stream events in LangGraph to reliably extract text token chunks across heterogeneous LLM providers (OpenAI, Anthropic Claude, Groq LLaMA).
+
+### 4.4 Rich Markdown & Stream-Safe Table Parser (`src/components/message-bubble.tsx`)
 - **Zero-Dependency Markdown Engine**: Parses headers (`#`, `##`, `###`), bold/italics, bullet lists, inline code, and syntax-highlighted code blocks with 1-click clipboard copy.
+- **Stream-Safe Table Parsing**: Dynamically calculates table header column count and automatically synthesizes in-flight placeholder cells (`<td>`) for partially completed rows during token streaming, preventing DOM thrashing and layout flickering.
 - **Interactive Citation Tokens**: Automatically detects `[Doc-X]` tokens and transforms them into interactive pill badges linked to document sources.
 
 ---
@@ -114,13 +119,13 @@ src/
 │   ├── chat-actions.ts    # Server actions for sessions (list, create, delete, rename, message history)
 │   └── globals.css        # Linear.app-style dark glassmorphism design tokens & animations
 ├── components/
-│   ├── ChatInput.tsx      # Auto-resizing textarea, document attachment pill, file drag-and-drop
-│   ├── MessageList.tsx    # Message container, dynamic scroll, Bento feature quick-start cards
-│   ├── MessageBubble.tsx  # Linear-style message cards, inline citation tags, markdown formatting
-│   ├── Sidebar.tsx        # Vertical icon navigation rail, session history drawer, new chat trigger
-│   ├── ApprovalModal.tsx  # Human-in-the-loop action approval modal for SQL mutations
-│   ├── TelemetryModal.tsx # Live LangGraph execution traces & state machine inspector
-│   └── Toast.tsx          # Non-intrusive floating feedback alerts
+│   ├── chat-input.tsx     # Auto-resizing textarea, document attachment pill, file drag-and-drop
+│   ├── message-list.tsx   # Message container, dynamic scroll, Bento feature quick-start cards
+│   ├── message-bubble.tsx # Linear-style message cards, stream-safe tables, inline citation tags
+│   ├── sidebar.tsx        # Vertical icon navigation rail, session history drawer, new chat trigger
+│   ├── approval-modal.tsx # Human-in-the-loop action approval modal for SQL mutations
+│   ├── telemetry-modal.tsx# Live LangGraph execution traces & state machine inspector
+│   └── toast.tsx          # Non-intrusive floating feedback alerts
 └── lib/
     ├── agent/
     │   ├── graph.ts       # LangGraph cyclic state machine construction & PostgreSQL checkpointer

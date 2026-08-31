@@ -244,6 +244,16 @@ function parseMarkdownBlocks(raw: string): MarkdownBlock[] {
   const blocks: MarkdownBlock[] = [];
   let i = 0;
 
+  const isSeparatorLine = (s: string) =>
+    /^\|?[\s:-]+\|?[\s:-|]*$/.test(s) && s.includes("-");
+
+  const parseRow = (rowLine: string) => {
+    let cleaned = rowLine.trim();
+    if (cleaned.startsWith("|")) cleaned = cleaned.slice(1);
+    if (cleaned.endsWith("|")) cleaned = cleaned.slice(0, -1);
+    return cleaned.split("|").map((c) => c.trim());
+  };
+
   while (i < lines.length) {
     const line = lines[i];
     const trimmed = line.trim();
@@ -274,29 +284,29 @@ function parseMarkdownBlocks(raw: string): MarkdownBlock[] {
       continue;
     }
 
-    // 2. Table Block
+    // 2. Table Block (Streaming resilient)
     if (
       trimmed.startsWith("|") &&
-      trimmed.endsWith("|") &&
-      i + 1 < lines.length &&
-      lines[i + 1].trim().startsWith("|") &&
-      /^\|(\s*:?-+:?\s*\|)+$/.test(lines[i + 1].trim())
+      (i + 1 >= lines.length || isSeparatorLine(lines[i + 1].trim()) || lines[i + 1].trim().startsWith("|"))
     ) {
-      const parseRow = (rowLine: string) => {
-        const cells = rowLine.split("|");
-        return cells.slice(1, -1).map((c) => c.trim());
-      };
-
+      const hasSep = i + 1 < lines.length && isSeparatorLine(lines[i + 1].trim());
       const headers = parseRow(trimmed);
-      i += 2; // Skip header and separator row
+      i += hasSep ? 2 : 1; // Skip header and separator if present
       const rows: string[][] = [];
 
-      while (
-        i < lines.length &&
-        lines[i].trim().startsWith("|") &&
-        lines[i].trim().endsWith("|")
-      ) {
-        rows.push(parseRow(lines[i].trim()));
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        const rowTrimmed = lines[i].trim();
+        if (isSeparatorLine(rowTrimmed)) {
+          i++;
+          continue;
+        }
+        const parsed = parseRow(rowTrimmed);
+        // Pad row to match header length so incomplete in-flight rows don't break layout
+        const paddedRow = [...parsed];
+        while (paddedRow.length < headers.length) {
+          paddedRow.push("");
+        }
+        rows.push(paddedRow.slice(0, Math.max(headers.length, paddedRow.length)));
         i++;
       }
 
@@ -382,12 +392,7 @@ function parseMarkdownBlocks(raw: string): MarkdownBlock[] {
       !/^(-{3,}|\*{3,}|_{3,})$/.test(lines[i].trim()) &&
       !/^[-*+]\s+/.test(lines[i].trim()) &&
       !/^\d+\.\s+/.test(lines[i].trim()) &&
-      !(
-        lines[i].trim().startsWith("|") &&
-        lines[i].trim().endsWith("|") &&
-        i + 1 < lines.length &&
-        /^\|(\s*:?-+:?\s*\|)+$/.test(lines[i + 1].trim())
-      )
+      !lines[i].trim().startsWith("|")
     ) {
       paraLines.push(lines[i]);
       i++;
@@ -462,7 +467,7 @@ function RenderMarkdown({
             return (
               <div
                 key={idx}
-                className="my-3 overflow-x-auto rounded-xl border border-white/10 bg-[#0c0e15] shadow-xl"
+                className="my-3 overflow-x-auto rounded-xl border border-white/10 bg-[#0c0e15]/80 backdrop-blur-md shadow-xl"
               >
                 <table className="w-full text-left text-xs border-collapse">
                   <thead className="bg-white/5 border-b border-white/10 text-teal-300 font-mono font-semibold">
@@ -596,7 +601,7 @@ export default function MessageBubble({
   message,
   isUser,
   onSelectCitation,
-  selectedModel = "groq-llama-3.3-70b",
+  selectedModel = "groq-gpt-oss-120b",
 }: MessageBubbleProps) {
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState<"up" | "down" | null>(null);

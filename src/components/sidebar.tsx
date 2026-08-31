@@ -147,11 +147,12 @@ export default function Sidebar({
         >
           {/* Top Section: Brand Logo + Primary Actions */}
           <div className="flex flex-col items-center gap-5">
-            {/* Brand Mark (Nexus AI) */}
+            {/* Brand Mark / Drawer Toggle Button */}
             <button
-              onClick={handleNewChat}
-              className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-600 text-slate-950 flex items-center justify-center font-bold transition-transform hover:scale-105 active:scale-95 shadow-[0_0_16px_rgba(20,184,166,0.35)]"
-              title="Nexus Enterprise Knowledge Worker — Home"
+              onClick={() => (onToggleDrawer ? onToggleDrawer() : onClose?.())}
+              className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-600 text-slate-950 flex items-center justify-center font-bold transition-transform hover:scale-105 active:scale-95 shadow-[0_0_16px_rgba(20,184,166,0.35)] cursor-pointer"
+              aria-label="Toggle Chat Sessions Sidebar"
+              title="Toggle Sidebar (Chat Sessions)"
             >
               <svg className="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />

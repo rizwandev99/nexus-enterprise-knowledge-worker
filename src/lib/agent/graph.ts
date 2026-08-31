@@ -18,17 +18,19 @@ export interface AgentGraphOptions {
 // checkpoints are not lost between the initial request and the resume request.
 const checkpointer = new PostgresSaver(pool);
 let checkpointerInitialized = false;
-
 /**
  * Dynamically resolves and instantiates the LLM based on modelId with graceful fallbacks.
  */
 export function resolveModel(requestedModelId?: string) {
-  const modelId = (requestedModelId || "groq-llama-3.3-70b") as SupportedModelId;
+  const modelId = (requestedModelId || "groq-gpt-oss-120b") as SupportedModelId;
 
   const groqKey = process.env.GROQ_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   const deepseekKey = process.env.DEEPSEEK_API_KEY;
+
+  const defaultGroqModel = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+  const defaultGroqQwenModel = process.env.GROQ_QWEN_MODEL || "qwen/qwen3.8-27b";
 
   switch (modelId) {
     case "gpt-4o": {
@@ -38,20 +40,22 @@ export function resolveModel(requestedModelId?: string) {
             model: process.env.OPENAI_MODEL || "gpt-4o",
             apiKey: openaiKey,
             temperature: 0,
+            streaming: true,
           }),
           resolvedModelId: "gpt-4o" as const,
           provider: "openai" as const,
         };
       }
       if (groqKey) {
-        console.warn("[createAgentGraph] Warning: OPENAI_API_KEY missing for 'gpt-4o'. Falling back to Groq LLaMA 3.3 70B.");
+        console.warn("[createAgentGraph] Warning: OPENAI_API_KEY missing for 'gpt-4o'. Falling back to Groq GPT-OSS 120B.");
         return {
           model: new ChatGroq({
-            model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+            model: defaultGroqModel,
             apiKey: groqKey,
             temperature: 0,
+            streaming: true,
           }),
-          resolvedModelId: "groq-llama-3.3-70b" as const,
+          resolvedModelId: "groq-gpt-oss-120b" as const,
           provider: "groq" as const,
         };
       }
@@ -61,6 +65,7 @@ export function resolveModel(requestedModelId?: string) {
           model: "gpt-4o",
           apiKey: "missing-key",
           temperature: 0,
+          streaming: true,
         }),
         resolvedModelId: "gpt-4o" as const,
         provider: "openai" as const,
@@ -77,20 +82,22 @@ export function resolveModel(requestedModelId?: string) {
               baseURL: process.env.ANTHROPIC_BASE_URL || "https://api.anthropic.com/v1",
             },
             temperature: 0,
+            streaming: true,
           }),
           resolvedModelId: "claude-3-5-sonnet" as const,
           provider: "anthropic" as const,
         };
       }
       if (groqKey) {
-        console.warn("[createAgentGraph] Warning: ANTHROPIC_API_KEY missing for 'claude-3-5-sonnet'. Falling back to Groq LLaMA 3.3 70B.");
+        console.warn("[createAgentGraph] Warning: ANTHROPIC_API_KEY missing for 'claude-3-5-sonnet'. Falling back to Groq GPT-OSS 120B.");
         return {
           model: new ChatGroq({
-            model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+            model: defaultGroqModel,
             apiKey: groqKey,
             temperature: 0,
+            streaming: true,
           }),
-          resolvedModelId: "groq-llama-3.3-70b" as const,
+          resolvedModelId: "groq-gpt-oss-120b" as const,
           provider: "groq" as const,
         };
       }
@@ -101,6 +108,7 @@ export function resolveModel(requestedModelId?: string) {
             model: process.env.OPENAI_MODEL || "gpt-4o",
             apiKey: openaiKey,
             temperature: 0,
+            streaming: true,
           }),
           resolvedModelId: "gpt-4o" as const,
           provider: "openai" as const,
@@ -109,11 +117,12 @@ export function resolveModel(requestedModelId?: string) {
       console.warn("[createAgentGraph] Warning: No API keys found for 'claude-3-5-sonnet'. Initializing safe placeholder.");
       return {
         model: new ChatGroq({
-          model: "llama-3.3-70b-versatile",
+          model: defaultGroqModel,
           apiKey: "missing-key",
           temperature: 0,
+          streaming: true,
         }),
-        resolvedModelId: "groq-llama-3.3-70b" as const,
+        resolvedModelId: "groq-gpt-oss-120b" as const,
         provider: "groq" as const,
       };
     }
@@ -128,6 +137,7 @@ export function resolveModel(requestedModelId?: string) {
               baseURL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com",
             },
             temperature: 0,
+            streaming: true,
           }),
           resolvedModelId: "deepseek-r1" as const,
           provider: "deepseek" as const,
@@ -136,9 +146,10 @@ export function resolveModel(requestedModelId?: string) {
       if (groqKey) {
         return {
           model: new ChatGroq({
-            model: process.env.GROQ_DEEPSEEK_MODEL || "deepseek-r1-distill-llama-70b",
+            model: process.env.GROQ_DEEPSEEK_MODEL || defaultGroqModel,
             apiKey: groqKey,
             temperature: 0,
+            streaming: true,
           }),
           resolvedModelId: "deepseek-r1" as const,
           provider: "groq" as const,
@@ -151,6 +162,7 @@ export function resolveModel(requestedModelId?: string) {
             model: process.env.OPENAI_MODEL || "gpt-4o",
             apiKey: openaiKey,
             temperature: 0,
+            streaming: true,
           }),
           resolvedModelId: "gpt-4o" as const,
           provider: "openai" as const,
@@ -159,35 +171,78 @@ export function resolveModel(requestedModelId?: string) {
       console.warn("[createAgentGraph] Warning: No API keys found for 'deepseek-r1'. Initializing safe placeholder.");
       return {
         model: new ChatGroq({
-          model: "deepseek-r1-distill-llama-70b",
+          model: defaultGroqModel,
           apiKey: "missing-key",
           temperature: 0,
+          streaming: true,
         }),
         resolvedModelId: "deepseek-r1" as const,
         provider: "groq" as const,
       };
     }
 
-    case "groq-llama-3.3-70b":
-    default: {
+    case "groq-qwen-3.8-27b": {
       if (groqKey) {
         return {
           model: new ChatGroq({
-            model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+            model: defaultGroqQwenModel,
             apiKey: groqKey,
             temperature: 0,
+            streaming: true,
           }),
-          resolvedModelId: "groq-llama-3.3-70b" as const,
+          resolvedModelId: "groq-qwen-3.8-27b" as const,
           provider: "groq" as const,
         };
       }
       if (openaiKey) {
-        console.warn("[createAgentGraph] Warning: GROQ_API_KEY missing for 'groq-llama-3.3-70b'. Falling back to OpenAI GPT-4o.");
+        console.warn("[createAgentGraph] Warning: GROQ_API_KEY missing for 'groq-qwen-3.8-27b'. Falling back to OpenAI GPT-4o.");
         return {
           model: new ChatOpenAI({
             model: process.env.OPENAI_MODEL || "gpt-4o",
             apiKey: openaiKey,
             temperature: 0,
+            streaming: true,
+          }),
+          resolvedModelId: "gpt-4o" as const,
+          provider: "openai" as const,
+        };
+      }
+      console.warn("[createAgentGraph] Warning: Neither GROQ_API_KEY nor OPENAI_API_KEY found for 'groq-qwen-3.8-27b'. Initializing safe placeholder.");
+      return {
+        model: new ChatGroq({
+          model: defaultGroqQwenModel,
+          apiKey: "missing-key",
+          temperature: 0,
+          streaming: true,
+        }),
+        resolvedModelId: "groq-qwen-3.8-27b" as const,
+        provider: "groq" as const,
+      };
+    }
+
+    case "groq-llama-3.3-70b":
+    case "groq-gpt-oss-120b":
+    default: {
+      if (groqKey) {
+        return {
+          model: new ChatGroq({
+            model: defaultGroqModel,
+            apiKey: groqKey,
+            temperature: 0,
+            streaming: true,
+          }),
+          resolvedModelId: "groq-gpt-oss-120b" as const,
+          provider: "groq" as const,
+        };
+      }
+      if (openaiKey) {
+        console.warn("[createAgentGraph] Warning: GROQ_API_KEY missing for 'groq-gpt-oss-120b'. Falling back to OpenAI GPT-4o.");
+        return {
+          model: new ChatOpenAI({
+            model: process.env.OPENAI_MODEL || "gpt-4o",
+            apiKey: openaiKey,
+            temperature: 0,
+            streaming: true,
           }),
           resolvedModelId: "gpt-4o" as const,
           provider: "openai" as const,
@@ -196,11 +251,12 @@ export function resolveModel(requestedModelId?: string) {
       console.warn("[createAgentGraph] Warning: Neither GROQ_API_KEY nor OPENAI_API_KEY found. Initializing safe placeholder.");
       return {
         model: new ChatGroq({
-          model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+          model: defaultGroqModel,
           apiKey: "missing-key",
           temperature: 0,
+          streaming: true,
         }),
-        resolvedModelId: "groq-llama-3.3-70b" as const,
+        resolvedModelId: "groq-gpt-oss-120b" as const,
         provider: "groq" as const,
       };
     }
@@ -374,10 +430,10 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
       const isErr = lastMsg.content?.toString().includes("RUNTIME EXCEPTION");
 
       if (isErr && state.retryCount < 3) {
-        return "reasoning"; // Self-correction loop
+        return "reasoning"; // Self-correction retry loop
       }
 
-      return "reasoning";
+      return END; // ✅ Tool executed successfully — terminate the graph
     });
 
   return workflow.compile({ checkpointer });
