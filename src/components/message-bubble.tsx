@@ -157,7 +157,11 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(code);
+    try {
+      navigator.clipboard?.writeText(code);
+    } catch {
+      // ignore clipboard error in restricted contexts
+    }
     setCopied(true);
     showToast("Code snippet copied to clipboard", "success");
     setTimeout(() => setCopied(false), 2000);
@@ -178,7 +182,11 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
         <button
           type="button"
           onClick={handleCopy}
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono text-gray-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+          className={
+            copied
+              ? "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono text-teal-300 font-bold bg-teal-500/25 border border-teal-500/40 shadow-[0_0_10px_rgba(20,184,166,0.25)] active:scale-95 transition-all cursor-pointer animate-in fade-in zoom-in-95"
+              : "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 active:scale-95 transition-all cursor-pointer shadow-xs"
+          }
           title="Copy code to clipboard"
           aria-label="Copy code to clipboard"
         >
@@ -193,11 +201,11 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-teal-400"
+                className="text-teal-300"
               >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              <span className="text-teal-400 font-medium">Copied</span>
+              <span className="text-teal-300 font-bold">Copied!</span>
             </>
           ) : (
             <>
@@ -702,7 +710,11 @@ export default function MessageBubble({
   if (!hasContent) return null;
 
   const handleCopy = (textToCopy: string) => {
-    navigator.clipboard.writeText(textToCopy);
+    try {
+      navigator.clipboard?.writeText(textToCopy);
+    } catch {
+      // ignore clipboard error in restricted contexts
+    }
     setCopied(true);
     showToast("Message copied to clipboard", "success");
     setTimeout(() => setCopied(false), 2000);
@@ -835,42 +847,54 @@ export default function MessageBubble({
 
             {/* Copy Button */}
             <button
+              type="button"
               onClick={() => handleCopy(partsText)}
-              className="opacity-70 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-white/10 text-gray-400 hover:text-white flex items-center gap-1 text-[11px] cursor-pointer"
-              title="Copy message"
+              className={
+                isUser
+                  ? copied
+                    ? "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-white text-teal-950 border border-white shadow-md transition-all duration-150 active:scale-95 cursor-pointer animate-in fade-in zoom-in-95"
+                    : "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono text-white/90 bg-black/20 hover:bg-black/35 hover:text-white border border-white/20 shadow-xs transition-all duration-150 active:scale-95 cursor-pointer"
+                  : copied
+                    ? "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-teal-500/25 text-teal-300 border border-teal-500/40 shadow-[0_0_12px_rgba(20,184,166,0.3)] transition-all duration-150 active:scale-95 cursor-pointer animate-in fade-in zoom-in-95"
+                    : "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 shadow-xs transition-all duration-150 active:scale-95 cursor-pointer"
+              }
+              title={copied ? "Copied to clipboard" : "Copy message"}
               aria-label="Copy message"
             >
               {copied ? (
                 <>
                   <svg
-                    width="12"
-                    height="12"
+                    width="11"
+                    height="11"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="2.5"
+                    strokeWidth={isUser ? "3" : "2.5"}
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-teal-400"
+                    className={isUser ? "text-teal-950" : "text-teal-300"}
                   >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span className="text-teal-400 font-mono">Copied</span>
+                  <span>Copied!</span>
                 </>
               ) : (
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
+                <>
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                  <span>Copy</span>
+                </>
               )}
             </button>
           </div>

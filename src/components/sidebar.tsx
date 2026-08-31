@@ -270,11 +270,16 @@ export default function Sidebar({
                 )}
                 {sessions.length > 0 && (
                   <button
+                    type="button"
                     onClick={handleDeleteAll}
-                    className="p-1 rounded text-gray-500 hover:text-red-400 hover:bg-white/5 transition-colors text-xs"
-                    title="Delete All"
+                    className={`px-2 py-0.5 rounded-md transition-all text-[11px] font-mono cursor-pointer ${
+                      confirmDeleteAll
+                        ? "text-red-400 bg-red-500/20 border border-red-500/30 animate-pulse font-medium"
+                        : "text-gray-400 hover:text-red-400 hover:bg-white/5"
+                    }`}
+                    title={confirmDeleteAll ? "Click again to confirm delete all chats" : "Delete all chat sessions"}
                   >
-                    Clear all
+                    {confirmDeleteAll ? "Confirm?" : "Clear all"}
                   </button>
                 )}
               </div>
@@ -321,20 +326,52 @@ export default function Sidebar({
                       )}
 
                       {!editingId && (isActive || isHovered) && (
-                        <div className="flex items-center gap-1 shrink-0 ml-1">
+                        <div className="flex items-center gap-0.5 shrink-0 ml-1">
                           <button
+                            type="button"
                             onClick={(e) => startRename(e, session)}
-                            className="p-1 text-gray-400 hover:text-white"
-                            title="Rename"
+                            className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+                            title="Rename chat"
+                            aria-label="Rename chat"
                           >
-                            ✏️
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
                           </button>
                           <button
+                            type="button"
                             onClick={(e) => handleDelete(e, session.id)}
-                            className="p-1 text-gray-400 hover:text-red-400"
-                            title="Delete"
+                            className={`p-1.5 rounded-md transition-all active:scale-95 cursor-pointer ${
+                              confirmDeleteId === session.id
+                                ? "text-red-400 bg-red-500/20 border border-red-500/40 animate-pulse"
+                                : "text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+                            }`}
+                            title={confirmDeleteId === session.id ? "Click again to confirm delete" : "Delete chat"}
+                            aria-label="Delete chat"
                           >
-                            🗑️
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
                           </button>
                         </div>
                       )}

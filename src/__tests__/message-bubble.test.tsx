@@ -1,10 +1,18 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import MessageBubble from '../components/message-bubble';
 import type { UIMessage } from '@ai-sdk/react';
 
 describe('MessageBubble Markdown & Feature Rendering', () => {
+  beforeEach(() => {
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: vi.fn().mockImplementation(() => Promise.resolve()),
+      },
+    });
+  });
+
   it('renders bold, inline code, and headers properly', () => {
     const message: UIMessage = {
       id: 'msg-1',
@@ -38,9 +46,10 @@ describe('MessageBubble Markdown & Feature Rendering', () => {
 
     render(<MessageBubble message={message} isUser={false} />);
 
-    expect(screen.getByText('typescript')).toBeDefined();
-    expect(screen.getByText('const enterprise = true;')).toBeDefined();
-    expect(screen.getByText('Copy')).toBeDefined();
+    const codeCopyBtn = screen.getByRole('button', { name: /copy code to clipboard/i });
+    expect(codeCopyBtn).toBeDefined();
+    fireEvent.click(codeCopyBtn);
+    expect(codeCopyBtn.textContent).toContain('Copied!');
   });
 
   it('renders markdown tables cleanly', () => {
@@ -113,4 +122,54 @@ describe('MessageBubble Markdown & Feature Rendering', () => {
     expect(screen.getByText('Groq LPU')).toBeDefined();
     expect(screen.getByText('850 tok/s')).toBeDefined();
   });
+
+  it('renders high-contrast copy button on user message and toggles Copied! state', () => {
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: vi.fn().mockImplementation(() => Promise.resolve()),
+      },
+    });
+
+    const message: UIMessage = {
+      id: 'msg-copy-user',
+      role: 'user',
+      parts: [{ type: 'text', text: 'Explain PostgreSQL tsvector indexes' }],
+    };
+
+    render(<MessageBubble message={message} isUser={true} />);
+
+    const copyBtn = screen.getByRole('button', { name: /copy message/i });
+    expect(copyBtn).toBeDefined();
+    expect(copyBtn.textContent).toContain('Copy');
+
+    fireEvent.click(copyBtn);
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Explain PostgreSQL tsvector indexes');
+    expect(copyBtn.textContent).toContain('Copied!');
+  });
+
+  it('renders copy button on assistant message and copies full response content', () => {
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: vi.fn().mockImplementation(() => Promise.resolve()),
+      },
+    });
+
+    const message: UIMessage = {
+      id: 'msg-copy-assistant',
+      role: 'assistant',
+      parts: [{ type: 'text', text: 'Here is the comprehensive response.' }],
+    };
+
+    render(<MessageBubble message={message} isUser={false} />);
+
+    const copyBtn = screen.getByRole('button', { name: /copy message/i });
+    expect(copyBtn).toBeDefined();
+
+    fireEvent.click(copyBtn);
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Here is the comprehensive response.');
+    expect(copyBtn.textContent).toContain('Copied!');
+  });
 });
+

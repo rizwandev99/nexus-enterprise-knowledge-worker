@@ -258,16 +258,21 @@ export default function CitationDrawer({
 
                     {/* 1-Click Copy Snippet Button */}
                     <button
+                      type="button"
                       onClick={activeTab === "passage" ? handleCopySnippet : handleCopyFull}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-teal-500/10 border border-teal-500/30 text-teal-300 hover:bg-teal-500/20 hover:border-teal-400 hover:text-white transition-all shadow-[0_0_12px_rgba(20,184,166,0.15)] active:scale-95"
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all active:scale-95 cursor-pointer ${
+                        (activeTab === "passage" ? copiedSnippet : copiedFull)
+                          ? "bg-emerald-500/25 border border-emerald-500/50 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.3)] animate-in fade-in zoom-in-95 font-semibold"
+                          : "bg-teal-500/10 border border-teal-500/30 text-teal-300 hover:bg-teal-500/20 hover:border-teal-400 hover:text-white shadow-[0_0_12px_rgba(20,184,166,0.15)]"
+                      }`}
                       title="Copy content to clipboard"
                     >
                       {(activeTab === "passage" ? copiedSnippet : copiedFull) ? (
                         <>
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-300">
                             <polyline points="20 6 9 17 4 12" />
                           </svg>
-                          <span className="text-emerald-400 font-mono">Copied!</span>
+                          <span className="text-emerald-300 font-mono font-bold">Copied!</span>
                         </>
                       ) : (
                         <>
