@@ -74,7 +74,7 @@ function ChatApp() {
   }, [activeChatId, setMessages]);
 
   const handleSend = useCallback(
-    (promptText: string) => {
+    (promptText: string, options?: { webSearch?: boolean }) => {
       const generatedChatId =
         activeChatId ||
         (typeof crypto !== "undefined" && crypto.randomUUID
@@ -94,6 +94,7 @@ function ChatApp() {
           body: {
             chatId: generatedChatId,
             model: selectedModel,
+            webSearch: options?.webSearch ?? false,
           },
         }
       );
@@ -216,7 +217,7 @@ function ChatApp() {
   });
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden select-none bg-[#141720] text-slate-100">
+    <div className="flex h-screen w-screen overflow-hidden select-none bg-[#08090b] text-slate-100">
       {/* Approval Modal for HITL Interrupts */ }
       <ApprovalModal
         pendingApproval={pendingApproval as UIMessage}
@@ -256,21 +257,18 @@ function ChatApp() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 flex flex-col h-full min-w-0 relative z-10 bg-[#0b0f19]">
+      <main className="flex-1 flex flex-col h-full min-w-0 relative z-10 bg-[#08090b]">
         {/* Top Header matching Linear.app */}
         <header
-          className="h-12 border-b border-white/[0.06] bg-[#0d0f15]/60 backdrop-blur-xl px-4 flex items-center justify-between relative z-20"
+          className="h-12 border-b border-white/[0.08] bg-[#0c0d12]/80 backdrop-blur-2xl px-4 flex items-center justify-between relative z-20"
         >
-          {/* Left: Brand squircle (New Thread) + Sidebar Toggle Button + Nexus AI */}
+          {/* Left: Brand squircle (Toggle Drawer) + Sidebar Toggle Button + Nexus AI */}
           <div className="flex items-center gap-2.5">
             <button
-              onClick={() => {
-                setActiveChatId(null);
-                setMessages([]);
-              }}
+              onClick={() => setIsSidebarOpen((p) => !p)}
               className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer"
-              aria-label="New Chat Thread"
-              title="Start New Thread"
+              aria-label="Toggle Sidebar Sessions Drawer"
+              title="Toggle Sidebar Sessions Drawer (Ctrl+B)"
             >
               <svg className="w-3.5 h-3.5 fill-slate-950" viewBox="0 0 24 24">
                 <path d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4772 12 22C12 16.4772 16.4772 12 22 12C16.4772 12 12 7.52285 12 2Z" />
@@ -279,7 +277,7 @@ function ChatApp() {
 
             <button
               onClick={() => setIsSidebarOpen((p) => !p)}
-              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
               aria-label="Toggle Sessions Drawer"
               title="Toggle Chat Sessions (Ctrl+B)"
             >
@@ -289,13 +287,13 @@ function ChatApp() {
               </svg>
             </button>
 
-            <span className="text-xs font-medium text-slate-300 tracking-wide">
+            <span className="text-xs font-medium text-slate-200 tracking-wide">
               Nexus AI
             </span>
 
             {/* Status Indicator */}
             {isLoading && (
-              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono bg-white/[0.04] border border-white/[0.08] text-slate-300">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono bg-white/[0.06] border border-white/[0.12] text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                 <span>Generating...</span>
               </div>
@@ -306,7 +304,7 @@ function ChatApp() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsTelemetryOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08] text-slate-300 hover:text-white text-xs font-mono transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.10] text-slate-300 hover:text-white text-xs font-mono transition-all cursor-pointer shadow-sm"
               title="View Live LangGraph Execution Traces & State Machine"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -317,7 +315,7 @@ function ChatApp() {
               href="https://github.com/rizwandev99/nexus-enterprise-knowledge-worker"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all flex items-center justify-center cursor-pointer"
+              className="p-1.5 rounded-lg bg-white/[0.05] border border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.10] transition-all flex items-center justify-center cursor-pointer"
               title="View Source Code on GitHub"
               aria-label="GitHub Repository"
             >

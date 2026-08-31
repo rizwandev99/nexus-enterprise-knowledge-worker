@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import ModelSelector from "./model-selector";
 
 export interface ChatInputProps {
-  onSend: (text: string) => void;
+  onSend: (text: string, options?: { webSearch?: boolean }) => void;
   isLoading: boolean;
   selectedPrompt?: string;
   onClearSelectedPrompt?: () => void;
@@ -28,7 +28,7 @@ export default function ChatInput({
   onSelectModel,
 }: ChatInputProps) {
   const [input, setInput] = useState("");
-  const [isSearchActive, setIsSearchActive] = useState(true);
+  const [isSearchActive, setIsSearchActive] = useState(false);
   const [isToolsPopoverOpen, setIsToolsPopoverOpen] = useState(false);
   const [attachedFile, setAttachedFile] = useState<{
     name: string;
@@ -86,7 +86,7 @@ export default function ChatInput({
         : "[ATTACHED DOCUMENT: " + attachedFile.name + " (" + formatFileSize(attachedFile.size) + ")]\n--- ATTACHED DOCUMENT CONTENT\n" + attachedFile.content;
     }
 
-    onSend(payload);
+    onSend(payload, { webSearch: isSearchActive });
     setInput("");
     setAttachedFile(null);
     setParseError(null);
@@ -149,7 +149,7 @@ export default function ChatInput({
     <div className="w-full px-4 pb-4 pt-1 shrink-0 relative z-20">
       <div className="max-w-2xl mx-auto">
         {/* Floating Suggestion Chips above Input */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mb-2 px-1">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mb-2.5 px-1">
           {SUGGESTION_CHIPS.map((chip) => (
             <button
               key={chip.label}
@@ -158,7 +158,7 @@ export default function ChatInput({
                 setInput(chip.prompt);
                 textareaRef.current?.focus();
               }}
-              className="text-xs font-medium text-slate-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] rounded-full px-3 py-1 transition-all shrink-0 cursor-pointer"
+              className="text-xs font-medium text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.10] backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] rounded-full px-3 py-1 transition-all shrink-0 cursor-pointer"
             >
               {chip.label}
             </button>
@@ -172,12 +172,12 @@ export default function ChatInput({
           }}
           className="w-full"
         >
-          {/* Floating rounded-2xl glass pill */}
-          <div className="relative rounded-2xl p-3 bg-[#121622]/80 backdrop-blur-2xl border border-white/[0.08] focus-within:border-white/20 focus-within:ring-1 focus-within:ring-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all">
+          {/* Floating rounded-2xl rich glass input */}
+          <div className="relative rounded-2xl p-3 glass-input focus-within:border-white/30 focus-within:ring-1 focus-within:ring-white/20 transition-all">
             {attachedFile && (
-              <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono bg-white/[0.04] border border-white/[0.08] text-slate-200">
+              <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono bg-white/[0.06] border border-white/[0.12] text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
                 <svg
-                  className="w-3.5 h-3.5 text-slate-400"
+                  className="w-3.5 h-3.5 text-slate-300"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -255,14 +255,14 @@ export default function ChatInput({
             />
 
             {/* Bottom Bar Controls */}
-            <div className="flex items-center justify-between pt-2 mt-1 border-t border-white/[0.06]">
+            <div className="flex items-center justify-between pt-2 mt-1 border-t border-white/[0.08]">
               {/* Bottom Bar Left: Attachment (Paperclip), Search pill toggle (Globe), Canvas (Layers) */}
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isLoading || isParsingFile}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer disabled:opacity-50 inline-flex items-center justify-center"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer disabled:opacity-50 inline-flex items-center justify-center"
                   title="Attach Document (.pdf, .txt, .md, .csv)"
                   aria-label="Attach Document"
                 >
@@ -284,11 +284,11 @@ export default function ChatInput({
                   onClick={() => setIsSearchActive((p) => !p)}
                   className={`inline-flex items-center gap-1.5 text-xs transition-all cursor-pointer ${
                     isSearchActive
-                      ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 rounded-full px-2.5 py-1 font-medium shadow-sm"
-                      : "p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                      ? "bg-white/[0.08] text-white border border-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] rounded-full px-2.5 py-1 font-medium"
+                      : "p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08]"
                   }`}
-                  title={isSearchActive ? "Globe Search Enabled" : "Toggle Globe Search"}
-                  aria-label="Toggle Globe Search"
+                  title="Toggle Live Internet Web Search"
+                  aria-label="Toggle Live Internet Web Search"
                 >
                   <svg
                     className="w-4 h-4 shrink-0"
@@ -303,7 +303,7 @@ export default function ChatInput({
                     <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
                     <path d="M2 12h20" />
                   </svg>
-                  {isSearchActive && <span className="text-xs font-medium">Globe Search</span>}
+                  {isSearchActive && <span className="text-xs font-medium">Web Search</span>}
                 </button>
 
                 {/* Enterprise Tools & Integrations Popover on Layers button */}
@@ -313,8 +313,8 @@ export default function ChatInput({
                     onClick={() => setIsToolsPopoverOpen((p) => !p)}
                     className={`p-1.5 rounded-lg transition-all cursor-pointer inline-flex items-center justify-center ${
                       isToolsPopoverOpen
-                        ? "bg-white/15 text-white border border-white/20 shadow-sm"
-                        : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                        ? "bg-white/20 text-white border border-white/25 shadow-sm"
+                        : "text-slate-400 hover:text-white hover:bg-white/[0.08]"
                     }`}
                     title="Enterprise Tools & Integrations"
                     aria-label="Enterprise Tools & Integrations"
@@ -337,9 +337,9 @@ export default function ChatInput({
 
                   {isToolsPopoverOpen && (
                     <div
-                      className="absolute bottom-full mb-3 left-0 z-50 w-72 sm:w-80 rounded-2xl p-3 bg-[#121622]/95 backdrop-blur-2xl border border-white/[0.1] shadow-2xl animate-in fade-in zoom-in-95 space-y-2.5"
+                      className="absolute bottom-full mb-3 left-0 z-50 w-72 sm:w-80 rounded-2xl p-3.5 bg-[#10131a]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl animate-in fade-in zoom-in-95 space-y-2.5"
                       style={{
-                        boxShadow: "0 20px 50px rgba(0,0,0,0.7), 0 0 25px rgba(99,102,241,0.15)",
+                        boxShadow: "0 24px 60px rgba(0,0,0,0.85), inset 0 1px 1px rgba(255,255,255,0.15)",
                       }}
                     >
                       {/* Header */}
@@ -357,9 +357,9 @@ export default function ChatInput({
                       {/* Integration Cards List */}
                       <div className="space-y-1.5">
                         {/* 1. PostgreSQL pgvector (Hybrid RAG) */}
-                        <div className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors flex items-center justify-between">
+                        <div className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] transition-colors flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                           <div className="flex items-center gap-2.5 truncate">
-                            <div className="w-7 h-7 rounded-lg bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center text-indigo-400 shrink-0">
+                            <div className="w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-slate-200 shrink-0">
                               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <ellipse cx="12" cy="5" rx="9" ry="3" />
                                 <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
@@ -377,9 +377,9 @@ export default function ChatInput({
                         </div>
 
                         {/* 2. LangGraph Stateful Graph */}
-                        <div className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors flex items-center justify-between">
+                        <div className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] transition-colors flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                           <div className="flex items-center gap-2.5 truncate">
-                            <div className="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/25 flex items-center justify-center text-violet-400 shrink-0">
+                            <div className="w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-slate-200 shrink-0">
                               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <circle cx="18" cy="5" r="3" />
                                 <circle cx="6" cy="12" r="3" />
@@ -399,9 +399,9 @@ export default function ChatInput({
                         </div>
 
                         {/* 3. Groq GPT-OSS Fast Inference */}
-                        <div className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors flex items-center justify-between">
+                        <div className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] transition-colors flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                           <div className="flex items-center gap-2.5 truncate">
-                            <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/25 flex items-center justify-center text-amber-400 shrink-0">
+                            <div className="w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-slate-200 shrink-0">
                               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                               </svg>
@@ -417,9 +417,9 @@ export default function ChatInput({
                         </div>
 
                         {/* 4. OpenTelemetry Distributed Tracing */}
-                        <div className="p-2 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition-colors flex items-center justify-between">
+                        <div className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] transition-colors flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                           <div className="flex items-center gap-2.5 truncate">
-                            <div className="w-7 h-7 rounded-lg bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center text-cyan-400 shrink-0">
+                            <div className="w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-slate-200 shrink-0">
                               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
                               </svg>

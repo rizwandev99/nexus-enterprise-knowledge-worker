@@ -80,8 +80,9 @@ graph TD
 
 ### LangGraph Directed Cyclic Graph Nodes & Edges
 - **`ragNode`**: Extracts user intent, runs Reciprocal Rank Fusion (RRF) combining vector similarity + BM25 keyword matching via PostgreSQL `tsvector`, and injects citations into context.
-- **`reasoningNode`**: Invokes LLM (OpenAI `gpt-4o-mini` / `gpt-4o`, Claude 3.5 Sonnet, or Groq LLaMA 3.3 70B) with bound native tools (`add_document`, `execute_sql_query`, `execute_sql_mutation`).
-- **`toolsNode`**: Executes in-process tools safely with OWASP table allowlisting, error capture, and cyclic self-healing back to `reasoningNode`.
+- **`reasoningNode`**: Invokes LLM (OpenAI `gpt-4o`, Claude 3.5 Sonnet, DeepSeek R1, or Groq GPT-OSS 120B / Qwen 27B) with bound native tools (`add_document`, `execute_sql_query`, `execute_sql_mutation`, `web_search`).
+- **`toolsNode`**: Executes in-process tools safely with OWASP table allowlisting, DuckDuckGo live internet search, error capture, and cyclic self-healing / response synthesis back to `reasoningNode`.
+- **`webSearchTool`**: Live web search integration via DuckDuckGo with user-agent handling, HTML entity cleanup, snippet parsing, and direct link citations.
 - **HITL Interrupt**: Halts graph execution on sensitive SQL mutations, prompts client for review, and resumes dynamically upon user confirmation.
 - **Bounded Cyclic Self-Correction**: `AgentState.retryCount` tracks retry attempts; conditional edges bound retries to a maximum of 3 iterations to guarantee zero runaway loops.
 

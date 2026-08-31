@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { addDocumentTool, executeSqlMutationTool, executeSqlQueryTool, nativeTools } from '../tools';
+import { addDocumentTool, executeSqlMutationTool, executeSqlQueryTool, webSearchTool, nativeTools } from '../tools';
 
 // Mock pg module before importing or executing tools
 vi.mock('pg', () => {
@@ -178,12 +178,61 @@ describe('Native Agent Tools (Milestone 2)', () => {
     });
   });
 
+  describe('webSearchTool', () => {
+    it('should have correct name and description metadata', () => {
+      expect(webSearchTool.name).toBe('web_search');
+      expect(webSearchTool.description).toContain('Search the live Internet');
+    });
+
+    it('should return helpful message when search query is empty', async () => {
+      const result = await webSearchTool.invoke({ query: '   ' });
+      expect(result).toBe('No search query provided.');
+    });
+
+    it('should successfully invoke and return web search results when query is provided', async () => {
+      // Mock global fetch for unit test
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        text: vi.fn().mockResolvedValue(`
+          <div class="result results_links">
+            <a class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fnextjs.org%2Fdocs">Next.js 15 Documentation</a>
+            <a class="result__snippet">Complete guide to Next.js 15 features &amp; Server Components.</a>
+          </div>
+        `),
+      } as unknown as Response);
+
+      try {
+        const result = await webSearchTool.invoke({ query: 'Next.js 15 features' });
+        expect(result).toContain('Next.js 15 Documentation');
+        expect(result).toContain('https://nextjs.org/docs');
+        expect(result).toContain('Complete guide to Next.js 15 features & Server Components.');
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+
+    it('should handle fetch errors gracefully without unhandled exceptions', async () => {
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn().mockRejectedValue(new Error('Network connection timeout'));
+
+      try {
+        const result = await webSearchTool.invoke({ query: 'test query' });
+        expect(result).toContain('Failed to execute live web search: Network connection timeout');
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+  });
+
   describe('nativeTools array', () => {
     it('should export nativeTools array containing all tools', () => {
-      expect(nativeTools).toHaveLength(3);
+      expect(nativeTools).toHaveLength(4);
       expect(nativeTools).toContain(addDocumentTool);
       expect(nativeTools).toContain(executeSqlMutationTool);
       expect(nativeTools).toContain(executeSqlQueryTool);
+      expect(nativeTools).toContain(webSearchTool);
     });
   });
 });

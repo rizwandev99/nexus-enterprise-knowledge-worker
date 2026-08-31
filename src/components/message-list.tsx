@@ -140,7 +140,7 @@ export default function MessageList({
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto relative bg-[#0b0f19]">
+    <div className="flex-1 overflow-y-auto relative bg-[#08090b]">
       <div className="ambient-radial-glow" aria-hidden="true" />
 
       <div className="max-w-3xl mx-auto w-full px-5 sm:px-6 pt-10 pb-6 flex flex-col gap-6 relative z-10">
@@ -148,7 +148,7 @@ export default function MessageList({
           <div className="flex flex-col items-center text-center mt-4 mb-4 select-none max-w-2xl mx-auto w-full">
             {/* 1. Brand Mark: Clean, refined 48x48px white squircle with precision black vector aperture/star glyph */}
             <div className="mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-white shadow-[0_4px_20px_rgba(255,255,255,0.15)] flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-white shadow-[0_4px_24px_rgba(255,255,255,0.18)] flex items-center justify-center">
                 <svg className="w-6 h-6 fill-slate-950" viewBox="0 0 24 24">
                   <path d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4772 12 22C12 16.4772 16.4772 12 22 12C16.4772 12 12 7.52285 12 2Z" />
                 </svg>
@@ -176,7 +176,7 @@ export default function MessageList({
                 type="button"
                 onClick={handleSeedClick}
                 disabled={isSeeding}
-                className="text-xs font-mono text-slate-300 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.08] rounded-full px-3.5 py-1.5 transition-all flex items-center gap-2 mx-auto mb-8 cursor-pointer disabled:opacity-50"
+                className="text-xs font-mono text-slate-200 bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.12] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] rounded-full px-4 py-1.5 transition-all flex items-center gap-2 mx-auto mb-8 cursor-pointer disabled:opacity-50"
                 title="Seed sample governance and architecture docs into PostgreSQL"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -194,7 +194,7 @@ export default function MessageList({
               </button>
             )}
 
-            {/* 6. Bento Grid (4 Cards in 2x2 grid) */}
+            {/* 6. Bento Grid (4 Cards in 2x2 grid with pronounced Rich Glassmorphism) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full text-left">
               {featureCards.map((card) => (
                 <div
@@ -206,13 +206,13 @@ export default function MessageList({
                       card.onClick();
                     }
                   }}
-                  className="bg-[#121622]/60 hover:bg-[#161b2a]/80 border border-white/[0.07] hover:border-white/[0.15] rounded-2xl p-5 transition-all duration-200 hover:-translate-y-0.5 group text-left cursor-pointer shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
+                  className="glass-card hover:border-white/25 hover:bg-white/[0.06] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_20px_40px_rgba(0,0,0,0.6)] hover:-translate-y-1 rounded-2xl p-5 group text-left cursor-pointer transition-all duration-200"
                 >
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-slate-300">
+                    <div className="w-7 h-7 rounded-lg bg-white/[0.06] border border-white/[0.12] flex items-center justify-center text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
                       {card.icon}
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.04] text-slate-400 border border-white/[0.06]">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.05] text-slate-300 border border-white/[0.10]">
                       {card.badge}
                     </span>
                   </div>
@@ -225,7 +225,7 @@ export default function MessageList({
                     {card.description}
                   </p>
 
-                  <div className="text-xs font-mono text-indigo-300/90 hover:text-indigo-200 flex items-center gap-1.5 mt-3.5 pt-3 border-t border-white/[0.04] group-hover:text-indigo-300 transition-colors">
+                  <div className="text-xs font-mono text-slate-300 hover:text-white flex items-center gap-1.5 mt-3.5 pt-3 border-t border-white/[0.08] group-hover:text-white transition-colors">
                     <span>{card.actionText}</span>
                     <span className="transition-transform duration-150 group-hover:translate-x-0.5">
                       →

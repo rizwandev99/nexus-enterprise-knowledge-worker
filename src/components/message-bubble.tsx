@@ -124,14 +124,14 @@ export default function MessageBubble({
         return (
           <div
             key={bIdx}
-            className="my-3 rounded-2xl overflow-hidden border border-slate-700/50 bg-[#181c26] text-xs font-mono shadow-md"
+            className="my-3 rounded-2xl overflow-hidden border border-white/[0.12] bg-[#10131c] text-xs font-mono shadow-md"
           >
-            <div className="flex items-center justify-between px-3.5 py-1.5 bg-[#202736]/90 border-b border-slate-700/50 text-[11px] text-slate-400">
+            <div className="flex items-center justify-between px-3.5 py-1.5 bg-[#181c26]/90 border-b border-white/[0.10] text-[11px] text-slate-300">
               <span className="font-semibold uppercase tracking-wider">{block.language}</span>
               <button
                 type="button"
                 onClick={() => handleCopyCode(block.content, bIdx)}
-                className="flex items-center gap-1 px-2 py-0.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-2 py-0.5 rounded-lg hover:bg-white/[0.10] text-slate-300 hover:text-white transition-colors cursor-pointer"
                 aria-label="copy code to clipboard"
               >
                 {isCopied ? <span>Copied!</span> : <span>Copy</span>}
@@ -167,9 +167,9 @@ export default function MessageBubble({
       const bodyRows = rows.slice(1).filter((r) => !isDivider(r));
 
       elements.push(
-        <div key={"tbl-" + k} className="my-3 overflow-x-auto rounded-2xl border border-slate-700/50 bg-[#181c26]/90 shadow-md">
+        <div key={"tbl-" + k} className="my-3 overflow-x-auto rounded-2xl border border-white/[0.12] bg-[#10131c]/90 shadow-md">
           <table className="w-full text-xs text-left text-slate-200">
-            <thead className="text-[11px] uppercase tracking-wider font-mono bg-[#202736] text-slate-300 border-b border-slate-700/50">
+            <thead className="text-[11px] uppercase tracking-wider font-mono bg-[#181c26] text-slate-200 border-b border-white/[0.10]">
               <tr>
                 {header.map((col, idx) => (
                   <th key={idx} className="px-3.5 py-2.5 font-semibold">
@@ -178,14 +178,14 @@ export default function MessageBubble({
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/30">
+            <tbody className="divide-y divide-white/[0.08]">
               {bodyRows.map((row, rIdx) => {
                 const paddedRow = [...row];
                 while (paddedRow.length < colCount) {
                   paddedRow.push("...");
                 }
                 return (
-                  <tr key={rIdx} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={rIdx} className="hover:bg-white/[0.04] transition-colors">
                     {paddedRow.map((cell, cIdx) => (
                       <td key={cIdx} className="px-3.5 py-2">
                         {renderInlineElements(cell)}
@@ -258,7 +258,7 @@ export default function MessageBubble({
             key={pIdx}
             type="button"
             onClick={() => onSelectCitation?.(docNum)}
-            className="inline-flex items-center gap-1 mx-1 px-2 py-0.5 rounded-lg text-[11px] font-mono font-semibold bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white transition-all cursor-pointer"
+            className="inline-flex items-center gap-1 mx-1 px-2 py-0.5 rounded-lg text-[11px] font-mono font-semibold bg-white/[0.08] border border-white/[0.14] text-slate-200 hover:bg-white/[0.16] hover:text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-all cursor-pointer"
             aria-label={"Doc-" + docNum}
           >
             <span>[Doc-{docNum}]</span>
@@ -276,7 +276,7 @@ export default function MessageBubble({
 
       if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
         return (
-          <code key={pIdx} className="px-1.5 py-0.5 rounded-md bg-slate-800 font-mono text-[11px] text-slate-200 border border-slate-700/60">
+          <code key={pIdx} className="px-1.5 py-0.5 rounded-md bg-white/[0.08] font-mono text-[11px] text-slate-200 border border-white/[0.12]">
             {part.slice(1, -1)}
           </code>
         );
@@ -291,11 +291,11 @@ export default function MessageBubble({
       {/* Header with Avatar Squircle, Name, Timestamp */}
       <div className="flex items-center gap-2.5 px-1">
         {isUser ? (
-          <div className="w-7 h-7 rounded-xl bg-slate-800 border border-white/[0.08] flex items-center justify-center text-slate-300 font-mono text-xs font-semibold shadow-sm">
+          <div className="w-7 h-7 rounded-xl bg-white/[0.08] border border-white/[0.14] flex items-center justify-center text-slate-200 font-mono text-xs font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
             U
           </div>
         ) : (
-          <div className="w-7 h-7 rounded-xl bg-white flex items-center justify-center shadow-md">
+          <div className="w-7 h-7 rounded-xl bg-white flex items-center justify-center shadow-[0_2px_12px_rgba(255,255,255,0.18)]">
             <svg className="w-4 h-4 fill-slate-950" viewBox="0 0 32 32">
               <path d="M16 3.5C14.3 3.5 13.1 5.8 12.5 8.8 11.7 12.3 8.8 15.2 5.2 15.9c-1.2.2-1.2 2 0 2.2 3.6.7 6.5 3.6 7.1.6 3 1.8 5.3 3.5 5.3s2.9-2.3 3.5-5.3c.8-3.5 3.7-6.4 7.3-7.1 1.2-.2 1.2-2 0-2.2-3.6-.7-6.5-3.6-7.3-7.1-.6-3-1.8-5.3-3.5-5.3z" />
             </svg>
@@ -306,10 +306,10 @@ export default function MessageBubble({
         </span>
       </div>
 
-      {/* Message Card Body (Sleek dark slate glass) */}
-      <div className="rounded-2xl px-4 py-3 bg-[#131722]/70 border border-white/[0.07] backdrop-blur-md shadow-sm text-slate-200 text-sm leading-relaxed">
+      {/* Message Card Body (Rich Pronounced Glass Panel) */}
+      <div className="rounded-2xl px-4 py-3.5 glass-panel text-slate-100 text-sm leading-relaxed">
         {isUser && attachedFileName && (
-          <div className="mb-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-mono bg-white/[0.05] border border-white/[0.08] text-slate-200">
+          <div className="mb-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-mono bg-white/[0.06] border border-white/[0.12] text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
             <span>📄</span>
             <span className="font-semibold">Attached: {attachedFileName}{attachedFileSize ? " (" + attachedFileSize + ")" : ""}</span>
           </div>
@@ -325,7 +325,7 @@ export default function MessageBubble({
 
         {/* Overlapping 3D Citation Stack */}
         {!isUser && citationMatches.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-white/[0.07]">
+          <div className="mt-4 pt-3 border-t border-white/[0.08]">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
                 Verified Sources ({citationMatches.length})
@@ -333,7 +333,7 @@ export default function MessageBubble({
               <button
                 type="button"
                 onClick={() => onSelectCitation?.(citationMatches[0])}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-mono bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-slate-300 hover:text-white transition-all duration-200 cursor-pointer shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-mono bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.12] text-slate-200 hover:text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-all duration-200 cursor-pointer"
               >
                 <span>✦ Inspect Citations</span>
               </button>
@@ -344,13 +344,13 @@ export default function MessageBubble({
               className="relative cursor-pointer group mt-2 pt-1.5 pb-1"
             >
               {/* Back Card: -rotate-1.5 */}
-              <div className="absolute inset-0 rounded-2xl bg-[#181d2a]/60 border border-white/[0.04] shadow-md transform -rotate-1.5 group-hover:rotate-0 transition-transform duration-300" />
+              <div className="absolute inset-0 rounded-2xl bg-[#141824]/60 border border-white/[0.06] shadow-md transform -rotate-1.5 group-hover:rotate-0 transition-transform duration-300" />
               {/* Middle Card: rotate-1 */}
-              <div className="absolute inset-0 rounded-2xl bg-[#1c2232]/80 border border-white/[0.06] shadow-md transform rotate-1 group-hover:rotate-0 transition-transform duration-300" />
+              <div className="absolute inset-0 rounded-2xl bg-[#181e2e]/80 border border-white/[0.08] shadow-md transform rotate-1 group-hover:rotate-0 transition-transform duration-300" />
               {/* Front Top Card */}
-              <div className="relative rounded-2xl p-3 bg-[#131722] border border-white/[0.09] shadow-lg flex items-center justify-between group-hover:border-white/[0.18] transition-all duration-300">
+              <div className="relative rounded-2xl p-3 bg-[#10141e] border border-white/[0.12] shadow-lg flex items-center justify-between group-hover:border-white/[0.22] transition-all duration-300">
                 <div className="flex items-center gap-2.5 truncate">
-                  <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-white/[0.06] text-slate-200 border border-white/[0.08]">
+                  <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-white/[0.08] text-slate-200 border border-white/[0.12]">
                     [Doc-{citationMatches[0]}]
                   </span>
                   <span className="text-xs text-slate-200 truncate font-medium">
@@ -374,7 +374,7 @@ export default function MessageBubble({
           className={
             copied
               ? "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold bg-white text-slate-950 border border-white shadow-md transition-all active:scale-95 cursor-pointer"
-              : "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-mono text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] backdrop-blur-md shadow-sm transition-all duration-200 active:scale-95 cursor-pointer"
+              : "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-mono text-slate-300 hover:text-white bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.10] backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-all duration-200 active:scale-95 cursor-pointer"
           }
           title={copied ? "Copied to clipboard" : "Copy message"}
           aria-label="Copy message"
@@ -402,7 +402,7 @@ export default function MessageBubble({
             <button
               type="button"
               onClick={() => handleFeedback("up")}
-              className={"p-1.5 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer " + (feedback === "up" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm" : "text-slate-400 hover:text-slate-200 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] backdrop-blur-md shadow-sm")}
+              className={"p-1.5 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer " + (feedback === "up" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm" : "text-slate-400 hover:text-slate-200 bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.10] backdrop-blur-md shadow-sm")}
               title="Helpful (+1)"
               aria-label="Thumbs up"
             >
@@ -415,7 +415,7 @@ export default function MessageBubble({
             <button
               type="button"
               onClick={() => handleFeedback("down")}
-              className={"p-1.5 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer " + (feedback === "down" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-sm" : "text-slate-400 hover:text-slate-200 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] backdrop-blur-md shadow-sm")}
+              className={"p-1.5 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer " + (feedback === "down" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-sm" : "text-slate-400 hover:text-slate-200 bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.10] backdrop-blur-md shadow-sm")}
               title="Issue (-1)"
               aria-label="Thumbs down"
             >
@@ -436,17 +436,17 @@ export default function MessageBubble({
             <button
               type="button"
               onClick={() => setShowTelemetryPopover((p) => !p)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-mono font-medium text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] backdrop-blur-md shadow-sm transition-all duration-200 active:scale-95 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-mono font-medium text-slate-300 hover:text-white bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.10] backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-all duration-200 active:scale-95 cursor-pointer"
               title="View latency, token, and cost telemetry"
             >
               <span className="text-slate-400">⚡</span>
               <span>{telemetry.totalTokens} tok</span>
-              <span className="text-slate-600">·</span>
+              <span className="text-slate-500">·</span>
               <span>{telemetry.latencyMs}ms</span>
             </button>
 
             {showTelemetryPopover && (
-              <div className="absolute bottom-full mb-2 left-0 z-50 w-72 p-3.5 rounded-2xl border border-white/[0.09] shadow-2xl text-xs space-y-2.5 bg-[#131722]/95 backdrop-blur-2xl animate-in fade-in zoom-in-95">
+              <div className="absolute bottom-full mb-2 left-0 z-50 w-72 p-3.5 rounded-2xl border border-white/[0.12] shadow-2xl text-xs space-y-2.5 bg-[#10131b]/95 backdrop-blur-2xl animate-in fade-in zoom-in-95">
                 <div className="flex items-center justify-between pb-1.5 border-b border-white/[0.08] font-mono text-[11px]">
                   <span className="font-semibold text-white flex items-center gap-1.5">
                     <span>⚡</span> Execution Telemetry
@@ -455,19 +455,19 @@ export default function MessageBubble({
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.07] flex flex-col">
+                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] flex flex-col">
                     <span className="text-slate-400">Prompt Tokens</span>
                     <span className="text-white font-bold">{telemetry.promptTokens}</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.07] flex flex-col">
+                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] flex flex-col">
                     <span className="text-slate-400">Output Tokens</span>
                     <span className="text-slate-200 font-bold">{telemetry.completionTokens}</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.07] flex flex-col">
+                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] flex flex-col">
                     <span className="text-slate-400">TTFT Latency</span>
                     <span className="text-slate-200 font-bold">{telemetry.latencyMs} ms</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.07] flex flex-col">
+                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] flex flex-col">
                     <span className="text-slate-400">Est. Cost</span>
                     <span className="text-emerald-400 font-bold">${telemetry.cost}</span>
                   </div>

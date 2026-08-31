@@ -142,28 +142,28 @@ export default function Sidebar({
       <div className="flex h-full shrink-0 z-40">
         {/* 1. Left Vertical Icon Rail (Linear-style 56px Matte Glass Rail) */}
         <div
-          className="w-14 h-full flex flex-col items-center justify-between py-3.5 shrink-0 border-r border-white/[0.06] bg-[#0d0f15]/90 backdrop-blur-xl select-none"
+          className="w-14 h-full flex flex-col items-center justify-between py-3.5 shrink-0 border-r border-white/[0.08] bg-[#0c0d12]/95 backdrop-blur-2xl select-none"
         >
           <div className="flex flex-col items-center gap-4">
-            {/* Top brand mark: 36x36px white squircle with black vector aperture glyph -> Starts New Thread */}
+            {/* Top brand mark: 36x36px white squircle with black vector aperture glyph -> Toggles Sessions Drawer */}
             <button
-              onClick={handleNewChat}
-              className="w-9 h-9 rounded-xl bg-white text-slate-950 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 shadow-[0_2px_12px_rgba(255,255,255,0.15)] cursor-pointer"
-              aria-label="Start New Chat Session"
-              title="Start New Thread"
+              onClick={() => (onToggleDrawer ? onToggleDrawer() : onClose?.())}
+              className="w-9 h-9 rounded-xl bg-white text-slate-950 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 shadow-[0_2px_16px_rgba(255,255,255,0.18)] cursor-pointer"
+              aria-label="Toggle Sidebar Sessions Drawer"
+              title="Toggle Sessions Drawer (Ctrl+B)"
             >
               <svg className="w-4 h-4 fill-slate-950" viewBox="0 0 24 24">
                 <path d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4772 12 22C12 16.4772 16.4772 12 22 12C16.4772 12 12 7.52285 12 2Z" />
               </svg>
             </button>
 
-            <div className="w-6 h-px bg-white/[0.06]" />
+            <div className="w-6 h-px bg-white/[0.08]" />
 
             <nav className="flex flex-col items-center gap-2">
               {/* Plus: New Chat */}
               <button
                 onClick={handleNewChat}
-                className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer"
+                className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"
                 title="Start New Chat Session"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -175,21 +175,21 @@ export default function Sidebar({
               {/* MessageSquare: Toggle Sessions Drawer */}
               <button
                 onClick={() => (onToggleDrawer ? onToggleDrawer() : onClose?.())}
-                className={"p-2.5 rounded-xl transition-all relative cursor-pointer " + (isOpen ? "bg-white/[0.1] text-white border border-white/[0.08]" : "text-slate-400 hover:text-white hover:bg-white/[0.06]")}
+                className={"p-2.5 rounded-xl transition-all relative cursor-pointer " + (isOpen ? "bg-white/[0.12] text-white border border-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]" : "text-slate-400 hover:text-white hover:bg-white/[0.08]")}
                 title="Toggle Chat Sessions (PostgreSQL Checkpointer)"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
                 {sessions.length > 0 && (
-                  <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-400 ring-2 ring-[#0d0f15]" />
+                  <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-400 ring-2 ring-[#0c0d12]" />
                 )}
               </button>
 
               {/* Activity: Telemetry & Tracing */}
               <button
                 onClick={() => onOpenTelemetry?.()}
-                className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer"
+                className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer"
                 title="Live LangGraph State Machine & OTel Traces Inspector"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -202,7 +202,7 @@ export default function Sidebar({
                 <button
                   onClick={handleSeedClick}
                   disabled={isSeeding}
-                  className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all disabled:opacity-50 cursor-pointer"
+                  className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all disabled:opacity-50 cursor-pointer"
                   title="Seed Knowledge Base (3 Enterprise Docs into pgvector)"
                 >
                   {isSeeding ? (
@@ -225,7 +225,7 @@ export default function Sidebar({
               href="https://github.com/rizwandev99/nexus-enterprise-knowledge-worker"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all"
+              className="p-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all"
               title="View Source Code & Architecture on GitHub"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -237,10 +237,10 @@ export default function Sidebar({
 
         {/* 2. Expandable Sessions Drawer */}
         <aside
-          className={"fixed inset-y-0 left-14 z-40 bg-[#0d0f15]/95 backdrop-blur-xl border-r border-white/[0.06] flex flex-col overflow-hidden transition-all duration-300 ease-out md:relative md:left-0 " + (isOpen ? "translate-x-0 w-60 opacity-100" : "-translate-x-full w-60 md:w-0 md:translate-x-0 md:opacity-0")}
+          className={"fixed inset-y-0 left-14 z-40 bg-[#0c0d12]/95 backdrop-blur-2xl border-r border-white/[0.08] flex flex-col overflow-hidden transition-all duration-300 ease-out md:relative md:left-0 " + (isOpen ? "translate-x-0 w-60 opacity-100" : "-translate-x-full w-60 md:w-0 md:translate-x-0 md:opacity-0")}
         >
           <div className="w-60 flex flex-col h-full">
-            <div className="h-12 flex items-center justify-between px-3.5 border-b border-white/[0.06] shrink-0 bg-[#0d0f15]/50">
+            <div className="h-12 flex items-center justify-between px-3.5 border-b border-white/[0.08] shrink-0 bg-[#0c0d12]/60">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 font-mono">
                 Chat Sessions
               </span>
@@ -248,7 +248,7 @@ export default function Sidebar({
                 {activeChatId && onExportChat && (
                   <button
                     onClick={onExportChat}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors text-xs cursor-pointer"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors text-xs cursor-pointer"
                     title="Export Current Chat to Markdown"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -262,7 +262,7 @@ export default function Sidebar({
                   <button
                     type="button"
                     onClick={openClearAllModal}
-                    className="px-2 py-0.5 rounded-lg transition-all text-[11px] font-mono cursor-pointer text-slate-400 hover:text-rose-400 hover:bg-white/[0.06]"
+                    className="px-2 py-0.5 rounded-lg transition-all text-[11px] font-mono cursor-pointer text-slate-400 hover:text-rose-400 hover:bg-white/[0.08]"
                     title="Clear all chat sessions"
                   >
                     Clear all
@@ -287,7 +287,7 @@ export default function Sidebar({
                       onClick={() => onSelectChat(session.id)}
                       onMouseEnter={() => setHoveredId(session.id)}
                       onMouseLeave={() => setHoveredId(null)}
-                      className={"group w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs cursor-pointer transition-all " + (isActive ? "bg-white/[0.08] text-white font-medium border border-white/[0.08] shadow-sm" : "text-slate-300 hover:bg-white/[0.06] hover:text-white")}
+                      className={"group w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs cursor-pointer transition-all " + (isActive ? "bg-white/[0.10] text-white font-medium border border-white/[0.12] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]" : "text-slate-300 hover:bg-white/[0.06] hover:text-white")}
                     >
                       {editingId === session.id ? (
                         <input
@@ -313,7 +313,7 @@ export default function Sidebar({
                           <button
                             type="button"
                             onClick={(e) => startRename(e, session)}
-                            className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors"
+                            className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/[0.10] transition-colors"
                             title="Rename chat"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -323,7 +323,7 @@ export default function Sidebar({
                           <button
                             type="button"
                             onClick={(e) => openDeleteModal(e, session)}
-                            className="p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-white/[0.08] transition-colors"
+                            className="p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-white/[0.10] transition-colors"
                             title="Delete chat"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
