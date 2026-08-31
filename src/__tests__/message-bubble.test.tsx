@@ -94,4 +94,23 @@ describe('MessageBubble Markdown & Feature Rendering', () => {
     expect(screen.getByText('Can you analyze this report?')).toBeDefined();
     expect(screen.getByText('Attached: quarterly_report.pdf (24.5 KB)')).toBeDefined();
   });
+
+  it('handles in-flight streaming markdown tables without crashing or thrashing', () => {
+    // In-flight table where row has missing trailing pipe and missing column padding
+    const streamingTableMd = 'Paragraph before table\n| Model | Speed | Cost\n|---|---|---\n| Groq LPU | 850 tok/s';
+    const message: UIMessage = {
+      id: 'msg-stream-table',
+      role: 'assistant',
+      parts: [{ type: 'text', text: streamingTableMd }],
+    };
+
+    render(<MessageBubble message={message} isUser={false} />);
+
+    expect(screen.getByText('Paragraph before table')).toBeDefined();
+    expect(screen.getByText('Model')).toBeDefined();
+    expect(screen.getByText('Speed')).toBeDefined();
+    expect(screen.getByText('Cost')).toBeDefined();
+    expect(screen.getByText('Groq LPU')).toBeDefined();
+    expect(screen.getByText('850 tok/s')).toBeDefined();
+  });
 });
