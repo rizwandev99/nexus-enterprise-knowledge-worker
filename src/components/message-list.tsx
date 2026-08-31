@@ -110,20 +110,17 @@ export default function MessageList({
       {/* Ambient Radial Blue/Violet Glow */}
       <div className="ambient-radial-glow" aria-hidden="true" />
 
-      <div className="max-w-4xl mx-auto w-full px-5 sm:px-8 py-8 flex flex-col gap-6 relative z-10">
+      <div className="max-w-4xl mx-auto w-full px-5 sm:px-8 pt-8 pb-6 flex flex-col gap-6 relative z-10">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center text-center mt-6 mb-4 select-none max-w-2xl mx-auto w-full">
+          <div className="flex flex-col items-center text-center mt-2 mb-4 select-none max-w-2xl mx-auto w-full">
             {/* Sense AI White Squircle Icon */}
             <div className="mb-6 relative group">
-              <div className="w-16 h-16 rounded-[22px] bg-white flex items-center justify-center shadow-[0_0_35px_rgba(255,255,255,0.3)] transition-transform duration-300 group-hover:scale-105">
-                {/* Minimalist Nexus Geometric Glyph */}
-                <svg className="w-8 h-8 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                  <path d="M2 17l10 5 10-5" />
-                  <path d="M2 12l10 5 10-5" />
+              <div className="w-16 h-16 rounded-[22px] bg-white flex items-center justify-center shadow-[0_0_35px_rgba(255,255,255,0.25)] transition-transform duration-300 group-hover:scale-105">
+                {/* Sense AI Organic 4-Petal Flower Glyph */}
+                <svg className="w-8 h-8 fill-slate-950" viewBox="0 0 32 32">
+                  <path d="M16 3.5C14.3 3.5 13.1 5.8 12.5 8.8 11.7 12.3 8.8 15.2 5.2 15.9c-1.2.2-1.2 2 0 2.2 3.6.7 6.5 3.6 7.3 7.1.6 3 1.8 5.3 3.5 5.3s2.9-2.3 3.5-5.3c.8-3.5 3.7-6.4 7.3-7.1 1.2-.2 1.2-2 0-2.2-3.6-.7-6.5-3.6-7.3-7.1-.6-3-1.8-5.3-3.5-5.3z" />
                 </svg>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-400 border-2 border-[#0b0f19] ring-2 ring-emerald-400/20" />
             </div>
 
             {/* Monospace Greeting */}
@@ -136,9 +133,9 @@ export default function MessageList({
               Can I help you with anything?
             </h1>
 
-            {/* Centered 2-line Subtitle */}
+            {/* Centered Subtitle */}
             <p className="text-xs sm:text-sm font-mono text-slate-400 max-w-lg mb-6 leading-relaxed">
-              Nexus Enterprise Knowledge Worker • LangGraph Autonomous RAG
+              Ready to assist you with anything you need — from enterprise knowledge retrieval to safe database mutations.
             </p>
 
             {/* Demo Knowledge Base Ingestion Strip */}

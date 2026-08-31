@@ -90,7 +90,9 @@ function ChatApp() {
 
   const msgCount = displayMessages.length;
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "instant" as ScrollBehavior });
+    if (msgCount > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "instant" as ScrollBehavior });
+    }
   }, [msgCount]);
 
   /* Citation click handler */
@@ -286,10 +288,8 @@ function ChatApp() {
 
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center shadow-[0_0_12px_rgba(255,255,255,0.3)]">
-                <svg className="w-3.5 h-3.5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                  <path d="M2 17l10 5 10-5" />
-                  <path d="M2 12l10 5 10-5" />
+                <svg className="w-3.5 h-3.5 fill-slate-950" viewBox="0 0 32 32">
+                  <path d="M16 3.5C14.3 3.5 13.1 5.8 12.5 8.8 11.7 12.3 8.8 15.2 5.2 15.9c-1.2.2-1.2 2 0 2.2 3.6.7 6.5 3.6 7.3 7.1.6 3 1.8 5.3 3.5 5.3s2.9-2.3 3.5-5.3c.8-3.5 3.7-6.4 7.3-7.1 1.2-.2 1.2-2 0-2.2-3.6-.7-6.5-3.6-7.3-7.1-.6-3-1.8-5.3-3.5-5.3z" />
                 </svg>
               </div>
               <span className="text-xs font-semibold text-white tracking-tight">
