@@ -40,7 +40,7 @@ next-env.d.ts
 .vercel
 .env*
 
-# Internal AI Agent & Workflow Files
+# Internal AI agent workflow files
 .agents/
 AGENTS.md
 skills-lock.json
@@ -50,3 +50,12 @@ DESign.md
 SYSTEM_STATE.md
 PROJECT.md
 scratch/
+
+# Antigravity IDE internal tool artifacts
+agent-browser.tgz
+package/bin/
+package/cli/
+package/skill-data/
+package/scripts/
+package/skills/
+test_batch.json
