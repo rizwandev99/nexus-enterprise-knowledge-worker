@@ -1,50 +1,57 @@
 @import "tailwindcss";
 
 /* ────────────────────────────────────────────────
-   Design Tokens — Dark Glassmorphic Palette (Refined)
+   Design Tokens — Sense AI / Deep Obsidian Palette
 ──────────────────────────────────────────────── */
 @theme {
   /* Core surfaces */
-  --color-base:          #090a0f;   /* deepest pitch dark background */
-  --color-surface:       #11131a;   /* main card / sidebar surface   */
-  --color-surface-2:     #161922;   /* elevated hover surface        */
-  --color-surface-3:     #1d212d;   /* active / focus surface        */
-  --color-overlay:       rgba(9,10,15,0.85);
+  --color-base:          #0b0f19;   /* deep obsidian canvas */
+  --color-surface:       #0e131f;   /* main surface */
+  --color-surface-2:     #151c2e;   /* elevated surface */
+  --color-surface-3:     #1e293b;   /* active / focus surface */
+  --color-overlay:       rgba(11, 15, 25, 0.85);
 
   /* Borders */
-  --color-border:        rgba(255,255,255,0.07);
-  --color-border-strong: rgba(255,255,255,0.14);
-  --color-border-focus:  rgba(20,184,166,0.6); /* Teal focus glow */
+  --color-border:        rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.15);
+  --color-border-focus:  rgba(99, 102, 241, 0.6); /* Soft violet/indigo glow */
 
   /* Text */
-  --color-text-primary:  #f3f4f6;
-  --color-text-secondary:#9ca3af;
-  --color-text-muted:    #4b5563;
-  --color-text-inverse:  #090a0f;
+  --color-text-primary:  #f8fafc;
+  --color-text-secondary:#94a3b8;
+  --color-text-muted:    #64748b;
+  --color-text-inverse:  #0b0f19;
 
-  /* Brand Accents — Cyan / Teal like reference screenshot */
-  --color-brand:         #14b8a6;   /* Teal accent */
-  --color-brand-hover:   #2dd4bf;   /* Lighter teal */
-  --color-brand-muted:   rgba(20,184,166,0.14);
-  --color-brand-glow:    rgba(20,184,166,0.30);
+  /* Brand Accents — Sense AI Violet / Indigo & Subtle Cyan */
+  --color-brand:         #6366f1;   /* Violet / Indigo */
+  --color-brand-hover:   #818cf8;   /* Lighter violet */
+  --color-brand-muted:   rgba(99, 102, 241, 0.15);
+  --color-brand-glow:    rgba(99, 102, 241, 0.35);
+
+  /* Status Colors */
+  --color-success:       #10b981;
+  --color-error:         #f43f5e;
+  --color-warning:       #f59e0b;
+  --color-warning-muted: rgba(245, 158, 11, 0.15);
 
   /* Semantic Pill Badges */
-  --color-badge-teal-bg: #132e35;
+  --color-badge-teal-bg: rgba(20, 184, 166, 0.15);
   --color-badge-teal-fg: #5eead4;
-  --color-badge-pink-bg: #3b1c24;
-  --color-badge-pink-fg: #fca5a5;
-  --color-badge-green-bg:#163522;
-  --color-badge-green-fg:#86efac;
-  --color-badge-purple-bg:#2d1b3f;
-  --color-badge-purple-fg:#d8b4fe;
+  --color-badge-pink-bg: rgba(244, 63, 94, 0.15);
+  --color-badge-pink-fg: #fda4af;
+  --color-badge-green-bg:rgba(16, 185, 129, 0.15);
+  --color-badge-green-fg:#6ee7b7;
+  --color-badge-purple-bg:rgba(139, 92, 246, 0.15);
+  --color-badge-purple-fg:#c4b5fd;
 
   /* Radius */
-  --radius-xs:   4px;
-  --radius-sm:   8px;
-  --radius-md:   12px;
-  --radius-lg:   16px;
-  --radius-xl:   22px;
-  --radius-pill: 999px;
+  --radius-xs:   6px;
+  --radius-sm:   10px;
+  --radius-md:   14px;
+  --radius-lg:   18px;
+  --radius-xl:   24px;
+  --radius-2xl:  32px;
+  --radius-pill: 9999px;
 
   /* Fonts */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -73,64 +80,72 @@ body {
 
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
 
 /* ────────────────────────────────────────────────
-   Background Grid Pattern (Inspiration Screenshot)
+   Ambient Glowing Canvas & Grid Pattern
 ──────────────────────────────────────────────── */
 .bg-grid-pattern {
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 48px 48px;
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 56px 56px;
 }
 
-/* ────────────────────────────────────────────────
-   Top Glowing Fluid Glass Orb (Inspiration Visual)
-──────────────────────────────────────────────── */
-.fluid-orb {
+.ambient-radial-glow {
   position: absolute;
-  top: -120px;
+  top: 5%;
   left: 50%;
   transform: translateX(-50%);
-  width: 480px;
-  height: 280px;
+  width: 720px;
+  height: 440px;
   border-radius: 50%;
   background: radial-gradient(
     ellipse at center,
-    rgba(20, 184, 166, 0.22) 0%,
-    rgba(14, 116, 144, 0.15) 45%,
-    rgba(9, 10, 15, 0) 75%
+    rgba(99, 102, 241, 0.14) 0%,
+    rgba(59, 130, 246, 0.08) 40%,
+    rgba(11, 15, 25, 0) 72%
   );
-  filter: blur(45px);
+  filter: blur(60px);
   pointer-events: none;
-  animation: orb-pulse 8s ease-in-out infinite alternate;
-}
-
-@keyframes orb-pulse {
-  0% {
-    transform: translateX(-50%) scale(1) translateY(0px);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translateX(-50%) scale(1.12) translateY(12px);
-    opacity: 1;
-  }
+  z-index: 1;
 }
 
 /* ────────────────────────────────────────────────
-   Glass utility
+   Glass Utility Classes
 ──────────────────────────────────────────────── */
 .glass-panel {
-  background: rgba(17, 19, 26, 0.75);
+  background: rgba(14, 19, 31, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+}
+
+.glass-pill {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.glass-card {
+  background: rgba(14, 19, 31, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 /* ────────────────────────────────────────────────
-   Animations
+   Card Stack 3D Visual Effects
+──────────────────────────────────────────────── */
+.card-stack-base {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+/* ────────────────────────────────────────────────
+   Keyframe Animations
 ──────────────────────────────────────────────── */
 @keyframes toast-in {
   from { transform: translateX(110%) scale(0.95); opacity: 0; }
@@ -142,12 +157,12 @@ body {
 }
 
 @keyframes modal-in {
-  from { opacity: 0; transform: scale(0.96) translateY(10px); }
+  from { opacity: 0; transform: scale(0.96) translateY(12px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes msg-in {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .msg-animate {

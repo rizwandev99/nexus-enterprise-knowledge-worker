@@ -73,7 +73,7 @@ function renderInlineContent(
             e.stopPropagation();
             onSelectCitation?.(docNum);
           }}
-          className="inline-flex items-center gap-1 px-2 py-0.5 mx-1 my-0.5 rounded-md text-[11px] font-mono font-semibold bg-teal-500/15 text-teal-300 border border-teal-500/40 hover:bg-teal-500/30 hover:border-teal-400 hover:text-white hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer shadow-[0_0_8px_rgba(20,184,166,0.2)]"
+          className="inline-flex items-center gap-1 px-2 py-0.5 mx-1 my-0.5 rounded-md text-[11px] font-mono font-semibold bg-violet-500/15 text-violet-300 border border-violet-500/30 hover:bg-violet-500/30 hover:border-violet-400 hover:text-white hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer shadow-[0_0_10px_rgba(99,102,241,0.2)]"
           title={`Inspect verified Hybrid RAG context for [Doc-${docNum}] (Click to open Drawer)`}
         >
           <svg
@@ -83,7 +83,7 @@ function renderInlineContent(
             fill="none"
             stroke="currentColor"
             strokeWidth="2.5"
-            className="text-teal-400"
+            className="text-violet-400"
           >
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
             <polyline points="14 2 14 8 20 8" />
@@ -104,7 +104,7 @@ function renderInlineContent(
       elements.push(
         <code
           key={`code-${match.index}`}
-          className="px-1.5 py-0.5 mx-0.5 rounded-md text-xs font-mono bg-teal-500/10 text-teal-300 border border-teal-500/20"
+          className="px-1.5 py-0.5 mx-0.5 rounded-md text-xs font-mono bg-violet-500/10 text-violet-200 border border-violet-500/20"
         >
           {match[7]}
         </code>
@@ -119,7 +119,7 @@ function renderInlineContent(
           href={linkUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-teal-400 hover:text-teal-300 underline underline-offset-2 transition-colors"
+          className="text-violet-400 hover:text-violet-300 underline underline-offset-2 transition-colors"
         >
           {linkText}
         </a>
@@ -128,7 +128,7 @@ function renderInlineContent(
       // Italic text
       const italicContent = match[12] || match[13] || "";
       elements.push(
-        <em key={`italic-${match.index}`} className="italic text-gray-200">
+        <em key={`italic-${match.index}`} className="italic text-slate-300">
           {renderInlineContent(italicContent, onSelectCitation)}
         </em>
       );
@@ -170,12 +170,12 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
   const cleanLang = (language || "code").trim().toLowerCase();
 
   return (
-    <div className="my-3 rounded-xl border border-white/10 bg-[#090b10] overflow-hidden shadow-2xl">
+    <div className="my-3 rounded-2xl border border-white/10 bg-[#090b12] overflow-hidden shadow-2xl">
       {/* Code Header */}
-      <div className="flex items-center justify-between px-3.5 py-1.5 bg-[#12151e] border-b border-white/5 select-none">
-        <div className="flex items-center gap-2 text-xs font-mono text-gray-400">
-          <span className="w-2 h-2 rounded-full bg-teal-400/80 shadow-[0_0_6px_rgba(20,184,166,0.5)]" />
-          <span className="uppercase text-[11px] font-semibold tracking-wider text-teal-300">
+      <div className="flex items-center justify-between px-4 py-2 bg-slate-900/80 border-b border-white/5 select-none">
+        <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+          <span className="w-2 h-2 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+          <span className="uppercase text-[11px] font-semibold tracking-wider text-violet-300">
             {cleanLang}
           </span>
         </div>
@@ -184,41 +184,22 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
           onClick={handleCopy}
           className={
             copied
-              ? "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono text-teal-300 font-bold bg-teal-500/25 border border-teal-500/40 shadow-[0_0_10px_rgba(20,184,166,0.25)] active:scale-95 transition-all cursor-pointer animate-in fade-in zoom-in-95"
-              : "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 active:scale-95 transition-all cursor-pointer shadow-xs"
+              ? "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono text-emerald-300 font-bold bg-emerald-500/20 border border-emerald-500/30 active:scale-95 transition-all cursor-pointer"
+              : "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 active:scale-95 transition-all cursor-pointer"
           }
           title="Copy code to clipboard"
           aria-label="Copy code to clipboard"
         >
           {copied ? (
             <>
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-teal-300"
-              >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-300">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              <span className="text-teal-300 font-bold">Copied!</span>
+              <span>Copied!</span>
             </>
           ) : (
             <>
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
               </svg>
@@ -229,7 +210,7 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
       </div>
 
       {/* Code Content */}
-      <pre className="p-3.5 text-xs sm:text-[13px] font-mono leading-relaxed overflow-x-auto text-gray-200 selection:bg-teal-500/30">
+      <pre className="p-4 text-xs sm:text-[13px] font-mono leading-relaxed overflow-x-auto text-slate-200 selection:bg-violet-500/30">
         <code>{code}</code>
       </pre>
     </div>
@@ -420,8 +401,6 @@ function parseMarkdownBlocks(raw: string): MarkdownBlock[] {
 
 /* ────────────────────────────────────────────────
    Markdown Block Renderer
-   Wrapped in React.memo so React skips re-render if
-   props haven't changed — critical for 850 tok/s streaming.
 ──────────────────────────────────────────────── */
 const RenderMarkdown = memo(function RenderMarkdown({
   content,
@@ -441,9 +420,9 @@ const RenderMarkdown = memo(function RenderMarkdown({
     return (
       <div className="space-y-2.5">
         {userPrompt && <div className="leading-relaxed">{userPrompt}</div>}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono bg-white/10 border border-white/20 text-teal-200 shadow-sm">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono bg-white/10 border border-white/20 text-white shadow-sm">
           <svg
-            className="w-4 h-4 text-teal-400 shrink-0"
+            className="w-4 h-4 text-violet-300 shrink-0"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -465,12 +444,11 @@ const RenderMarkdown = memo(function RenderMarkdown({
     return <div className="leading-relaxed">{renderInlineContent(content, onSelectCitation)}</div>;
   }
 
-  // Memoize the expensive parse — skips re-parse if content string is identical
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const blocks = useMemo(() => parseMarkdownBlocks(content), [content]);
 
   return (
-    <div className="space-y-2.5 text-[13.5px] sm:text-sm leading-relaxed text-gray-200">
+    <div className="space-y-3 text-[13.5px] sm:text-sm leading-relaxed text-slate-200">
       {blocks.map((block, idx) => {
         switch (block.type) {
           case "code":
@@ -480,23 +458,23 @@ const RenderMarkdown = memo(function RenderMarkdown({
             return (
               <div
                 key={idx}
-                className="my-3 overflow-x-auto rounded-xl border border-white/10 bg-[#0c0e15]/80 backdrop-blur-md shadow-xl"
+                className="my-3 overflow-x-auto rounded-2xl border border-white/10 bg-slate-950/80 backdrop-blur-md shadow-xl"
               >
                 <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-white/5 border-b border-white/10 text-teal-300 font-mono font-semibold">
+                  <thead className="bg-white/5 border-b border-white/10 text-violet-300 font-mono font-semibold">
                     <tr>
                       {block.headers.map((h, hIdx) => (
-                        <th key={hIdx} className="px-3.5 py-2.5 tracking-wide">
+                        <th key={hIdx} className="px-4 py-3 tracking-wide">
                           {renderInlineContent(h, onSelectCitation)}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5 text-gray-300">
+                  <tbody className="divide-y divide-white/5 text-slate-300">
                     {block.rows.map((row, rIdx) => (
                       <tr key={rIdx} className="hover:bg-white/[0.02] transition-colors">
                         {row.map((cell, cIdx) => (
-                          <td key={cIdx} className="px-3.5 py-2">
+                          <td key={cIdx} className="px-4 py-2.5">
                             {renderInlineContent(cell, onSelectCitation)}
                           </td>
                         ))}
@@ -512,7 +490,7 @@ const RenderMarkdown = memo(function RenderMarkdown({
               return (
                 <h1
                   key={idx}
-                  className="text-lg font-bold text-teal-300 mt-4 mb-2 first:mt-0 tracking-tight"
+                  className="text-lg font-bold text-white mt-4 mb-2 first:mt-0 tracking-tight"
                 >
                   {renderInlineContent(block.text, onSelectCitation)}
                 </h1>
@@ -522,7 +500,7 @@ const RenderMarkdown = memo(function RenderMarkdown({
               return (
                 <h2
                   key={idx}
-                  className="text-base font-semibold text-teal-200 mt-3 mb-1.5 first:mt-0 tracking-tight"
+                  className="text-base font-semibold text-slate-100 mt-3 mb-1.5 first:mt-0 tracking-tight"
                 >
                   {renderInlineContent(block.text, onSelectCitation)}
                 </h2>
@@ -532,7 +510,7 @@ const RenderMarkdown = memo(function RenderMarkdown({
               return (
                 <h3
                   key={idx}
-                  className="text-sm font-semibold text-teal-100 mt-2.5 mb-1 first:mt-0"
+                  className="text-sm font-semibold text-violet-200 mt-2.5 mb-1 first:mt-0"
                 >
                   {renderInlineContent(block.text, onSelectCitation)}
                 </h3>
@@ -541,7 +519,7 @@ const RenderMarkdown = memo(function RenderMarkdown({
             return (
               <h4
                 key={idx}
-                className="text-xs font-bold uppercase tracking-wider text-teal-400 mt-2 mb-1 first:mt-0"
+                className="text-xs font-bold uppercase tracking-wider text-violet-400 mt-2 mb-1 first:mt-0"
               >
                 {renderInlineContent(block.text, onSelectCitation)}
               </h4>
@@ -554,7 +532,7 @@ const RenderMarkdown = memo(function RenderMarkdown({
                 <ol key={idx} className="my-2 space-y-1.5 pl-1">
                   {block.items.map((item, itemIdx) => (
                     <li key={itemIdx} className="flex items-start gap-2.5">
-                      <span className="text-teal-400 text-xs font-mono font-bold mt-0.5 select-none shrink-0">
+                      <span className="text-violet-400 text-xs font-mono font-bold mt-0.5 select-none shrink-0">
                         {itemIdx + 1}.
                       </span>
                       <span className="flex-1">
@@ -569,7 +547,7 @@ const RenderMarkdown = memo(function RenderMarkdown({
               <ul key={idx} className="my-2 space-y-1.5 pl-1">
                 {block.items.map((item, itemIdx) => (
                   <li key={itemIdx} className="flex items-start gap-2.5">
-                    <span className="text-teal-400 text-sm leading-none mt-1 select-none shrink-0">
+                    <span className="text-violet-400 text-sm leading-none mt-1 select-none shrink-0">
                       •
                     </span>
                     <span className="flex-1">
@@ -585,14 +563,14 @@ const RenderMarkdown = memo(function RenderMarkdown({
             return (
               <blockquote
                 key={idx}
-                className="border-l-2 border-teal-500/60 pl-3.5 my-2.5 text-gray-300 italic bg-teal-500/5 py-1.5 rounded-r-lg"
+                className="border-l-2 border-violet-500/60 pl-4 my-3 text-slate-300 italic bg-violet-500/5 py-2 rounded-r-xl"
               >
                 {renderInlineContent(block.text, onSelectCitation)}
               </blockquote>
             );
 
           case "hr":
-            return <hr key={idx} className="my-3.5 border-white/10" />;
+            return <hr key={idx} className="my-4 border-white/10" />;
 
           case "paragraph":
           default:
@@ -608,7 +586,7 @@ const RenderMarkdown = memo(function RenderMarkdown({
 });
 
 /* ────────────────────────────────────────────────
-   Main MessageBubble Component
+   Main MessageBubble Component (Sense AI Aesthetic)
 ──────────────────────────────────────────────── */
 export default function MessageBubble({
   message,
@@ -622,12 +600,6 @@ export default function MessageBubble({
   const [showTelemetryPopover, setShowTelemetryPopover] = useState(false);
   const { showToast } = useToast();
 
-  // ── Direct DOM streaming (ChatGPT/Claude technique) ───────────────────────
-  // While isStreaming === true, we write text directly to a DOM node via ref.
-  // This completely bypasses React's reconciler and VDOM diff, so 850 tok/s
-  // from Groq never touches the React render cycle at all.
-  // When streaming ends (isStreaming → false), React takes over and renders
-  // the final full-markdown view.
   const streamingDivRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!isStreaming || !streamingDivRef.current) return;
@@ -639,7 +611,6 @@ export default function MessageBubble({
         : "";
     streamingDivRef.current.textContent = text;
   });
-  // ── End streaming bypass ──────────────────────────────────────────────────
 
   const parts = message.parts as MessagePart[] | undefined;
 
@@ -652,14 +623,27 @@ export default function MessageBubble({
     ? (message as { content?: string }).content!
     : "";
 
-  // Estimated Telemetry metrics for assistant responses
+  // Extract citation matches for 3D Card Stack
+  const citationMatches = useMemo(() => {
+    const regex = /\[Doc-(\d+)\]/g;
+    const matches: number[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = regex.exec(partsText)) !== null) {
+      const docNum = parseInt(m[1], 10);
+      if (!matches.includes(docNum)) {
+        matches.push(docNum);
+      }
+    }
+    return matches;
+  }, [partsText]);
+
+  // Telemetry metrics
   const telemetry = useMemo(() => {
     const charLen = partsText.length;
     const completionTokens = Math.max(38, Math.round(charLen / 3.7));
     const promptTokens = Math.max(145, Math.round(completionTokens * 0.65));
     const totalTokens = promptTokens + completionTokens;
 
-    // Model-specific pricing and latency estimates
     let costPerMillion = 0.59;
     let ttft = 380;
     let speed = "~850 tok/s";
@@ -734,181 +718,37 @@ export default function MessageBubble({
   };
 
   return (
-    <div className={`group flex msg-animate relative ${isUser ? "justify-end" : "justify-start"}`}>
-      {/* Avatar for AI */}
-      {!isUser && (
-        <div
-          className="shrink-0 w-7 h-7 rounded-lg mr-3 flex items-center justify-center text-xs font-bold mt-1 self-start select-none"
-          style={{
-            background: "linear-gradient(135deg, #14b8a6, #6366f1)",
-            color: "#fff",
-            boxShadow: "0 0 12px rgba(20, 184, 166, 0.35)",
-          }}
-          aria-hidden="true"
-        >
-          N
-        </div>
-      )}
+    <div className={`group flex flex-col msg-animate ${isUser ? "items-end" : "items-start"}`}>
+      {/* Monospace Sender Header & Timestamp */}
+      <div className="flex items-center gap-2 mb-1.5 px-1 select-none">
+        <span className="font-mono text-xs text-slate-400 font-medium tracking-wide">
+          {isUser ? "Md Rizwan" : "Sense AI"}
+        </span>
+        <span className="text-[10px] text-slate-600 font-mono">•</span>
+        <span className="font-mono text-[11px] text-slate-500">
+          {new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).toLowerCase()}
+        </span>
+        {!isUser && (
+          <span className="ml-1 px-1.5 py-0.2 rounded text-[9px] font-mono text-violet-400 bg-violet-500/10 border border-violet-500/20">
+            Hybrid RAG
+          </span>
+        )}
+      </div>
 
+      {/* Main Bubble Container */}
       <div
-        className={`relative max-w-[88%] sm:max-w-[82%] rounded-2xl transition-all ${
-          isUser ? "rounded-tr-sm" : "rounded-tl-sm"
-        }`}
-        style={
+        className={`relative max-w-[92%] sm:max-w-[85%] rounded-3xl transition-all ${
           isUser
-            ? {
-                background: "linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)",
-                color: "#fff",
-                padding: "12px 18px",
-                boxShadow: "0 4px 20px rgba(20, 184, 166, 0.25)",
-              }
-            : {
-                background: "rgba(17, 19, 26, 0.85)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                color: "var(--color-text-primary)",
-                padding: "14px 18px",
-                boxShadow: "0 4px 24px rgba(0, 0, 0, 0.4)",
-              }
-        }
+            ? "rounded-tr-lg bg-gradient-to-br from-indigo-600 to-violet-700 text-white px-5 py-3.5 shadow-[0_4px_20px_rgba(99,102,241,0.25)] border border-violet-400/20"
+            : "rounded-tl-lg bg-slate-900/60 backdrop-blur-2xl border border-white/10 text-slate-100 px-5 py-4 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
+        }`}
       >
-        {/* Header row with role badge + Actions */}
-        <div className="flex items-center justify-between gap-4 mb-2">
-          <div
-            className="text-[10px] font-semibold uppercase tracking-widest font-mono flex items-center gap-2"
-            style={{
-              color: isUser ? "rgba(255,255,255,0.7)" : "#5eead4",
-              letterSpacing: "0.12em",
-            }}
-          >
-            <span>{isUser ? "You" : "Nexus Agent"}</span>
-            {!isUser && (
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-white/5 text-gray-400 font-mono font-normal">
-                Hybrid RAG
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1">
-            {/* Thumbs Up / Down Feedback buttons for Assistant messages */}
-            {!isUser && (
-              <div className="flex items-center gap-0.5 mr-1">
-                <button
-                  type="button"
-                  onClick={() => handleFeedback("up")}
-                  className={`p-1 rounded-md transition-all ${
-                    feedback === "up"
-                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                      : "text-gray-400 hover:text-white hover:bg-white/5 opacity-70 group-hover:opacity-100"
-                  }`}
-                  title="Mark response helpful (+1)"
-                  aria-label="Thumbs up"
-                >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill={feedback === "up" ? "currentColor" : "none"}
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
-                  </svg>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleFeedback("down")}
-                  className={`p-1 rounded-md transition-all ${
-                    feedback === "down"
-                      ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                      : "text-gray-400 hover:text-white hover:bg-white/5 opacity-70 group-hover:opacity-100"
-                  }`}
-                  title="Flag response issue (-1)"
-                  aria-label="Thumbs down"
-                >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill={feedback === "down" ? "currentColor" : "none"}
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3" />
-                  </svg>
-                </button>
-              </div>
-            )}
-
-            {/* Copy Button */}
-            <button
-              type="button"
-              onClick={() => handleCopy(partsText)}
-              className={
-                isUser
-                  ? copied
-                    ? "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-white text-teal-950 border border-white shadow-md transition-all duration-150 active:scale-95 cursor-pointer animate-in fade-in zoom-in-95"
-                    : "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono text-white/90 bg-black/20 hover:bg-black/35 hover:text-white border border-white/20 shadow-xs transition-all duration-150 active:scale-95 cursor-pointer"
-                  : copied
-                    ? "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-teal-500/25 text-teal-300 border border-teal-500/40 shadow-[0_0_12px_rgba(20,184,166,0.3)] transition-all duration-150 active:scale-95 cursor-pointer animate-in fade-in zoom-in-95"
-                    : "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 shadow-xs transition-all duration-150 active:scale-95 cursor-pointer"
-              }
-              title={copied ? "Copied to clipboard" : "Copy message"}
-              aria-label="Copy message"
-            >
-              {copied ? (
-                <>
-                  <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={isUser ? "3" : "2.5"}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className={isUser ? "text-teal-950" : "text-teal-300"}
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Copied!</span>
-                </>
-              ) : (
-                <>
-                  <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                  </svg>
-                  <span>Copy</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
         {/* Content: direct DOM write while streaming, full markdown when done */}
         <div className="text-sm leading-relaxed">
           {isStreaming && !isUser ? (
-            // ── ChatGPT/Claude technique: bypass React entirely during stream ──
-            // The useEffect above writes textContent directly to this node.
-            // Zero VDOM diff, zero parseMarkdownBlocks, zero re-renders.
             <div
               ref={streamingDivRef}
-              className="whitespace-pre-wrap text-gray-200 text-[13.5px] sm:text-sm leading-relaxed"
+              className="whitespace-pre-wrap text-slate-200 text-[13.5px] sm:text-sm leading-relaxed"
             />
           ) : Array.isArray(parts) && parts.length > 0 ? (
             parts.map((part, index) => {
@@ -928,14 +768,10 @@ export default function MessageBubble({
                 return (
                   <div
                     key={index}
-                    className="my-3 flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all"
-                    style={{
-                      background: isDone ? "rgba(20, 184, 166, 0.12)" : "rgba(255, 255, 255, 0.05)",
-                      border: `1px solid ${isDone ? "rgba(20, 184, 166, 0.3)" : "rgba(255, 255, 255, 0.1)"}`,
-                    }}
+                    className="my-3 flex items-center gap-3 rounded-2xl px-4 py-2.5 transition-all bg-slate-950/70 border border-white/10 shadow-lg"
                   >
                     {isDone ? (
-                      <span className="text-teal-400">
+                      <span className="text-emerald-400">
                         <svg
                           width="14"
                           height="14"
@@ -950,22 +786,11 @@ export default function MessageBubble({
                         </svg>
                       </span>
                     ) : (
-                      <div
-                        className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent animate-spin"
-                        style={{ borderColor: "#2dd4bf", borderTopColor: "transparent" }}
-                      />
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-violet-400 border-t-transparent animate-spin" />
                     )}
-                    <span
-                      className="font-mono text-xs"
-                      style={{ color: isDone ? "#5eead4" : "var(--color-text-secondary)" }}
-                    >
+                    <span className="font-mono text-xs text-slate-300">
                       {isDone ? "Executed Tool" : "Invoking Tool"}:{" "}
-                      <span
-                        style={{
-                          color: isDone ? "#5eead4" : "#2dd4bf",
-                          fontWeight: 600,
-                        }}
-                      >
+                      <span className={isDone ? "text-emerald-300 font-semibold" : "text-violet-300 font-semibold"}>
                         {part.toolInvocation.toolName}
                       </span>
                       {!isDone && "…"}
@@ -984,98 +809,179 @@ export default function MessageBubble({
           )}
         </div>
 
-
-        {/* Telemetry Pill for Assistant Messages */}
-        {!isUser && partsText.trim() && (
-          <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between relative">
-            <div
-              className="relative"
-              onMouseEnter={() => setShowTelemetryPopover(true)}
-              onMouseLeave={() => setShowTelemetryPopover(false)}
-            >
-              {/* Pill Button */}
+        {/* 3D Overlapping Card Deck for Citations (When Citations Exist) */}
+        {!isUser && citationMatches.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-white/10">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1.5 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+                Retrieved RAG Sources ({citationMatches.length})
+              </span>
               <button
                 type="button"
-                onClick={() => setShowTelemetryPopover((p) => !p)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-medium text-gray-400 bg-white/5 border border-white/10 hover:border-teal-500/30 hover:text-teal-300 transition-all cursor-pointer"
-                title="View latency, token, and cost telemetry breakdown"
+                onClick={() => onSelectCitation?.(citationMatches[0])}
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium text-violet-300 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/30 transition-all cursor-pointer shadow-sm"
               >
-                <span className="text-teal-400">⚡</span>
-                <span>{telemetry.totalTokens} tokens</span>
-                <span className="text-gray-600">·</span>
-                <span>${telemetry.cost}</span>
-                <span className="text-gray-600">·</span>
-                <span>{telemetry.latencyMs}ms TTFT</span>
+                ✦ Inspect Deck
               </button>
-
-              {/* Hover Popover Breakdown */}
-              {showTelemetryPopover && (
-                <div
-                  className="absolute bottom-full mb-2 left-0 z-50 w-72 p-3 rounded-xl border border-white/15 shadow-2xl text-xs space-y-2 animate-in fade-in zoom-in-95"
-                  style={{
-                    background:
-                      "linear-gradient(180deg, rgba(17, 19, 26, 0.98) 0%, rgba(9, 10, 15, 0.98) 100%)",
-                    backdropFilter: "blur(20px)",
-                    boxShadow:
-                      "0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(20, 184, 166, 0.15)",
-                  }}
-                >
-                  <div className="flex items-center justify-between pb-1.5 border-b border-white/10 font-mono text-[11px]">
-                    <span className="font-semibold text-teal-300 flex items-center gap-1.5">
-                      <span>⚡</span> Execution Telemetry
-                    </span>
-                    <span className="text-gray-400">{telemetry.speed}</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-                    <div className="p-1.5 rounded bg-white/5 flex flex-col">
-                      <span className="text-gray-400">Prompt Tokens</span>
-                      <span className="text-gray-200 font-bold">{telemetry.promptTokens}</span>
-                    </div>
-                    <div className="p-1.5 rounded bg-white/5 flex flex-col">
-                      <span className="text-gray-400">Output Tokens</span>
-                      <span className="text-teal-300 font-bold">{telemetry.completionTokens}</span>
-                    </div>
-                    <div className="p-1.5 rounded bg-white/5 flex flex-col">
-                      <span className="text-gray-400">TTFT Latency</span>
-                      <span className="text-indigo-300 font-bold">{telemetry.latencyMs} ms</span>
-                    </div>
-                    <div className="p-1.5 rounded bg-white/5 flex flex-col">
-                      <span className="text-gray-400">Est. Cost</span>
-                      <span className="text-emerald-300 font-bold">${telemetry.cost}</span>
-                    </div>
-                  </div>
-
-                  <div className="text-[10px] text-gray-400 font-mono pt-1 border-t border-white/5 flex items-center justify-between">
-                    <span>Engine:</span>
-                    <span className="text-gray-300 truncate max-w-[160px]">{telemetry.engine}</span>
-                  </div>
-                </div>
-              )}
             </div>
 
-            <div className="text-[10px] font-mono text-gray-500">
-              pgvector RRF k=60
+            {/* 3D Stack Visualization */}
+            <div
+              onClick={() => onSelectCitation?.(citationMatches[0])}
+              className="relative cursor-pointer group mt-2 pt-2 pb-1"
+            >
+              {/* Back Card (Layer 3) */}
+              <div className="absolute inset-x-2 top-0 h-10 rounded-2xl bg-slate-800/40 border border-white/5 -rotate-2 transform transition-transform group-hover:-rotate-3 group-hover:-translate-y-1" />
+              {/* Mid Card (Layer 2) */}
+              <div className="absolute inset-x-1 top-1 h-10 rounded-2xl bg-slate-800/60 border border-white/10 rotate-1 transform transition-transform group-hover:rotate-2 group-hover:-translate-y-0.5" />
+              {/* Top Card (Layer 1) */}
+              <div className="relative rounded-2xl p-3 bg-slate-900/90 backdrop-blur-xl border border-white/15 shadow-xl flex items-center justify-between group-hover:border-violet-500/40 transition-colors">
+                <div className="flex items-center gap-2 truncate">
+                  <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                    [Doc-{citationMatches[0]}]
+                  </span>
+                  <span className="text-xs text-slate-200 truncate font-medium">
+                    Verified Enterprise Policy & Governance
+                  </span>
+                </div>
+                <span className="text-xs text-violet-400 font-mono ml-2 shrink-0">
+                  View →
+                </span>
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Avatar for User */}
-      {isUser && (
-        <div
-          className="shrink-0 w-7 h-7 rounded-lg ml-3 flex items-center justify-center text-xs font-bold mt-1 self-start select-none"
-          style={{
-            background: "rgba(255, 255, 255, 0.1)",
-            border: "1px solid rgba(255, 255, 255, 0.15)",
-            color: "#e2e8f0",
-          }}
-          aria-hidden="true"
+      {/* Sleek Floating Glass Action Pills Below Bubble */}
+      <div className="flex items-center gap-1.5 mt-2 px-1">
+        {/* Copy Button */}
+        <button
+          type="button"
+          onClick={() => handleCopy(partsText)}
+          className={
+            copied
+              ? "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold bg-white text-slate-950 shadow-md transition-all active:scale-95 cursor-pointer"
+              : "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-mono text-slate-400 hover:text-white bg-slate-900/60 hover:bg-slate-800/80 border border-white/5 hover:border-white/15 backdrop-blur-md shadow-sm transition-all active:scale-95 cursor-pointer"
+          }
+          title={copied ? "Copied to clipboard" : "Copy message"}
+          aria-label="Copy message"
         >
-          U
-        </div>
-      )}
+          {copied ? (
+            <>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-slate-950">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>Copied!</span>
+            </>
+          ) : (
+            <>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              <span>Copy</span>
+            </>
+          )}
+        </button>
+
+        {/* Feedback buttons for assistant */}
+        {!isUser && (
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => handleFeedback("up")}
+              className={`p-1.5 rounded-xl transition-all ${
+                feedback === "up"
+                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                  : "text-slate-400 hover:text-white bg-slate-900/60 hover:bg-slate-800/80 border border-white/5"
+              }`}
+              title="Helpful (+1)"
+              aria-label="Thumbs up"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill={feedback === "up" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleFeedback("down")}
+              className={`p-1.5 rounded-xl transition-all ${
+                feedback === "down"
+                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                  : "text-slate-400 hover:text-white bg-slate-900/60 hover:bg-slate-800/80 border border-white/5"
+              }`}
+              title="Issue (-1)"
+              aria-label="Thumbs down"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill={feedback === "down" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Telemetry pill for assistant */}
+        {!isUser && partsText.trim() && (
+          <div
+            className="relative"
+            onMouseEnter={() => setShowTelemetryPopover(true)}
+            onMouseLeave={() => setShowTelemetryPopover(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setShowTelemetryPopover((p) => !p)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-mono font-medium text-slate-400 hover:text-violet-300 bg-slate-900/60 hover:bg-slate-800/80 border border-white/5 hover:border-violet-500/30 transition-all cursor-pointer"
+              title="View latency, token, and cost telemetry"
+            >
+              <span className="text-violet-400">⚡</span>
+              <span>{telemetry.totalTokens} tok</span>
+              <span className="text-slate-600">·</span>
+              <span>{telemetry.latencyMs}ms</span>
+            </button>
+
+            {/* Hover Popover */}
+            {showTelemetryPopover && (
+              <div
+                className="absolute bottom-full mb-2 left-0 z-50 w-72 p-3.5 rounded-2xl border border-white/15 shadow-2xl text-xs space-y-2.5 bg-slate-950/95 backdrop-blur-2xl animate-in fade-in zoom-in-95"
+              >
+                <div className="flex items-center justify-between pb-1.5 border-b border-white/10 font-mono text-[11px]">
+                  <span className="font-semibold text-violet-300 flex items-center gap-1.5">
+                    <span>⚡</span> Execution Telemetry
+                  </span>
+                  <span className="text-slate-400">{telemetry.speed}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                  <div className="p-2 rounded-xl bg-white/5 flex flex-col">
+                    <span className="text-slate-400">Prompt Tokens</span>
+                    <span className="text-slate-200 font-bold">{telemetry.promptTokens}</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-white/5 flex flex-col">
+                    <span className="text-slate-400">Output Tokens</span>
+                    <span className="text-violet-300 font-bold">{telemetry.completionTokens}</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-white/5 flex flex-col">
+                    <span className="text-slate-400">TTFT Latency</span>
+                    <span className="text-indigo-300 font-bold">{telemetry.latencyMs} ms</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-white/5 flex flex-col">
+                    <span className="text-slate-400">Est. Cost</span>
+                    <span className="text-emerald-300 font-bold">${telemetry.cost}</span>
+                  </div>
+                </div>
+
+                <div className="text-[10px] text-slate-400 font-mono pt-1 border-t border-white/5 flex items-center justify-between">
+                  <span>Engine:</span>
+                  <span className="text-slate-300 truncate max-w-[160px]">{telemetry.engine}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-

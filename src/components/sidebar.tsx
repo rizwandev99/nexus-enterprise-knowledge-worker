@@ -49,11 +49,12 @@ export default function Sidebar({
   const loadSessions = useCallback(async () => {
     try {
       const data = await getChatSessions();
-      setSessions(data);
+      setSessions(data || []);
     } catch {
-      showToast("Failed to load sessions", "error");
+      // Graceful silent fallback during cold-start or initial connection
+      setSessions([]);
     }
-  }, [showToast]);
+  }, []);
 
   useEffect(() => {
     loadSessions();
@@ -140,22 +141,23 @@ export default function Sidebar({
 
       {/* Main Container consisting of Left Icon Rail + Expandable Sessions Drawer */}
       <div className="flex h-full shrink-0 z-40">
-        {/* 1. Left Vertical Icon Rail (Streamlined, High ROI Portfolio Navigation) */}
+        {/* 1. Left Vertical Icon Rail (Sense AI Minimalist Navigation) */}
         <div
-          className="w-16 h-full flex flex-col items-center justify-between py-5 shrink-0 border-r border-white/5"
-          style={{ background: "#0c0d12" }}
+          className="w-16 h-full flex flex-col items-center justify-between py-5 shrink-0 border-r border-white/5 bg-[#0b0e17]"
         >
           {/* Top Section: Brand Logo + Primary Actions */}
           <div className="flex flex-col items-center gap-5">
-            {/* Brand Mark / Drawer Toggle Button */}
+            {/* White Squircle Brand Mark / Drawer Toggle Button */}
             <button
               onClick={() => (onToggleDrawer ? onToggleDrawer() : onClose?.())}
-              className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-600 text-slate-950 flex items-center justify-center font-bold transition-transform hover:scale-105 active:scale-95 shadow-[0_0_16px_rgba(20,184,166,0.35)] cursor-pointer"
+              className="w-10 h-10 rounded-2xl bg-white text-slate-950 flex items-center justify-center font-bold transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.25)] cursor-pointer"
               aria-label="Toggle Chat Sessions Sidebar"
               title="Toggle Sidebar (Chat Sessions)"
             >
-              <svg className="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              <svg className="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
               </svg>
             </button>
 
@@ -167,7 +169,7 @@ export default function Sidebar({
               {/* 1. New Chat Button */}
               <button
                 onClick={handleNewChat}
-                className="p-2.5 rounded-xl text-gray-400 hover:text-teal-300 hover:bg-white/5 border border-transparent hover:border-teal-500/30 transition-all group"
+                className="p-2.5 rounded-2xl text-slate-400 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/15 transition-all group"
                 title="Start New Chat Session"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
@@ -178,10 +180,10 @@ export default function Sidebar({
               {/* 2. Chat Sessions / History Drawer Toggle */}
               <button
                 onClick={() => onToggleDrawer ? onToggleDrawer() : onClose?.()}
-                className={`p-2.5 rounded-xl transition-all relative ${
+                className={`p-2.5 rounded-2xl transition-all relative ${
                   isOpen
-                    ? "bg-teal-500/15 text-teal-300 border border-teal-500/30 shadow-[0_0_12px_rgba(20,184,166,0.2)]"
-                    : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                    ? "bg-violet-500/20 text-violet-300 border border-violet-500/30 shadow-[0_0_12px_rgba(99,102,241,0.2)]"
+                    : "text-slate-400 hover:text-white hover:bg-white/5 border border-transparent"
                 }`}
                 title="Toggle Chat Sessions (PostgreSQL Checkpointer)"
               >
@@ -189,14 +191,14 @@ export default function Sidebar({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
                 {sessions.length > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-teal-400 ring-2 ring-[#0c0d12]" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-violet-400 ring-2 ring-[#0b0e17]" />
                 )}
               </button>
 
               {/* 3. Live LangGraph Telemetry & Traces */}
               <button
                 onClick={() => onOpenTelemetry?.()}
-                className="p-2.5 rounded-xl text-teal-400 hover:text-white hover:bg-teal-500/20 border border-teal-500/30 transition-all shadow-[0_0_12px_rgba(20,184,166,0.15)]"
+                className="p-2.5 rounded-2xl text-violet-400 hover:text-white hover:bg-violet-500/20 border border-violet-500/30 transition-all shadow-[0_0_12px_rgba(99,102,241,0.15)]"
                 title="Live LangGraph State Machine & OTel Traces Inspector"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -209,11 +211,11 @@ export default function Sidebar({
                 <button
                   onClick={handleSeedClick}
                   disabled={isSeeding}
-                  className="p-2.5 rounded-xl text-emerald-400 hover:text-white hover:bg-emerald-500/20 border border-emerald-500/30 transition-all disabled:opacity-50"
+                  className="p-2.5 rounded-2xl text-cyan-400 hover:text-white hover:bg-cyan-500/20 border border-cyan-500/30 transition-all disabled:opacity-50"
                   title="Seed Demo Knowledge Base (3 Enterprise Docs into pgvector)"
                 >
                   {isSeeding ? (
-                    <div className="w-5 h-5 border-2 border-emerald-300 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-cyan-300 border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
@@ -230,7 +232,7 @@ export default function Sidebar({
               href="https://github.com/rizwandev99/nexus-enterprise-knowledge-worker"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 border border-white/5 hover:border-white/20 transition-all"
+              className="p-2.5 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 border border-white/5 hover:border-white/20 transition-all"
               title="View Source Code & Architecture on GitHub"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -242,7 +244,7 @@ export default function Sidebar({
 
         {/* 2. Expandable Sessions Drawer */}
         <aside
-          className={`fixed inset-y-0 left-16 z-40 bg-[#11131a] border-r border-white/5 flex flex-col overflow-hidden transition-all duration-300 ease-out md:relative md:left-0 ${
+          className={`fixed inset-y-0 left-16 z-40 bg-[#0e121e] border-r border-white/5 flex flex-col overflow-hidden transition-all duration-300 ease-out md:relative md:left-0 ${
             isOpen
               ? "translate-x-0 w-60 opacity-100"
               : "-translate-x-full w-60 md:w-0 md:translate-x-0 md:opacity-0"
@@ -250,15 +252,15 @@ export default function Sidebar({
         >
           <div className="w-60 flex flex-col h-full">
             {/* Header */}
-            <div className="h-14 flex items-center justify-between px-4 border-b border-white/5 shrink-0">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 font-mono">
+            <div className="h-14 flex items-center justify-between px-4 border-b border-white/5 shrink-0 bg-white/[0.01]">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-mono">
                 Chat Sessions
               </span>
               <div className="flex items-center gap-1">
                 {activeChatId && onExportChat && (
                   <button
                     onClick={onExportChat}
-                    className="p-1 rounded text-gray-400 hover:text-teal-300 hover:bg-white/5 transition-colors text-xs"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors text-xs"
                     title="Export Current Chat to Markdown"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -272,10 +274,10 @@ export default function Sidebar({
                   <button
                     type="button"
                     onClick={handleDeleteAll}
-                    className={`px-2 py-0.5 rounded-md transition-all text-[11px] font-mono cursor-pointer ${
+                    className={`px-2 py-0.5 rounded-lg transition-all text-[11px] font-mono cursor-pointer ${
                       confirmDeleteAll
-                        ? "text-red-400 bg-red-500/20 border border-red-500/30 animate-pulse font-medium"
-                        : "text-gray-400 hover:text-red-400 hover:bg-white/5"
+                        ? "text-rose-300 bg-rose-500/20 border border-rose-500/30 animate-pulse font-medium"
+                        : "text-slate-400 hover:text-rose-400 hover:bg-white/5"
                     }`}
                     title={confirmDeleteAll ? "Click again to confirm delete all chats" : "Delete all chat sessions"}
                   >
@@ -288,7 +290,7 @@ export default function Sidebar({
             {/* Session items */}
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
               {sessions.length === 0 ? (
-                <div className="text-center py-8 text-xs text-gray-500">
+                <div className="text-center py-8 text-xs text-slate-500 font-mono">
                   No previous sessions yet
                 </div>
               ) : (
@@ -302,16 +304,16 @@ export default function Sidebar({
                       onClick={() => onSelectChat(session.id)}
                       onMouseEnter={() => setHoveredId(session.id)}
                       onMouseLeave={() => setHoveredId(null)}
-                      className={`group w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs cursor-pointer transition-all ${
+                      className={`group w-full flex items-center justify-between px-3 py-2.5 rounded-2xl text-xs cursor-pointer transition-all ${
                         isActive
-                          ? "bg-teal-500/10 text-teal-300 font-medium border border-teal-500/20"
-                          : "text-gray-300 hover:bg-white/5"
+                          ? "bg-violet-500/15 text-violet-200 font-medium border border-violet-500/30 shadow-sm"
+                          : "text-slate-300 hover:bg-white/5"
                       }`}
                     >
                       {editingId === session.id ? (
                         <input
                           autoFocus
-                          className="w-full bg-transparent text-xs outline-none border-b border-teal-400 text-white"
+                          className="w-full bg-transparent text-xs outline-none border-b border-violet-400 text-white"
                           value={editTitle}
                           onChange={(e) => setEditTitle(e.target.value)}
                           onBlur={saveRename}
@@ -330,7 +332,7 @@ export default function Sidebar({
                           <button
                             type="button"
                             onClick={(e) => startRename(e, session)}
-                            className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
                             title="Rename chat"
                             aria-label="Rename chat"
                           >
@@ -351,10 +353,10 @@ export default function Sidebar({
                           <button
                             type="button"
                             onClick={(e) => handleDelete(e, session.id)}
-                            className={`p-1.5 rounded-md transition-all active:scale-95 cursor-pointer ${
+                            className={`p-1.5 rounded-lg transition-all active:scale-95 cursor-pointer ${
                               confirmDeleteId === session.id
-                                ? "text-red-400 bg-red-500/20 border border-red-500/40 animate-pulse"
-                                : "text-gray-400 hover:text-red-400 hover:bg-red-500/10"
+                                ? "text-rose-300 bg-rose-500/20 border border-rose-500/40 animate-pulse"
+                                : "text-slate-400 hover:text-rose-400 hover:bg-rose-500/10"
                             }`}
                             title={confirmDeleteId === session.id ? "Click again to confirm delete" : "Delete chat"}
                             aria-label="Delete chat"

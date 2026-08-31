@@ -18,10 +18,10 @@ import { ToastProvider, useToast } from "@/components/toast";
 
 /* ─── Status pill colours ─── */
 const STATUS_PILL = {
-  streaming: { bg: "rgba(20,184,166,0.15)", dot: "#14b8a6", label: "Streaming" },
-  submitted: { bg: "rgba(20,184,166,0.10)", dot: "#2dd4bf", label: "Thinking…" },
+  streaming: { bg: "rgba(99,102,241,0.15)", dot: "#818cf8", label: "Streaming" },
+  submitted: { bg: "rgba(99,102,241,0.10)", dot: "#6366f1", label: "Thinking…" },
   ready:     { bg: "transparent",           dot: "transparent", label: "" },
-  error:     { bg: "rgba(248,113,113,0.12)", dot: "#f87171", label: "Error" },
+  error:     { bg: "rgba(244,63,94,0.15)",  dot: "#f43f5e", label: "Error" },
 };
 
 function ChatApp() {
@@ -35,7 +35,7 @@ function ChatApp() {
   const [isCitationLoading, setIsCitationLoading] = useState<boolean>(false);
   const { showToast } = useToast();
 
-  /* Toggle sidebar handler */
+  /* Toggle sidebar keyboard shortcut */
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth >= 768) setIsSidebarOpen(true);
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -75,16 +75,12 @@ function ChatApp() {
   const isLoading = status === "streaming" || status === "submitted";
 
   // ── RAF-throttled display messages ────────────────────────────────────────
-  // useChat fires setState on every SSE token (~850/s with Groq).
-  // We cap what MessageList actually renders to one commit per animation frame
-  // (~60fps / 16ms) so the main thread is never saturated.
   const [displayMessages, setDisplayMessages] = useState<UIMessage[]>(messages);
   const rafIdRef = useRef<number | null>(null);
   const latestMessagesRef = useRef<UIMessage[]>(messages);
 
   useEffect(() => {
     latestMessagesRef.current = messages;
-    // Only schedule a new RAF if one isn't already pending
     if (rafIdRef.current !== null) return;
     rafIdRef.current = requestAnimationFrame(() => {
       setDisplayMessages(latestMessagesRef.current);
@@ -92,12 +88,10 @@ function ChatApp() {
     });
   }, [messages]);
 
-  // Scroll to bottom when a new message is added (not on every token delta)
   const msgCount = displayMessages.length;
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "instant" as ScrollBehavior });
   }, [msgCount]);
-
 
   /* Citation click handler */
   const handleSelectCitation = useCallback(async (docIndex: number) => {
@@ -143,7 +137,7 @@ function ChatApp() {
     }
     const markdownContent = messages
       .map((m) => {
-        const role = m.role === "user" ? "### 👤 User" : "### 🤖 Nexus AI";
+        const role = m.role === "user" ? "### 👤 User" : "### 🤖 Sense AI";
         const content =
           m.parts
             ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
@@ -225,7 +219,7 @@ function ChatApp() {
   return (
     <div
       className="flex h-screen overflow-hidden relative"
-      style={{ background: "#090a0f" }}
+      style={{ background: "#0b0f19" }}
     >
       {/* HITL approval modal */}
       <ApprovalModal
@@ -271,16 +265,16 @@ function ChatApp() {
         <header
           className="flex h-14 items-center px-6 shrink-0 justify-between relative z-20"
           style={{
-            background: "rgba(9, 10, 15, 0.75)",
+            background: "rgba(11, 15, 25, 0.75)",
             backdropFilter: "blur(20px)",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
           }}
         >
-          {/* Left: Toggle + App Name + Status */}
+          {/* Left: Toggle + Squircle Brand Mark + App Name + Status */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen((p) => !p)}
-              className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
               aria-label="Toggle Sessions Drawer"
               title="Toggle Chat Sessions (Ctrl+B)"
             >
@@ -290,17 +284,26 @@ function ChatApp() {
               </svg>
             </button>
 
-            <span className="text-xs font-semibold text-gray-300 tracking-tight">
-              Nexus Knowledge Base
-            </span>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center shadow-[0_0_12px_rgba(255,255,255,0.3)]">
+                <svg className="w-3.5 h-3.5 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                  <path d="M2 17l10 5 10-5" />
+                  <path d="M2 12l10 5 10-5" />
+                </svg>
+              </div>
+              <span className="text-xs font-semibold text-white tracking-tight">
+                Sense AI <span className="text-slate-500 font-mono font-normal">/ Nexus</span>
+              </span>
+            </div>
 
             {/* Status Pill */}
             {isLoading && (
               <div
-                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border border-teal-500/30"
+                className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border border-violet-500/30"
                 style={{
                   background: pill.bg,
-                  color: "#5eead4",
+                  color: "#c4b5fd",
                 }}
               >
                 <span
@@ -312,13 +315,13 @@ function ChatApp() {
             )}
           </div>
 
-          {/* Right: High ROI Action Controls */}
+          {/* Right: Action Controls */}
           <div className="flex items-center gap-2.5">
             {/* Export Session Markdown Button (Visible when messages exist) */}
             {messages.length > 0 && (
               <button
                 onClick={handleExportChat}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 text-gray-300 hover:text-white text-xs font-medium transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 text-slate-300 hover:text-white text-xs font-medium transition-all cursor-pointer"
                 title="Export Active Session as Markdown"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -333,10 +336,10 @@ function ChatApp() {
             {/* Live LangGraph Telemetry & Traces Inspector */}
             <button
               onClick={() => setIsTelemetryOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/30 hover:bg-teal-500/20 text-teal-300 text-xs font-medium transition-all shadow-[0_0_15px_rgba(20,184,166,0.15)] cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/30 hover:bg-violet-500/20 text-violet-300 text-xs font-medium transition-all shadow-[0_0_15px_rgba(99,102,241,0.15)] cursor-pointer"
               title="View Live LangGraph Execution Traces & State Machine Health"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
               <span>Telemetry & Traces</span>
             </button>
 
@@ -345,7 +348,7 @@ function ChatApp() {
               href="https://github.com/rizwandev99/nexus-enterprise-knowledge-worker"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-white/20 text-gray-300 hover:text-white text-xs font-medium transition-all"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-white/20 text-slate-300 hover:text-white text-xs font-medium transition-all"
               title="View Source Code Repository on GitHub"
             >
               <svg className="w-3.5 h-3.5 fill-currentColor" viewBox="0 0 24 24">
@@ -360,9 +363,10 @@ function ChatApp() {
         <MessageList
           messages={displayMessages as UIMessage[]}
           messagesEndRef={messagesEndRef}
-          onSelectPrompt={(prompt) => setSelectedPrompt(prompt)}
+          onSelectPrompt={(prompt) => handleSend(prompt)}
           onSeedKnowledgeBase={handleSeedKnowledgeBase}
           onSelectCitation={handleSelectCitation}
+          onOpenTelemetry={() => setIsTelemetryOpen(true)}
           selectedModel={selectedModel}
           isStreaming={status === "streaming"}
         />
@@ -376,6 +380,13 @@ function ChatApp() {
           selectedModel={selectedModel}
           onSelectModel={setSelectedModel}
         />
+
+        {/* Monospace Footer Disclaimer */}
+        <footer className="text-center pb-2 px-4 select-none">
+          <p className="text-[11px] font-mono text-slate-500">
+            Nexus Enterprise AI may contain errors. We recommend checking important information.
+          </p>
+        </footer>
       </main>
     </div>
   );

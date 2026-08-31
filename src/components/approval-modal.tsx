@@ -27,8 +27,7 @@ export default function ApprovalModal({ pendingApproval, onApprove, onReject }: 
   return (
     /* Backdrop */
     <div
-      className="absolute inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)" }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200"
     >
       <div
         ref={modalRef}
@@ -36,28 +35,23 @@ export default function ApprovalModal({ pendingApproval, onApprove, onReject }: 
         aria-modal="true"
         aria-labelledby="approval-title"
         tabIndex={-1}
-        className="outline-none w-full max-w-md rounded-2xl overflow-hidden"
+        className="outline-none w-full max-w-md rounded-3xl overflow-hidden bg-slate-900/90 backdrop-blur-2xl border border-white/15 shadow-[0_24px_80px_rgba(0,0,0,0.8),0_0_30px_rgba(245,158,11,0.15)]"
         style={{
-          background: "var(--color-surface)",
-          border: "1px solid var(--color-border-strong)",
-          boxShadow: "0 24px 80px rgba(0,0,0,0.8)",
           animation: "modal-in 0.22s cubic-bezier(0.16,1,0.3,1) forwards",
         }}
       >
         {/* Header stripe */}
         <div
-          className="h-1 w-full"
-          style={{ background: "linear-gradient(90deg, #f59e0b, #ef4444)" }}
+          className="h-1.5 w-full bg-gradient-to-r from-amber-500 via-rose-500 to-violet-600"
         />
 
-        <div className="p-7">
+        <div className="p-6 sm:p-7">
           {/* Icon + title */}
           <div className="flex items-start gap-4 mb-5">
             <div
-              className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: "var(--color-warning-muted)", color: "var(--color-warning)" }}
+              className="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center bg-amber-500/15 border border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -66,29 +60,26 @@ export default function ApprovalModal({ pendingApproval, onApprove, onReject }: 
             <div>
               <h2
                 id="approval-title"
-                className="text-base font-semibold tracking-tight"
-                style={{ color: "var(--color-text-primary)" }}
+                className="text-base font-bold tracking-tight text-white"
               >
-                Human Approval Required
+                Human-in-the-Loop Approval
               </h2>
-              <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
-                The agent is requesting permission to execute a sensitive operation.
+              <p className="text-xs mt-1 text-slate-400 leading-relaxed">
+                The autonomous agent paused at a graph interrupt boundary to request database mutation authorization.
               </p>
             </div>
           </div>
 
           {/* Code block */}
           <div
-            className="rounded-xl p-4 mb-6 overflow-auto"
-            style={{
-              background: "var(--color-base)",
-              border: "1px solid var(--color-border)",
-              maxHeight: "200px",
-            }}
+            className="rounded-2xl p-4 mb-6 overflow-auto bg-slate-950/80 border border-white/10 max-h-[220px]"
           >
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/5 font-mono text-[10px] text-slate-400">
+              <span>SQL Mutation Payload</span>
+              <span className="text-amber-400">DML Allowed</span>
+            </div>
             <pre
-              className="text-xs leading-relaxed whitespace-pre-wrap break-all"
-              style={{ color: "var(--color-text-secondary)", fontFamily: "var(--font-mono)" }}
+              className="text-xs leading-relaxed whitespace-pre-wrap break-all text-slate-300 font-mono"
             >
               {approvalText}
             </pre>
@@ -98,28 +89,18 @@ export default function ApprovalModal({ pendingApproval, onApprove, onReject }: 
           <div className="flex items-center gap-3 justify-end">
             <button
               onClick={onReject}
-              className="px-5 py-2 rounded-xl text-sm font-medium transition-all duration-150 hover:opacity-80 active:scale-95"
-              style={{
-                background: "var(--color-surface-3)",
-                color: "var(--color-text-primary)",
-                border: "1px solid var(--color-border)",
-              }}
+              className="px-5 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-white/10 transition-all active:scale-95 cursor-pointer"
             >
-              Reject
+              Reject Operation
             </button>
             <button
               onClick={onApprove}
-              className="px-5 py-2 rounded-xl text-sm font-medium transition-all duration-150 hover:opacity-90 active:scale-95 flex items-center gap-2"
-              style={{
-                background: "linear-gradient(135deg, #6366f1, #7c3aed)",
-                color: "#fff",
-                boxShadow: "0 2px 16px var(--color-brand-glow)",
-              }}
+              className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 transition-all active:scale-95 flex items-center gap-2 shadow-[0_0_20px_rgba(99,102,241,0.35)] cursor-pointer"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              Approve & Continue
+              Approve & Execute
             </button>
           </div>
         </div>

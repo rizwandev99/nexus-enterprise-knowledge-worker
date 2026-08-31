@@ -95,31 +95,27 @@ export default function CitationDrawer({
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
         <aside
-          className="w-screen max-w-md sm:max-w-lg lg:max-w-xl flex flex-col h-full overflow-hidden text-gray-100 shadow-2xl transition-all duration-300 ease-out animate-in slide-in-from-right duration-300"
+          className="w-screen max-w-md sm:max-w-lg lg:max-w-xl flex flex-col h-full overflow-hidden text-slate-100 shadow-2xl transition-all duration-300 ease-out animate-in slide-in-from-right duration-300 bg-slate-900/95 backdrop-blur-2xl border-l border-white/10"
           style={{
-            background: "linear-gradient(180deg, rgba(17, 19, 26, 0.96) 0%, rgba(9, 10, 15, 0.98) 100%)",
-            backdropFilter: "blur(24px)",
-            borderLeft: "1px solid rgba(255, 255, 255, 0.1)",
-            boxShadow: "-12px 0 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(20, 184, 166, 0.08)",
+            boxShadow: "-12px 0 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(99, 102, 241, 0.1)",
           }}
         >
           {/* Header */}
           <div
-            className="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0"
-            style={{ background: "rgba(255, 255, 255, 0.02)" }}
+            className="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0 bg-white/[0.02]"
           >
             <div className="flex items-center gap-3">
-              <div className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-[0_0_12px_rgba(20,184,166,0.25)]">
+              <div className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-mono font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30 shadow-[0_0_12px_rgba(99,102,241,0.2)]">
                 [Doc-{citation?.docIndex || 1}]
               </div>
               <div>
                 <h2
                   id="citation-drawer-title"
-                  className="text-sm font-semibold text-white tracking-tight"
+                  className="text-sm font-bold text-white tracking-tight"
                 >
                   Verified Source Context
                 </h2>
-                <p className="text-[11px] text-gray-400 font-mono">
+                <p className="text-[11px] text-slate-400 font-mono">
                   Hybrid RAG • Reciprocal Rank Fusion
                 </p>
               </div>
@@ -127,7 +123,7 @@ export default function CitationDrawer({
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               aria-label="Close citation drawer"
               title="Close (Esc)"
             >
@@ -142,8 +138,8 @@ export default function CitationDrawer({
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-20 space-y-4 text-center">
-                <div className="w-8 h-8 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm text-gray-400 font-mono">
+                <div className="w-8 h-8 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-slate-400 font-mono">
                   Fetching RRF passage from PostgreSQL…
                 </p>
               </div>
@@ -151,20 +147,16 @@ export default function CitationDrawer({
               <>
                 {/* Document Metadata Card */}
                 <div
-                  className="p-4 rounded-2xl border border-white/10 relative overflow-hidden"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.03)",
-                    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.25)",
-                  }}
+                  className="p-4 rounded-3xl border border-white/10 relative overflow-hidden bg-slate-950/60 shadow-xl"
                 >
                   {/* Subtle top gradient glow */}
                   <div
-                    className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-teal-500/10 blur-2xl pointer-events-none"
+                    className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-violet-500/10 blur-2xl pointer-events-none"
                     aria-hidden="true"
                   />
 
                   <div className="flex items-start justify-between gap-3 mb-2.5">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-white/5 border border-white/10 text-teal-300">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[11px] font-medium bg-white/5 border border-white/10 text-violet-300">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                         <polyline points="14 2 14 8 20 8" />
@@ -183,14 +175,14 @@ export default function CitationDrawer({
                   </div>
 
                   {/* Document Title */}
-                  <h3 className="text-base font-semibold text-white leading-snug tracking-tight mb-2">
+                  <h3 className="text-base font-bold text-white leading-snug tracking-tight mb-2">
                     {citation.title}
                   </h3>
 
                   {/* Document URI / Entity tag */}
-                  <div className="flex items-center gap-2 text-xs text-gray-400 font-mono">
-                    <span className="text-gray-500">URI:</span>
-                    <span className="text-gray-300 truncate max-w-[320px] bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                  <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
+                    <span className="text-slate-500">URI:</span>
+                    <span className="text-slate-300 truncate max-w-[320px] bg-white/5 px-2 py-0.5 rounded-lg border border-white/5">
                       {docUri}
                     </span>
                   </div>
@@ -198,10 +190,9 @@ export default function CitationDrawer({
 
                 {/* Retrieval Method Breakdown Pill Bar */}
                 <div
-                  className="p-3 rounded-xl border border-white/5 flex flex-col gap-2 text-xs"
-                  style={{ background: "rgba(12, 14, 20, 0.7)" }}
+                  className="p-3.5 rounded-2xl border border-white/5 flex flex-col gap-2 text-xs bg-slate-950/80"
                 >
-                  <div className="flex items-center justify-between text-gray-400 font-mono text-[11px]">
+                  <div className="flex items-center justify-between text-slate-400 font-mono text-[11px]">
                     <span className="flex items-center gap-1.5">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <polygon points="12 2 2 7 12 12 22 7 12 2" />
@@ -210,19 +201,19 @@ export default function CitationDrawer({
                       </svg>
                       RAG Retrieval Pipeline
                     </span>
-                    <span className="text-teal-400">Reciprocal Rank Fusion</span>
+                    <span className="text-violet-300">Reciprocal Rank Fusion</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
-                    <div className="p-2 rounded-lg bg-white/5 border border-white/5 flex flex-col">
-                      <span className="text-gray-400">pgvector (Cosine)</span>
-                      <span className="text-teal-300 font-bold mt-0.5">
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 flex flex-col">
+                      <span className="text-slate-400">pgvector (Cosine)</span>
+                      <span className="text-cyan-300 font-bold mt-0.5">
                         Similarity: {simScore.toFixed(2)}
                       </span>
                     </div>
-                    <div className="p-2 rounded-lg bg-white/5 border border-white/5 flex flex-col">
-                      <span className="text-gray-400">tsvector (Full-Text)</span>
-                      <span className="text-indigo-300 font-bold mt-0.5">
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 flex flex-col">
+                      <span className="text-slate-400">tsvector (Full-Text)</span>
+                      <span className="text-violet-300 font-bold mt-0.5">
                         ts_rank: {kwScore.toFixed(2)}
                       </span>
                     </div>
@@ -233,23 +224,23 @@ export default function CitationDrawer({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     {/* View mode toggle tabs */}
-                    <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10 text-xs">
+                    <div className="flex items-center p-1 rounded-2xl bg-white/5 border border-white/10 text-xs">
                       <button
                         onClick={() => setActiveTab("passage")}
-                        className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                        className={`px-3 py-1 rounded-xl font-medium transition-all cursor-pointer ${
                           activeTab === "passage"
-                            ? "bg-teal-500/20 text-teal-300 border border-teal-500/30 shadow-sm"
-                            : "text-gray-400 hover:text-white"
+                            ? "bg-violet-500/20 text-violet-200 border border-violet-500/30 shadow-sm"
+                            : "text-slate-400 hover:text-white"
                         }`}
                       >
                         Retrieved Passage
                       </button>
                       <button
                         onClick={() => setActiveTab("full")}
-                        className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                        className={`px-3 py-1 rounded-xl font-medium transition-all cursor-pointer ${
                           activeTab === "full"
-                            ? "bg-teal-500/20 text-teal-300 border border-teal-500/30 shadow-sm"
-                            : "text-gray-400 hover:text-white"
+                            ? "bg-violet-500/20 text-violet-200 border border-violet-500/30 shadow-sm"
+                            : "text-slate-400 hover:text-white"
                         }`}
                       >
                         Full Document
@@ -260,10 +251,10 @@ export default function CitationDrawer({
                     <button
                       type="button"
                       onClick={activeTab === "passage" ? handleCopySnippet : handleCopyFull}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all active:scale-95 cursor-pointer ${
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-xs font-medium transition-all active:scale-95 cursor-pointer ${
                         (activeTab === "passage" ? copiedSnippet : copiedFull)
                           ? "bg-emerald-500/25 border border-emerald-500/50 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.3)] animate-in fade-in zoom-in-95 font-semibold"
-                          : "bg-teal-500/10 border border-teal-500/30 text-teal-300 hover:bg-teal-500/20 hover:border-teal-400 hover:text-white shadow-[0_0_12px_rgba(20,184,166,0.15)]"
+                          : "bg-violet-500/10 border border-violet-500/30 text-violet-300 hover:bg-violet-500/20 hover:border-violet-400 hover:text-white shadow-[0_0_12px_rgba(99,102,241,0.15)]"
                       }`}
                       title="Copy content to clipboard"
                     >
@@ -288,13 +279,9 @@ export default function CitationDrawer({
 
                   {/* Passage Text Container */}
                   <div
-                    className="p-4 rounded-2xl border border-white/10 text-xs font-mono leading-relaxed overflow-x-auto select-text relative"
-                    style={{
-                      background: "rgba(10, 11, 16, 0.9)",
-                      boxShadow: "inset 0 2px 10px rgba(0, 0, 0, 0.5)",
-                    }}
+                    className="p-4 rounded-3xl border border-white/10 text-xs font-mono leading-relaxed overflow-x-auto select-text relative bg-slate-950/90 shadow-inner"
                   >
-                    <div className="text-gray-300 whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                    <div className="text-slate-200 whitespace-pre-wrap font-sans text-sm leading-relaxed">
                       {activeTab === "passage"
                         ? citation.passageText
                         : (citation.fullContent || citation.passageText)}
@@ -303,7 +290,7 @@ export default function CitationDrawer({
                 </div>
               </>
             ) : (
-              <div className="text-center py-20 text-sm text-gray-400">
+              <div className="text-center py-20 text-sm text-slate-400 font-mono">
                 No citation selected. Click any [Doc-X] tag in the chat to inspect its verified RRF context.
               </div>
             )}
@@ -311,17 +298,16 @@ export default function CitationDrawer({
 
           {/* Footer */}
           <div
-            className="flex items-center justify-between px-6 py-3.5 border-t border-white/10 shrink-0 text-xs text-gray-400 font-mono"
-            style={{ background: "rgba(255, 255, 255, 0.02)" }}
+            className="flex items-center justify-between px-6 py-3.5 border-t border-white/10 shrink-0 text-xs text-slate-400 font-mono bg-white/[0.02]"
           >
-            <span className="flex items-center gap-1.5 text-gray-400 text-[11px]">
-              <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
+            <span className="flex items-center gap-1.5 text-slate-400 text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
               PostgreSQL Vector Store
             </span>
 
             <button
               onClick={onClose}
-              className="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium transition-all text-xs"
+              className="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium transition-all text-xs cursor-pointer"
             >
               Done
             </button>
