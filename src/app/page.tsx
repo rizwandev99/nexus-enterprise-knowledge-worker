@@ -48,7 +48,7 @@ function ChatApp() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const { messages, setMessages, sendMessage, status } = useChat();
+  const { messages, setMessages, sendMessage, status } = useChat({ api: "/api/chat" });
   const loadedChatIdRef = useRef<string | null>(null);
   const prevStatusRef = useRef(status);
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);

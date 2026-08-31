@@ -430,10 +430,10 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
       const isErr = lastMsg.content?.toString().includes("RUNTIME EXCEPTION");
 
       if (isErr && state.retryCount < 3) {
-        return "reasoning"; // Self-correction loop
+        return "reasoning"; // Self-correction retry loop
       }
 
-      return "reasoning";
+      return END; // ✅ Tool executed successfully — terminate the graph
     });
 
   return workflow.compile({ checkpointer });
