@@ -35,5 +35,10 @@ jobs:
       - name: Run Tests
         run: npm test -- --run
 
+      # E2E tests require a running server — run manually or in a separate deployment-gated pipeline.
+      # To run E2E locally: npm run test:e2e  (requires: npm run dev in another terminal)
+      # - name: Run E2E Tests
+      #   run: npx playwright install --with-deps && npm run test:e2e
+
       - name: Build Project
         run: npm run build
