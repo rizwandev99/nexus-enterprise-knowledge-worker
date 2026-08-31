@@ -23,7 +23,7 @@ export default function ChatInput({
   isLoading,
   selectedPrompt,
   onClearSelectedPrompt,
-  selectedModel = "groq-llama-3.3-70b",
+  selectedModel = "groq-gpt-oss-120b",
   onSelectModel,
 }: ChatInputProps) {
   const [input, setInput] = useState("");

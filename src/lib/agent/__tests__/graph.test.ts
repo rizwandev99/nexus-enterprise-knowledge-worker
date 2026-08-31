@@ -98,7 +98,7 @@ describe('Agent Graph Initialization & Multi-Model Routing', () => {
     process.env.GROQ_API_KEY = 'test-groq-key';
 
     const resolution = resolveModel('gpt-4o');
-    expect(resolution.resolvedModelId).toBe('groq-llama-3.3-70b');
+    expect(resolution.resolvedModelId).toBe('groq-gpt-oss-120b');
     expect(resolution.provider).toBe('groq');
   });
 
@@ -114,7 +114,7 @@ describe('Agent Graph Initialization & Multi-Model Routing', () => {
     process.env.GROQ_API_KEY = 'test-groq-key';
 
     const resolution = resolveModel('claude-3-5-sonnet');
-    expect(resolution.resolvedModelId).toBe('groq-llama-3.3-70b');
+    expect(resolution.resolvedModelId).toBe('groq-gpt-oss-120b');
     expect(resolution.provider).toBe('groq');
   });
 
@@ -134,13 +134,20 @@ describe('Agent Graph Initialization & Multi-Model Routing', () => {
     expect(resolution.provider).toBe('groq');
   });
 
+  it('should compile graph for groq-qwen-3.8-27b when GROQ_API_KEY is present', async () => {
+    process.env.GROQ_API_KEY = 'test-groq-key';
+    const resolution = resolveModel('groq-qwen-3.8-27b');
+    expect(resolution.resolvedModelId).toBe('groq-qwen-3.8-27b');
+    expect(resolution.provider).toBe('groq');
+  });
+
   it('should never crash when all API keys are missing', async () => {
     delete process.env.OPENAI_API_KEY;
     delete process.env.ANTHROPIC_API_KEY;
     delete process.env.DEEPSEEK_API_KEY;
     delete process.env.GROQ_API_KEY;
 
-    const graph = await createAgentGraph({ modelId: 'groq-llama-3.3-70b' });
+    const graph = await createAgentGraph({ modelId: 'groq-gpt-oss-120b' });
     expect(graph).toBeDefined();
   });
 });
@@ -153,11 +160,18 @@ describe('Pricing Table & Token Telemetry Estimations', () => {
     expect(estimateTokenCount('a'.repeat(400))).toBe(100);
   });
 
-  it('should correctly estimate costs for groq-llama-3.3-70b', () => {
-    const cost = estimateTokenCost('groq-llama-3.3-70b', 1_000_000, 1_000_000);
+  it('should correctly estimate costs for groq-gpt-oss-120b', () => {
+    const cost = estimateTokenCost('groq-gpt-oss-120b', 1_000_000, 1_000_000);
     expect(cost.promptCost).toBe(0.59);
     expect(cost.completionCost).toBe(0.79);
     expect(cost.totalCost).toBe(1.38);
+  });
+
+  it('should correctly estimate costs for groq-qwen-3.8-27b', () => {
+    const cost = estimateTokenCost('groq-qwen-3.8-27b', 1_000_000, 1_000_000);
+    expect(cost.promptCost).toBe(0.20);
+    expect(cost.completionCost).toBe(0.60);
+    expect(cost.totalCost).toBe(0.80);
   });
 
   it('should correctly estimate costs for gpt-4o', () => {
@@ -182,6 +196,8 @@ describe('Pricing Table & Token Telemetry Estimations', () => {
   });
 
   it('should include all required model pricing configurations in MODEL_PRICING', () => {
+    expect(MODEL_PRICING['groq-gpt-oss-120b']).toBeDefined();
+    expect(MODEL_PRICING['groq-qwen-3.8-27b']).toBeDefined();
     expect(MODEL_PRICING['groq-llama-3.3-70b']).toBeDefined();
     expect(MODEL_PRICING['gpt-4o']).toBeDefined();
     expect(MODEL_PRICING['claude-3-5-sonnet']).toBeDefined();
@@ -191,7 +207,7 @@ describe('Pricing Table & Token Telemetry Estimations', () => {
 
 describe('Agent Graph Security & Self-Correction Flow', () => {
   it('should compile graph with prompt defense and retry bounding', async () => {
-    const graph = await createAgentGraph({ modelId: 'groq-llama-3.3-70b' });
+    const graph = await createAgentGraph({ modelId: 'groq-gpt-oss-120b' });
     expect(graph).toBeDefined();
     expect(typeof graph.invoke).toBe('function');
   });

@@ -1,4 +1,4 @@
-﻿# Nexus Enterprise Knowledge Worker
+# Nexus Enterprise Knowledge Worker
 
 > An enterprise-grade, stateful AI knowledge assistant and database worker featuring Hybrid RAG (pgvector + tsvector RRF), Human-in-the-Loop governance, cyclic tool self-correction, and full-stack observability.
 
@@ -59,7 +59,7 @@ graph TD
     ChatAPI -->|Stream Events| LangGraph["LangGraph.js Directed Cyclic Graph"]
 
     subgraph LangGraph State Machine
-        RAGNode["ragNode (Hybrid Search)"] -->|RRF Context & Citations| ReasoningNode["reasoningNode (Llama-3.3-70B)"]
+        RAGNode["ragNode (Hybrid Search)"] -->|RRF Context & Citations| ReasoningNode["reasoningNode (GPT-OSS 120B / Multi-Provider)"]
         ReasoningNode -->|Has Tool Call?| Router{"Tool Check"}
         Router -->|Read SELECT / Ingestion| ToolsNode["toolsNode (Native Tools)"]
         Router -->|DML Mutation| ApprovalInterrupt["approvalNode (interrupt() boundary)"]
@@ -119,7 +119,7 @@ Provides a real-time introspection modal in the UI displaying:
 |---|---|---|
 | **Framework** | Next.js 15 (App Router, Server Actions) | React 19, Server Components, Streaming UI |
 | **Agent Orchestration** | LangGraph.js v1.0 & `@langchain/core` | Directed cyclic graph, state checkpointers |
-| **LLM Inference** | Groq (`llama-3.3-70b-versatile`) | Ultra-fast token streaming & tool calling |
+| **LLM Inference** | Groq (`openai/gpt-oss-120b`), OpenAI, Anthropic | Ultra-fast token streaming & tool calling |
 | **Database & Vector Store** | PostgreSQL 16+ & `pgvector` | Prisma ORM, GIN full-text index, persistent checkpointers |
 | **UI Design System** | Tailwind CSS v4 | Linear.app-style dark glassmorphism, animated ambient orbs |
 | **Streaming Protocol** | Vercel AI SDK v7 (`@ai-sdk/react`) | `createUIMessageStream`, real-time SSE |

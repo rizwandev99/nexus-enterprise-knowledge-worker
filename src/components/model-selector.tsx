@@ -15,14 +15,24 @@ export interface ModelOption {
 
 export const AVAILABLE_MODELS: ModelOption[] = [
   {
-    id: "groq-llama-3.3-70b",
-    name: "Groq Llama 3.3 70B",
+    id: "groq-gpt-oss-120b",
+    name: "Groq GPT-OSS 120B",
     provider: "Groq",
     speedBadge: "Lightning Fast",
     speedToks: "~850 tok/s",
-    description: "Ultra-low latency inference powered by LPU tensor streaming",
+    description: "Flagship 120B open-weights model on Groq LPU with fast tool calling",
     tag: "Default",
     badgeClass: "bg-teal-500/15 text-teal-300 border-teal-500/30",
+  },
+  {
+    id: "groq-qwen-3.8-27b",
+    name: "Groq Qwen 3.8 27B",
+    provider: "Groq",
+    speedBadge: "Ultra Speed",
+    speedToks: "~1200 tok/s",
+    description: "High-speed dense reasoning model optimized for sub-second latency",
+    tag: "Fast",
+    badgeClass: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
   },
   {
     id: "gpt-4o",

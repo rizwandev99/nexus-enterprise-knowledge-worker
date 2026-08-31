@@ -29,7 +29,7 @@ function ChatApp() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTelemetryOpen, setIsTelemetryOpen] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>(undefined);
-  const [selectedModel, setSelectedModel] = useState<string>("groq-llama-3.3-70b");
+  const [selectedModel, setSelectedModel] = useState<string>("groq-gpt-oss-120b");
   const [activeCitation, setActiveCitation] = useState<CitationInfo | null>(null);
   const [isCitationDrawerOpen, setIsCitationDrawerOpen] = useState<boolean>(false);
   const [isCitationLoading, setIsCitationLoading] = useState<boolean>(false);

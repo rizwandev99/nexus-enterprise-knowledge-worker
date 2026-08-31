@@ -596,7 +596,7 @@ export default function MessageBubble({
   message,
   isUser,
   onSelectCitation,
-  selectedModel = "groq-llama-3.3-70b",
+  selectedModel = "groq-gpt-oss-120b",
 }: MessageBubbleProps) {
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState<"up" | "down" | null>(null);

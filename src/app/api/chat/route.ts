@@ -74,7 +74,7 @@ export async function POST(req: Request) {
   const jsonBody = await req.json();
   const { messages } = jsonBody;
   const chatId = url.searchParams.get("chatId") || jsonBody.chatId || jsonBody.body?.chatId;
-  const modelId = jsonBody.modelId || jsonBody.body?.modelId || url.searchParams.get("modelId") || "groq-llama-3.3-70b";
+  const modelId = jsonBody.modelId || jsonBody.body?.modelId || url.searchParams.get("modelId") || "groq-gpt-oss-120b";
 
   if (!chatId) {
     return new Response(JSON.stringify({ error: "Missing chatId" }), { status: 400 });
