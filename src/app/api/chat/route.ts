@@ -6,6 +6,7 @@
 
 import { createAgentGraph } from "@/lib/agent/graph";
 import { estimateTokenCost, estimateTokenCount, TelemetryMetrics, TelemetryCitation } from "@/lib/agent/pricing";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { HumanMessage } from "@langchain/core/messages";
 import { Command, isGraphInterrupt } from "@langchain/langgraph";
 import {
@@ -16,6 +17,9 @@ import {
 import { saveMessage, generateChatTitle } from "../../chat-actions";
 
 export const maxDuration = 60;
+
+// Chat completions are the core feature — allow 20 requests per minute per IP.
+const CHAT_MAX_REQUESTS = 20;
 
 // ── Helper: write an approval notice to the UI stream ────────────────────────
 // This writes a text block containing the __APPROVAL_REQUEST__ marker that
@@ -39,6 +43,33 @@ function writeApprovalNotice(
 }
 
 export async function POST(req: Request) {
+  // ── Rate limiting — checked BEFORE any body parsing ──────────────────────
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "anonymous";
+
+  const rl = checkRateLimit(`chat:${ip}`, CHAT_MAX_REQUESTS);
+
+  if (!rl.allowed) {
+    return new Response(
+      JSON.stringify({
+        error: "Rate limit exceeded. Please wait before sending more messages.",
+        resetAt: rl.resetAt,
+      }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "X-RateLimit-Limit": String(CHAT_MAX_REQUESTS),
+          "X-RateLimit-Remaining": "0",
+          "X-RateLimit-Reset": String(rl.resetAt),
+          "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)),
+        },
+      }
+    );
+  }
+
   const url = new URL(req.url);
   const jsonBody = await req.json();
   const { messages } = jsonBody;

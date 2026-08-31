@@ -13,7 +13,7 @@ import ChatInput from "@/components/chat-input";
 import MessageList from "@/components/message-list";
 import ApprovalModal from "@/components/approval-modal";
 import TelemetryModal from "@/components/telemetry-modal";
-import CitationDrawer, { type CitationInfo } from "@/components/CitationDrawer";
+import CitationDrawer, { type CitationInfo } from "@/components/citation-drawer";
 import { ToastProvider, useToast } from "@/components/toast";
 
 /* ─── Status pill colours ─── */

@@ -1,9 +1,9 @@
 # Screenshots
 
-Add the following screenshots here after capturing them from the live app:
-- `ui-main.png` — Main chat interface (dark glassmorphism)
-- `hitl-modal.png` — Human-in-the-Loop approval modal
-- `citation-drawer.png` — Citation drawer with RRF sources
-- `telemetry-modal.png` — Live LangGraph telemetry inspector
+Add screenshots here after capturing from the live app:
+- `ui-main.png` - Main dark glassmorphism UI
+- `hitl-modal.png` - HITL approval modal
+- `citation-drawer.png` - Citation drawer with RRF sources
+- `telemetry-modal.png` - Live telemetry inspector
 
-**Recommended resolution:** 1440x900px
+Recommended resolution: 1440x900px

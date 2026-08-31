@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import MessageBubble from '../components/MessageBubble';
+import MessageBubble from '../components/message-bubble';
 import type { UIMessage } from '@ai-sdk/react';
 
 describe('MessageBubble Markdown & Feature Rendering', () => {

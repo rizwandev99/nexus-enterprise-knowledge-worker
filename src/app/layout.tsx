@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     siteName: "Nexus Enterprise Knowledge Worker",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Nexus Enterprise Knowledge Worker — AI Agent with Hybrid RAG",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Nexus Enterprise Knowledge Worker",
     description: "Hybrid RAG • LangGraph State Machine • HITL Governance • OpenTelemetry",
-    images: ["/og-image.png"],
+    images: ["/og-image.jpg"],
     creator: "@rizwandev99",
   },
 };
