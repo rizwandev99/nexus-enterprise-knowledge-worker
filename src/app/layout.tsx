@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -13,33 +14,42 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-export const metadata = {
-  title: "Nexus — Enterprise Knowledge Worker",
+export const metadata: Metadata = {
+  title: "Nexus Enterprise Knowledge Worker",
   description:
-    "AI-powered enterprise knowledge worker with Hybrid RAG, LangGraph stateful agents, Human-in-the-Loop governance, and real-time streaming.",
-  keywords: ["AI", "enterprise", "RAG", "LangGraph", "knowledge worker", "pgvector", "Next.js", "TypeScript"],
+    "An enterprise-grade autonomous AI knowledge worker with Hybrid RAG (pgvector + tsvector RRF), Human-in-the-Loop governance, cyclic self-correction, and OpenTelemetry observability. Built with LangGraph.js, Next.js 15, and PostgreSQL.",
+  keywords: [
+    "AI agent",
+    "RAG",
+    "LangGraph",
+    "enterprise",
+    "knowledge worker",
+    "pgvector",
+    "human-in-the-loop",
+    "TypeScript",
+    "Next.js",
+  ],
   openGraph: {
     title: "Nexus Enterprise Knowledge Worker",
-    description:
-      "Hybrid RAG • LangGraph State Machine • HITL Governance — a portfolio-grade AI system built with Next.js 15, LangGraph.js, and PostgreSQL pgvector.",
+    description: "Hybrid RAG • LangGraph State Machine • HITL Governance • OpenTelemetry",
     url: "https://nexus-enterprise-knowledge-worker.vercel.app",
     siteName: "Nexus Enterprise Knowledge Worker",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Nexus Enterprise Knowledge Worker — Hybrid RAG, LangGraph, HITL",
+        alt: "Nexus Enterprise Knowledge Worker — AI Agent with Hybrid RAG",
       },
     ],
+    locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Nexus Enterprise Knowledge Worker",
-    description:
-      "Hybrid RAG • LangGraph State Machine • HITL Governance — portfolio-grade AI built with Next.js 15, LangGraph.js & pgvector.",
-    images: ["/og-image.jpg"],
+    description: "Hybrid RAG • LangGraph State Machine • HITL Governance • OpenTelemetry",
+    images: ["/og-image.png"],
     creator: "@rizwandev99",
   },
 };
