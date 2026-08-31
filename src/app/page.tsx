@@ -48,7 +48,7 @@ function ChatApp() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const { messages, setMessages, sendMessage, status } = useChat({ api: "/api/chat" });
+  const { messages, setMessages, sendMessage, status } = useChat();
   const loadedChatIdRef = useRef<string | null>(null);
   const prevStatusRef = useRef(status);
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
@@ -74,9 +74,10 @@ function ChatApp() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isLoading = status === "streaming" || status === "submitted";
 
+  const msgCount = messages.length;
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "instant" as ScrollBehavior });
+  }, [msgCount]);
 
   /* Citation click handler */
   const handleSelectCitation = useCallback(async (docIndex: number) => {
