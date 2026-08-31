@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import type { UIMessage } from "@ai-sdk/react";
 import { useToast } from "./toast";
 
@@ -411,8 +411,10 @@ function parseMarkdownBlocks(raw: string): MarkdownBlock[] {
 
 /* ────────────────────────────────────────────────
    Markdown Block Renderer
+   Wrapped in React.memo so React skips re-render if
+   props haven't changed — critical for 850 tok/s streaming.
 ──────────────────────────────────────────────── */
-function RenderMarkdown({
+const RenderMarkdown = memo(function RenderMarkdown({
   content,
   isUser,
   onSelectCitation,
@@ -454,7 +456,9 @@ function RenderMarkdown({
     return <div className="leading-relaxed">{renderInlineContent(content, onSelectCitation)}</div>;
   }
 
-  const blocks = parseMarkdownBlocks(content);
+  // Memoize the expensive parse — skips re-parse if content string is identical
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const blocks = useMemo(() => parseMarkdownBlocks(content), [content]);
 
   return (
     <div className="space-y-2.5 text-[13.5px] sm:text-sm leading-relaxed text-gray-200">
@@ -592,7 +596,7 @@ function RenderMarkdown({
       })}
     </div>
   );
-}
+});
 
 /* ────────────────────────────────────────────────
    Main MessageBubble Component
