@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import ModelSelector from "./ModelSelector";
+import ModelSelector from "./model-selector";
 
 export interface ChatInputProps {
   onSend: (text: string) => void;
