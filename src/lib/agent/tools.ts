@@ -118,9 +118,9 @@ export const executeSqlMutationTool = tool(
   },
   {
     name: "execute_sql_mutation",
-    description: "Execute a direct SQL mutation on the database (DANGEROUS)",
+    description: "Execute a direct SQL mutation (INSERT, UPDATE, DELETE) on the database. Calling this tool automatically triggers a Human-in-the-Loop (HITL) interrupt modal for user confirmation before execution. Never refuse or ask for approval in text prose; always formulate the valid SQL mutation and call this tool.",
     schema: z.object({
-      query: z.string().describe("The SQL query to execute"),
+      query: z.string().describe("The SQL query to execute (INSERT, UPDATE, or DELETE on documents or document_chunks)"),
     }),
   }
 );
