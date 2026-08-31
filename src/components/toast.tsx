@@ -98,7 +98,7 @@ function ToastBubble({
   return (
     <div
       role="alert"
-      className="flex items-center gap-3 pl-3 pr-4 py-3 rounded-2xl min-w-[240px] max-w-[360px] relative overflow-hidden bg-slate-900/90 backdrop-blur-2xl border border-white/10 shadow-2xl"
+      className="flex items-center gap-3 pl-3 pr-4 py-3 rounded-2xl min-w-[240px] max-w-[360px] relative overflow-hidden bg-slate-900/90 backdrop-blur-2xl border border-slate-700/50 shadow-2xl"
       style={{
         animation: leaving ? "toast-out 0.3s cubic-bezier(0.4,0,1,1) forwards" : "toast-in 0.3s cubic-bezier(0.16,1,0.3,1) forwards",
       }}
@@ -151,3 +151,5 @@ export function useToast() {
   }
   return ctx;
 }
+
+export default ToastProvider;

@@ -54,15 +54,15 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
 
       {/* Modal Container */}
       <div
-        className="relative w-full max-w-2xl rounded-3xl p-6 sm:p-7 overflow-hidden border border-white/10 shadow-2xl z-10 flex flex-col gap-5 text-slate-100 bg-slate-900/90 backdrop-blur-2xl"
+        className="relative w-full max-w-2xl rounded-3xl p-6 sm:p-7 overflow-hidden border border-slate-700/50 shadow-2xl z-10 flex flex-col gap-5 text-slate-100 bg-slate-900/90 backdrop-blur-2xl"
         style={{
           boxShadow: "0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(99, 102, 241, 0.15)",
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="flex items-center justify-between border-b border-slate-700/50 pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-violet-500/10 border border-violet-500/30 flex items-center justify-center text-violet-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+            <div className="w-10 h-10 rounded-2xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-300 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
@@ -91,28 +91,28 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
 
         {/* Live Metrics Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-white/5 flex flex-col">
+          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-700/40 flex flex-col">
             <span className="text-[11px] text-slate-400 font-medium font-mono">Knowledge Docs</span>
             <span className="text-xl font-bold text-cyan-300 mt-1 font-mono">
               {isLoading ? "…" : metrics?.documentCount ?? 0}
             </span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-white/5 flex flex-col">
+          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-700/40 flex flex-col">
             <span className="text-[11px] text-slate-400 font-medium font-mono">Chat Sessions</span>
-            <span className="text-xl font-bold text-violet-300 mt-1 font-mono">
+            <span className="text-xl font-bold text-slate-200 mt-1 font-mono">
               {isLoading ? "…" : metrics?.sessionCount ?? 0}
             </span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-white/5 flex flex-col">
+          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-700/40 flex flex-col">
             <span className="text-[11px] text-slate-400 font-medium font-mono">Total Messages</span>
             <span className="text-xl font-bold text-indigo-300 mt-1 font-mono">
               {isLoading ? "…" : metrics?.messageCount ?? 0}
             </span>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-white/5 flex flex-col">
+          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-700/40 flex flex-col">
             <span className="text-[11px] text-slate-400 font-medium font-mono">System Health</span>
             <div className="flex items-center gap-1.5 mt-1">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -124,22 +124,22 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
         </div>
 
         {/* State Machine Visualizer */}
-        <div className="p-4 rounded-2xl bg-slate-950/80 border border-white/5 flex flex-col gap-3">
+        <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-700/40 flex flex-col gap-3">
           <span className="text-xs font-semibold text-slate-200 tracking-wide flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
             Active LangGraph Directed Cyclic Flow
           </span>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono py-2.5 px-3.5 rounded-xl bg-white/5 border border-white/5">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono py-2.5 px-3.5 rounded-xl bg-white/5 border border-slate-700/40">
             <div className="flex items-center gap-1 text-cyan-300 bg-cyan-950/60 px-2.5 py-1 rounded-lg border border-cyan-800/60">
               <span>ragNode</span>
               <span className="text-[10px] text-cyan-400">(RRF k=60)</span>
             </div>
             <span className="text-slate-600">→</span>
 
-            <div className="flex items-center gap-1 text-violet-300 bg-violet-950/60 px-2.5 py-1 rounded-lg border border-violet-800/60">
+            <div className="flex items-center gap-1 text-slate-200 bg-violet-950/60 px-2.5 py-1 rounded-lg border border-violet-800/60">
               <span>reasoningNode</span>
-              <span className="text-[10px] text-violet-400">(Groq 120B)</span>
+              <span className="text-[10px] text-slate-300">(Groq 120B)</span>
             </div>
             <span className="text-slate-600">→</span>
 
@@ -158,17 +158,17 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
 
         {/* Architectural Specs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-white/5 flex flex-col gap-1.5">
+          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-700/40 flex flex-col gap-1.5">
             <span className="text-slate-400 font-medium">Orchestration & State Checkpointer</span>
             <div className="text-slate-200 font-mono text-[11px]">
               PostgresSaver (@langchain/langgraph-checkpoint-postgres)
             </div>
             <div className="text-[11px] text-slate-500 font-mono">
-              Thread ID: <span className="text-violet-400">{activeChatId || "New Thread"}</span>
+              Thread ID: <span className="text-slate-300">{activeChatId || "New Thread"}</span>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-white/5 flex flex-col gap-1.5">
+          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-700/40 flex flex-col gap-1.5">
             <span className="text-slate-400 font-medium">Hybrid Search Vector Engine</span>
             <div className="text-slate-200 font-mono text-[11px]">
               pgvector (Cosine) + tsvector (Full-Text)
@@ -180,7 +180,7 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs">
+        <div className="flex items-center justify-between pt-3 border-t border-slate-700/50 text-xs">
           <span className="text-slate-500 font-mono text-[11px]">
             OpenTelemetry OTLP trace exporter active
           </span>

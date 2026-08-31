@@ -72,9 +72,9 @@ export default function ApprovalModal({ pendingApproval, onApprove, onReject }: 
 
           {/* Code block */}
           <div
-            className="rounded-2xl p-4 mb-6 overflow-auto bg-slate-950/80 border border-white/10 max-h-[220px]"
+            className="rounded-2xl p-4 mb-6 overflow-auto bg-slate-950/80 border border-slate-700/50 max-h-[220px]"
           >
-            <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/5 font-mono text-[10px] text-slate-400">
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-700/40 font-mono text-[10px] text-slate-400">
               <span>SQL Mutation Payload</span>
               <span className="text-amber-400">DML Allowed</span>
             </div>
@@ -89,7 +89,7 @@ export default function ApprovalModal({ pendingApproval, onApprove, onReject }: 
           <div className="flex items-center gap-3 justify-end">
             <button
               onClick={onReject}
-              className="px-5 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-white/10 transition-all active:scale-95 cursor-pointer"
+              className="px-5 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700/50 transition-all active:scale-95 cursor-pointer"
             >
               Reject Operation
             </button>

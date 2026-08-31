@@ -1,66 +1,45 @@
 @import "tailwindcss";
 
-/* ────────────────────────────────────────────────
-   Design Tokens — Sense AI / Deep Obsidian Palette
-──────────────────────────────────────────────── */
+/* Design Tokens — Sense AI Velvety Charcoal-Slate & Glassmorphism */
 @theme {
-  /* Core surfaces */
-  --color-base:          #0b0f19;   /* deep obsidian canvas */
-  --color-surface:       #0e131f;   /* main surface */
-  --color-surface-2:     #151c2e;   /* elevated surface */
-  --color-surface-3:     #1e293b;   /* active / focus surface */
-  --color-overlay:       rgba(11, 15, 25, 0.85);
+  --color-base:          #141720;
+  --color-surface:       #181c26;
+  --color-surface-2:     #202736;
+  --color-surface-3:     #283144;
+  --color-overlay:       rgba(20, 23, 32, 0.9);
 
-  /* Borders */
-  --color-border:        rgba(255, 255, 255, 0.08);
-  --color-border-strong: rgba(255, 255, 255, 0.15);
-  --color-border-focus:  rgba(99, 102, 241, 0.6); /* Soft violet/indigo glow */
+  --color-border:        rgba(51, 65, 85, 0.5);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.12);
+  --color-border-focus:  rgba(148, 163, 184, 0.5);
 
-  /* Text */
-  --color-text-primary:  #f8fafc;
+  --color-text-primary:  #FFFFFF;
   --color-text-secondary:#94a3b8;
   --color-text-muted:    #64748b;
-  --color-text-inverse:  #0b0f19;
+  --color-text-inverse:  #141720;
 
-  /* Brand Accents — Sense AI Violet / Indigo & Subtle Cyan */
-  --color-brand:         #6366f1;   /* Violet / Indigo */
-  --color-brand-hover:   #818cf8;   /* Lighter violet */
-  --color-brand-muted:   rgba(99, 102, 241, 0.15);
-  --color-brand-glow:    rgba(99, 102, 241, 0.35);
+  --color-brand:         #f8fafc;
+  --color-brand-hover:   #ffffff;
+  --color-brand-muted:   rgba(255, 255, 255, 0.1);
+  --color-brand-glow:    rgba(255, 255, 255, 0.15);
 
-  /* Status Colors */
   --color-success:       #10b981;
   --color-error:         #f43f5e;
   --color-warning:       #f59e0b;
-  --color-warning-muted: rgba(245, 158, 11, 0.15);
+  --color-warning-muted: rgba(245, 158, 11, 0.12);
 
-  /* Semantic Pill Badges */
-  --color-badge-teal-bg: rgba(20, 184, 166, 0.15);
-  --color-badge-teal-fg: #5eead4;
-  --color-badge-pink-bg: rgba(244, 63, 94, 0.15);
-  --color-badge-pink-fg: #fda4af;
-  --color-badge-green-bg:rgba(16, 185, 129, 0.15);
-  --color-badge-green-fg:#6ee7b7;
-  --color-badge-purple-bg:rgba(139, 92, 246, 0.15);
-  --color-badge-purple-fg:#c4b5fd;
-
-  /* Radius */
   --radius-xs:   6px;
   --radius-sm:   10px;
   --radius-md:   14px;
   --radius-lg:   18px;
   --radius-xl:   24px;
-  --radius-2xl:  32px;
+  --radius-2xl:  30px;
   --radius-pill: 9999px;
 
-  /* Fonts */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
-/* ────────────────────────────────────────────────
-   Base Reset & Scrollbars
-──────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
@@ -69,84 +48,75 @@ html {
 }
 
 body {
-  background-color: var(--color-base);
+  background: radial-gradient(ellipse at 50% 25%, #1e2432 0%, #181c26 55%, #141720 100%);
+  background-color: #141720;
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   line-height: 1.6;
   overflow: hidden;
+  min-height: 100vh;
 }
 
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
 
-/* ────────────────────────────────────────────────
-   Ambient Glowing Canvas & Grid Pattern
-──────────────────────────────────────────────── */
 .bg-grid-pattern {
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 56px 56px;
+  background: transparent;
 }
 
 .ambient-radial-glow {
   position: absolute;
-  top: 5%;
+  top: 0%;
   left: 50%;
   transform: translateX(-50%);
-  width: 720px;
-  height: 440px;
+  width: 900px;
+  height: 500px;
   border-radius: 50%;
   background: radial-gradient(
     ellipse at center,
-    rgba(99, 102, 241, 0.14) 0%,
-    rgba(59, 130, 246, 0.08) 40%,
-    rgba(11, 15, 25, 0) 72%
+    rgba(30, 36, 50, 0.5) 0%,
+    rgba(24, 28, 38, 0.25) 45%,
+    rgba(20, 23, 32, 0) 75%
   );
-  filter: blur(60px);
+  filter: blur(80px);
   pointer-events: none;
   z-index: 1;
 }
 
-/* ────────────────────────────────────────────────
-   Glass Utility Classes
-──────────────────────────────────────────────── */
 .glass-panel {
-  background: rgba(14, 19, 31, 0.65);
+  background: rgba(32, 39, 54, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px) saturate(1.3);
-  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 .glass-pill {
-  background: rgba(15, 23, 42, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(32, 39, 54, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 
 .glass-card {
-  background: rgba(14, 19, 31, 0.5);
+  background: rgba(32, 39, 54, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
-/* ────────────────────────────────────────────────
-   Card Stack 3D Visual Effects
-──────────────────────────────────────────────── */
-.card-stack-base {
-  transform-style: preserve-3d;
-  perspective: 1000px;
+.machined-border {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.4);
 }
 
-/* ────────────────────────────────────────────────
-   Keyframe Animations
-──────────────────────────────────────────────── */
 @keyframes toast-in {
   from { transform: translateX(110%) scale(0.95); opacity: 0; }
   to   { transform: translateX(0) scale(1); opacity: 1; }
@@ -157,25 +127,24 @@ body {
 }
 
 @keyframes modal-in {
-  from { opacity: 0; transform: scale(0.96) translateY(12px); }
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes msg-in {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .msg-animate {
-  animation: msg-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: msg-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Loading animation */
 .loading-dot {
   display: inline-block;
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: var(--color-brand);
+  background: #ffffff;
   animation: dot-bounce 1.2s ease-in-out infinite;
 }
 .loading-dot:nth-child(2) { animation-delay: 0.2s; }
@@ -183,5 +152,5 @@ body {
 
 @keyframes dot-bounce {
   0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-  40% { transform: translateY(-5px); opacity: 1; }
+  40% { transform: translateY(-4px); opacity: 1; }
 }
