@@ -43,9 +43,11 @@ function ChatApp() {
 
   const isLoading = status === "submitted" || status === "streaming";
 
-  // Auto-scroll on new messages or tokens
+  // Auto-scroll on new messages or tokens (only when messages exist to avoid premature scroll on empty state)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages && messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   // Load chat messages when activeChatId changes

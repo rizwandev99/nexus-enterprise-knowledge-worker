@@ -288,31 +288,28 @@ export default function MessageBubble({
 
   return (
     <div className="w-full flex flex-col gap-2 my-2">
-      {/* Header with Avatar Squircle, Name, Timestamp */ }
+      {/* Header with Avatar Squircle, Name, Timestamp */}
       <div className="flex items-center gap-2.5 px-1">
         {isUser ? (
-          <div className="w-7 h-7 rounded-xl bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 font-mono text-xs font-semibold shadow-sm">
+          <div className="w-7 h-7 rounded-xl bg-slate-800 border border-white/[0.08] flex items-center justify-center text-slate-300 font-mono text-xs font-semibold shadow-sm">
             MR
           </div>
         ) : (
           <div className="w-7 h-7 rounded-xl bg-white flex items-center justify-center shadow-md">
             <svg className="w-4 h-4 fill-slate-950" viewBox="0 0 32 32">
-              <path d="M16 3.5C14.3 3.5 13.1 5.8 12.5 8.8 11.7 12.3 8.8 15.2 5.2 15.9c-1.2.2-1.2 2 0 2.2 3.6.7 6.5 3.6 7.3 7.1.6 3 1.8 5.3 3.5 5.3s2.9-2.3 3.5-5.3c.8-3.5 3.7-6.4 7.3-7.1 1.2-.2 1.2-2 0-2.2-3.6-.7-6.5-3.6-7.3-7.1-.6-3-1.8-5.3-3.5-5.3z" />
+              <path d="M16 3.5C14.3 3.5 13.1 5.8 12.5 8.8 11.7 12.3 8.8 15.2 5.2 15.9c-1.2.2-1.2 2 0 2.2 3.6.7 6.5 3.6 7.1.6 3 1.8 5.3 3.5 5.3s2.9-2.3 3.5-5.3c.8-3.5 3.7-6.4 7.3-7.1 1.2-.2 1.2-2 0-2.2-3.6-.7-6.5-3.6-7.3-7.1-.6-3-1.8-5.3-3.5-5.3z" />
             </svg>
           </div>
         )}
-        <span className="text-xs font-semibold text-white tracking-tight">
-          {isUser ? "Md Rizwan" : "Sense AI"}
-        </span>
-        <span className="text-[11px] font-mono text-slate-500">
-          2:40 pm
+        <span className="text-xs font-mono text-slate-400">
+          {isUser ? "Md Rizwan • 2:40 pm" : "Sense AI • 2:40 pm"}
         </span>
       </div>
 
-      {/* Message Card Body (#202736 dark slate card) */ }
-      <div className="rounded-2xl p-4 bg-[#202736]/80 border border-slate-700/50 shadow-lg text-slate-200">
+      {/* Message Card Body (Sleek dark slate glass) */}
+      <div className="rounded-2xl px-4 py-3 bg-[#131722]/70 border border-white/[0.07] backdrop-blur-md shadow-sm text-slate-200 text-sm leading-relaxed">
         {isUser && attachedFileName && (
-          <div className="mb-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-mono bg-slate-800 border border-slate-700 text-slate-200">
+          <div className="mb-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-mono bg-white/[0.05] border border-white/[0.08] text-slate-200">
             <span>📄</span>
             <span className="font-semibold">Attached: {attachedFileName}{attachedFileSize ? " (" + attachedFileSize + ")" : ""}</span>
           </div>
@@ -326,17 +323,17 @@ export default function MessageBubble({
           renderFormattedContent(partsText)
         )}
 
-        {/* Overlapping 3D Fan-out Citation Stack */ }
+        {/* Overlapping 3D Citation Stack */}
         {!isUser && citationMatches.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-slate-700/40">
-            <div className="flex items-center justify-between mb-2">
+          <div className="mt-4 pt-3 border-t border-white/[0.07]">
+            <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
                 Verified Sources ({citationMatches.length})
               </span>
               <button
                 type="button"
                 onClick={() => onSelectCitation?.(citationMatches[0])}
-                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-mono bg-slate-800/90 border border-slate-700/60 text-slate-200 hover:text-white hover:bg-slate-700/90 transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-mono bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-slate-300 hover:text-white transition-all duration-200 cursor-pointer shadow-sm"
               >
                 <span>✦ Inspect Citations</span>
               </button>
@@ -344,20 +341,23 @@ export default function MessageBubble({
 
             <div
               onClick={() => onSelectCitation?.(citationMatches[0])}
-              className="relative cursor-pointer group mt-2 pt-1"
+              className="relative cursor-pointer group mt-2 pt-1.5 pb-1"
             >
-              <div className="absolute inset-x-2 top-2 h-10 rounded-2xl bg-slate-800/40 border border-slate-700/30 transform transition-transform group-hover:translate-x-1.5" />
-              <div className="absolute inset-x-1 top-1 h-10 rounded-2xl bg-slate-800/70 border border-slate-700/50 transform transition-transform group-hover:translate-x-0.5" />
-              <div className="relative rounded-2xl p-3 bg-[#202736] border border-slate-700/60 shadow-md flex items-center justify-between group-hover:border-slate-600 transition-colors">
-                <div className="flex items-center gap-2 truncate">
-                  <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-slate-800 text-slate-200 border border-slate-700">
+              {/* Back Card: -rotate-1.5 */}
+              <div className="absolute inset-0 rounded-2xl bg-[#181d2a]/60 border border-white/[0.04] shadow-md transform -rotate-1.5 group-hover:rotate-0 transition-transform duration-300" />
+              {/* Middle Card: rotate-1 */}
+              <div className="absolute inset-0 rounded-2xl bg-[#1c2232]/80 border border-white/[0.06] shadow-md transform rotate-1 group-hover:rotate-0 transition-transform duration-300" />
+              {/* Front Top Card */}
+              <div className="relative rounded-2xl p-3 bg-[#131722] border border-white/[0.09] shadow-lg flex items-center justify-between group-hover:border-white/[0.18] transition-all duration-300">
+                <div className="flex items-center gap-2.5 truncate">
+                  <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-white/[0.06] text-slate-200 border border-white/[0.08]">
                     [Doc-{citationMatches[0]}]
                   </span>
                   <span className="text-xs text-slate-200 truncate font-medium">
                     Verified Enterprise Policy & Governance
                   </span>
                 </div>
-                <span className="text-xs text-slate-400 font-mono ml-2 shrink-0">
+                <span className="text-xs text-slate-400 font-mono ml-2 shrink-0 group-hover:text-slate-200 transition-colors">
                   View →
                 </span>
               </div>
@@ -366,31 +366,31 @@ export default function MessageBubble({
         )}
       </div>
 
-      {/* Frosted Action Pills Below Bubble */ }
+      {/* Frosted Action Pills Below Bubble */}
       <div className="flex items-center gap-1.5 mt-1 px-1">
         <button
           type="button"
           onClick={() => handleCopy(cleanUserText || partsText)}
           className={
             copied
-              ? "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold bg-white text-slate-950 shadow-md transition-all active:scale-95 cursor-pointer"
-              : "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-mono text-slate-400 hover:text-white bg-[#202736]/70 hover:bg-[#283144] border border-slate-700/50 backdrop-blur-md shadow-sm transition-all active:scale-95 cursor-pointer"
+              ? "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold bg-white text-slate-950 border border-white shadow-md transition-all active:scale-95 cursor-pointer"
+              : "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-mono text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] backdrop-blur-md shadow-sm transition-all duration-200 active:scale-95 cursor-pointer"
           }
           title={copied ? "Copied to clipboard" : "Copy message"}
           aria-label="Copy message"
         >
           {copied ? (
             <>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-slate-950">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-950">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
               <span>Copied!</span>
             </>
           ) : (
             <>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
               </svg>
               <span>Copy</span>
             </>
@@ -402,24 +402,26 @@ export default function MessageBubble({
             <button
               type="button"
               onClick={() => handleFeedback("up")}
-              className={"p-1.5 rounded-xl transition-all " + (feedback === "up" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "text-slate-400 hover:text-white bg-[#202736]/70 hover:bg-[#283144] border border-slate-700/50")}
+              className={"p-1.5 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer " + (feedback === "up" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm" : "text-slate-400 hover:text-slate-200 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] backdrop-blur-md shadow-sm")}
               title="Helpful (+1)"
               aria-label="Thumbs up"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill={feedback === "up" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                <path d="M7 10v12" />
+                <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
               </svg>
             </button>
 
             <button
               type="button"
               onClick={() => handleFeedback("down")}
-              className={"p-1.5 rounded-xl transition-all " + (feedback === "down" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30" : "text-slate-400 hover:text-white bg-[#202736]/70 hover:bg-[#283144] border border-slate-700/50")}
+              className={"p-1.5 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer " + (feedback === "down" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-sm" : "text-slate-400 hover:text-slate-200 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] backdrop-blur-md shadow-sm")}
               title="Issue (-1)"
               aria-label="Thumbs down"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill={feedback === "down" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3" />
+                <path d="M17 14V2" />
+                <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
               </svg>
             </button>
           </div>
@@ -434,7 +436,7 @@ export default function MessageBubble({
             <button
               type="button"
               onClick={() => setShowTelemetryPopover((p) => !p)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-mono font-medium text-slate-400 hover:text-white bg-[#202736]/70 hover:bg-[#283144] border border-slate-700/50 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-mono font-medium text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.07] backdrop-blur-md shadow-sm transition-all duration-200 active:scale-95 cursor-pointer"
               title="View latency, token, and cost telemetry"
             >
               <span className="text-slate-400">⚡</span>
@@ -444,8 +446,8 @@ export default function MessageBubble({
             </button>
 
             {showTelemetryPopover && (
-              <div className="absolute bottom-full mb-2 left-0 z-50 w-72 p-3.5 rounded-2xl border border-slate-700/60 shadow-2xl text-xs space-y-2.5 bg-[#181c26] backdrop-blur-2xl animate-in fade-in zoom-in-95">
-                <div className="flex items-center justify-between pb-1.5 border-b border-slate-700/50 font-mono text-[11px]">
+              <div className="absolute bottom-full mb-2 left-0 z-50 w-72 p-3.5 rounded-2xl border border-white/[0.09] shadow-2xl text-xs space-y-2.5 bg-[#131722]/95 backdrop-blur-2xl animate-in fade-in zoom-in-95">
+                <div className="flex items-center justify-between pb-1.5 border-b border-white/[0.08] font-mono text-[11px]">
                   <span className="font-semibold text-white flex items-center gap-1.5">
                     <span>⚡</span> Execution Telemetry
                   </span>
@@ -453,25 +455,25 @@ export default function MessageBubble({
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-                  <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700/50 flex flex-col">
+                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.07] flex flex-col">
                     <span className="text-slate-400">Prompt Tokens</span>
                     <span className="text-white font-bold">{telemetry.promptTokens}</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700/50 flex flex-col">
+                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.07] flex flex-col">
                     <span className="text-slate-400">Output Tokens</span>
                     <span className="text-slate-200 font-bold">{telemetry.completionTokens}</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700/50 flex flex-col">
+                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.07] flex flex-col">
                     <span className="text-slate-400">TTFT Latency</span>
                     <span className="text-slate-200 font-bold">{telemetry.latencyMs} ms</span>
                   </div>
-                  <div className="p-2 rounded-xl bg-slate-800/80 border border-slate-700/50 flex flex-col">
+                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.07] flex flex-col">
                     <span className="text-slate-400">Est. Cost</span>
-                    <span className="text-emerald-400 font-bold"></span>
+                    <span className="text-emerald-400 font-bold">${telemetry.cost}</span>
                   </div>
                 </div>
 
-                <div className="text-[10px] text-slate-400 font-mono pt-1 border-t border-slate-700/50 flex items-center justify-between">
+                <div className="text-[10px] text-slate-400 font-mono pt-1 border-t border-white/[0.08] flex items-center justify-between">
                   <span>Engine:</span>
                   <span className="text-slate-300 truncate max-w-[160px]">{telemetry.engine}</span>
                 </div>

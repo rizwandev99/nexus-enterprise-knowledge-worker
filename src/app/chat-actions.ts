@@ -296,4 +296,6 @@ export async function fetchCitationDetails(docIndex: number) {
   }
 }
 
+export const getCitationDetails = fetchCitationDetails;
+
 

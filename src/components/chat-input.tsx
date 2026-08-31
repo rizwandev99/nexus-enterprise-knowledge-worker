@@ -12,12 +12,19 @@ export interface ChatInputProps {
   onSelectModel?: (modelId: string) => void;
 }
 
+const SUGGESTION_CHIPS = [
+  { label: "Search documents", prompt: "Search documents for enterprise security compliance" },
+  { label: "SQL Mutation", prompt: "Execute SQL Mutation: UPDATE documents SET title = 'Updated Policy' WHERE id = 'doc-1';" },
+  { label: "Audit Logs", prompt: "Review system audit logs and recent agent mutations" },
+  { label: "System SLA", prompt: "Check system SLA, uptime metrics and telemetry status" },
+];
+
 export default function ChatInput({
   onSend,
   isLoading,
   selectedPrompt,
   onClearSelectedPrompt,
-  selectedModel = "gpt-oss-120b",
+  selectedModel = "groq-gpt-oss-120b",
   onSelectModel,
 }: ChatInputProps) {
   const [input, setInput] = useState("");
@@ -113,6 +120,23 @@ export default function ChatInput({
   return (
     <div className="w-full px-4 pb-4 pt-1 shrink-0 relative z-20">
       <div className="max-w-2xl mx-auto">
+        {/* Floating Suggestion Chips above Input */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mb-2 px-1">
+          {SUGGESTION_CHIPS.map((chip) => (
+            <button
+              key={chip.label}
+              type="button"
+              onClick={() => {
+                setInput(chip.prompt);
+                textareaRef.current?.focus();
+              }}
+              className="text-xs font-medium text-slate-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] rounded-full px-3 py-1 transition-all shrink-0 cursor-pointer"
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -120,10 +144,22 @@ export default function ChatInput({
           }}
           className="w-full"
         >
-          <div className="relative rounded-3xl p-3 bg-[#202736]/90 border border-slate-700/60 shadow-2xl backdrop-blur-xl transition-all">
+          {/* Floating rounded-2xl glass pill */}
+          <div className="relative rounded-2xl p-3 bg-[#121622]/80 backdrop-blur-2xl border border-white/[0.08] focus-within:border-white/20 focus-within:ring-1 focus-within:ring-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.06)] transition-all">
             {attachedFile && (
-              <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono bg-slate-800/80 border border-slate-700/60 text-slate-200">
-                <span className="text-slate-400">📄</span>
+              <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono bg-white/[0.04] border border-white/[0.08] text-slate-200">
+                <svg
+                  className="w-3.5 h-3.5 text-slate-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
                 <span className="truncate max-w-[200px] font-medium">{attachedFile.name}</span>
                 <span className="text-slate-400 text-[10px]">({formatFileSize(attachedFile.size)})</span>
                 <button
@@ -150,11 +186,12 @@ export default function ChatInput({
               </div>
             )}
 
+            {/* Textarea */}
             <textarea
               ref={textareaRef}
-              aria-label="Ask me anything"
+              aria-label="Ask me anything, search knowledge base, or run SQL mutations..."
               rows={1}
-              className="w-full resize-none bg-transparent font-mono text-sm leading-relaxed focus:outline-none placeholder:text-slate-500 text-slate-100 px-2 py-1"
+              className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 outline-none resize-none font-normal leading-relaxed px-1 py-1"
               style={{
                 minHeight: "40px",
                 maxHeight: "160px",
@@ -164,7 +201,7 @@ export default function ChatInput({
                   ? "Sense AI processing query..."
                   : isParsingFile
                   ? "Extracting document content..."
-                  : "Ask me anything..."
+                  : "Ask me anything, search knowledge base, or run SQL mutations..."
               }
               value={input}
               onChange={(e) => {
@@ -189,88 +226,116 @@ export default function ChatInput({
               onChange={handleFileChange}
             />
 
-            <div className="flex items-center justify-between pt-2 mt-1 border-t border-slate-700/50">
+            {/* Bottom Bar Controls */}
+            <div className="flex items-center justify-between pt-2 mt-1 border-t border-white/[0.06]">
+              {/* Bottom Bar Left: Attachment (Paperclip), Search pill toggle (Globe), Canvas (Layers) */}
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isLoading || isParsingFile}
-                  className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all cursor-pointer disabled:opacity-50"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer disabled:opacity-50 inline-flex items-center justify-center"
                   title="Attach Document (.pdf, .txt, .md, .csv)"
                   aria-label="Attach Document"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  <svg
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 17.97 8.8l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                   </svg>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setIsSearchActive((p) => !p)}
-                  className={"inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono transition-all cursor-pointer " + (isSearchActive ? "bg-slate-700/80 text-white border border-slate-600/60 shadow-sm" : "bg-transparent text-slate-400 hover:text-white")}
-                  title={isSearchActive ? "Search Active" : "Toggle Search"}
+                  className={`inline-flex items-center gap-1.5 text-xs transition-all cursor-pointer ${
+                    isSearchActive
+                      ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 rounded-full px-2.5 py-1 font-medium shadow-sm"
+                      : "p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                  }`}
+                  title={isSearchActive ? "Globe Search Enabled" : "Toggle Globe Search"}
+                  aria-label="Toggle Globe Search"
                 >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    className="w-4 h-4 shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <circle cx="12" cy="12" r="10" />
-                    <line x1="2" y1="12" x2="22" y2="12" />
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                    <path d="M2 12h20" />
                   </svg>
-                  <span className="text-[11px]">Search</span>
+                  {isSearchActive && <span className="text-xs font-medium">Globe Search</span>}
                 </button>
 
                 <button
                   type="button"
-                  className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all cursor-pointer"
-                  title="Workspace Window"
-                  aria-label="Workspace"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer inline-flex items-center justify-center"
+                  title="Canvas Workspace"
+                  aria-label="Canvas Workspace"
                 >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <line x1="3" y1="9" x2="21" y2="9" />
-                    <line x1="9" y1="21" x2="9" y2="9" />
+                  <svg
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
+                    <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
+                    <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
                   </svg>
                 </button>
               </div>
 
+              {/* Bottom Bar Right: Model Selector badge / dropdown, Send Button */}
               <div className="flex items-center gap-2">
-                {onSelectModel && (
+                {onSelectModel ? (
                   <ModelSelector
                     selectedModel={selectedModel}
                     onSelectModel={onSelectModel}
                     compact
                     align="top"
                   />
+                ) : (
+                  <div className="text-xs font-mono text-slate-400 bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-1">
+                    Groq GPT-OSS 120B ~850 tok/s
+                  </div>
                 )}
-
-                <div className="hidden sm:flex items-center gap-1 bg-slate-700/70 text-slate-300 rounded-full px-2.5 py-1 text-xs font-mono select-none" title="Audio / Voice ready">
-                  <span className="w-0.5 h-3 bg-slate-300 rounded-full animate-pulse" />
-                  <span className="w-0.5 h-4 bg-slate-300 rounded-full animate-pulse delay-75" />
-                  <span className="w-0.5 h-2 bg-slate-300 rounded-full animate-pulse delay-150" />
-                  <span className="w-0.5 h-3.5 bg-slate-300 rounded-full animate-pulse delay-100" />
-                </div>
 
                 <button
                   type="submit"
                   disabled={!canSend}
-                  className={"w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95 " + (canSend ? "bg-white text-slate-950 shadow-md hover:bg-slate-100 cursor-pointer" : "bg-slate-800 text-slate-500 cursor-default")}
+                  className="w-8 h-8 rounded-xl bg-white text-slate-950 hover:bg-slate-200 flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-sm active:scale-95"
                   aria-label="Send message"
                   title="Send message (Enter)"
                 >
                   {isLoading || isParsingFile ? (
-                    <div className="w-3.5 h-3.5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <svg
                       className="w-4 h-4"
-                      fill="none"
                       viewBox="0 0 24 24"
+                      fill="none"
                       stroke="currentColor"
                       strokeWidth={2.5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 10l7-7m0 0l7 7m-7-7v18"
-                      />
+                      <path d="m5 12 7-7 7 7" />
+                      <path d="M12 19V5" />
                     </svg>
                   )}
                 </button>
