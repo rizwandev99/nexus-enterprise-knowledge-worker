@@ -74,10 +74,30 @@ function ChatApp() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isLoading = status === "streaming" || status === "submitted";
 
-  const msgCount = messages.length;
+  // ── RAF-throttled display messages ────────────────────────────────────────
+  // useChat fires setState on every SSE token (~850/s with Groq).
+  // We cap what MessageList actually renders to one commit per animation frame
+  // (~60fps / 16ms) so the main thread is never saturated.
+  const [displayMessages, setDisplayMessages] = useState<UIMessage[]>(messages);
+  const rafIdRef = useRef<number | null>(null);
+  const latestMessagesRef = useRef<UIMessage[]>(messages);
+
+  useEffect(() => {
+    latestMessagesRef.current = messages;
+    // Only schedule a new RAF if one isn't already pending
+    if (rafIdRef.current !== null) return;
+    rafIdRef.current = requestAnimationFrame(() => {
+      setDisplayMessages(latestMessagesRef.current);
+      rafIdRef.current = null;
+    });
+  }, [messages]);
+
+  // Scroll to bottom when a new message is added (not on every token delta)
+  const msgCount = displayMessages.length;
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "instant" as ScrollBehavior });
   }, [msgCount]);
+
 
   /* Citation click handler */
   const handleSelectCitation = useCallback(async (docIndex: number) => {
@@ -338,12 +358,13 @@ function ChatApp() {
 
         {/* Message List area */}
         <MessageList
-          messages={messages as UIMessage[]}
+          messages={displayMessages as UIMessage[]}
           messagesEndRef={messagesEndRef}
           onSelectPrompt={(prompt) => setSelectedPrompt(prompt)}
           onSeedKnowledgeBase={handleSeedKnowledgeBase}
           onSelectCitation={handleSelectCitation}
           selectedModel={selectedModel}
+          isStreaming={status === "streaming"}
         />
 
         {/* Input matching inspiration design with ModelSelector */}

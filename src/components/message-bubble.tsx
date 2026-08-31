@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, memo } from "react";
+import { useState, useMemo, memo, useRef, useEffect } from "react";
 import type { UIMessage } from "@ai-sdk/react";
 import { useToast } from "./toast";
 
@@ -9,6 +9,7 @@ export interface MessageBubbleProps {
   isUser: boolean;
   onSelectCitation?: (docIndex: number) => void;
   selectedModel?: string;
+  isStreaming?: boolean; // true only for the last message while status === "streaming"
 }
 
 interface TextPart {
@@ -606,11 +607,31 @@ export default function MessageBubble({
   isUser,
   onSelectCitation,
   selectedModel = "groq-gpt-oss-120b",
+  isStreaming = false,
 }: MessageBubbleProps) {
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
   const [showTelemetryPopover, setShowTelemetryPopover] = useState(false);
   const { showToast } = useToast();
+
+  // ── Direct DOM streaming (ChatGPT/Claude technique) ───────────────────────
+  // While isStreaming === true, we write text directly to a DOM node via ref.
+  // This completely bypasses React's reconciler and VDOM diff, so 850 tok/s
+  // from Groq never touches the React render cycle at all.
+  // When streaming ends (isStreaming → false), React takes over and renders
+  // the final full-markdown view.
+  const streamingDivRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isStreaming || !streamingDivRef.current) return;
+    const parts = message.parts as MessagePart[] | undefined;
+    const text = Array.isArray(parts)
+      ? parts.filter((p): p is TextPart => p.type === "text").map((p) => p.text).join("")
+      : typeof (message as { content?: string }).content === "string"
+        ? (message as { content?: string }).content!
+        : "";
+    streamingDivRef.current.textContent = text;
+  });
+  // ── End streaming bypass ──────────────────────────────────────────────────
 
   const parts = message.parts as MessagePart[] | undefined;
 
@@ -855,9 +876,17 @@ export default function MessageBubble({
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content: direct DOM write while streaming, full markdown when done */}
         <div className="text-sm leading-relaxed">
-          {Array.isArray(parts) && parts.length > 0 ? (
+          {isStreaming && !isUser ? (
+            // ── ChatGPT/Claude technique: bypass React entirely during stream ──
+            // The useEffect above writes textContent directly to this node.
+            // Zero VDOM diff, zero parseMarkdownBlocks, zero re-renders.
+            <div
+              ref={streamingDivRef}
+              className="whitespace-pre-wrap text-gray-200 text-[13.5px] sm:text-sm leading-relaxed"
+            />
+          ) : Array.isArray(parts) && parts.length > 0 ? (
             parts.map((part, index) => {
               if (part.type === "text") {
                 return (
@@ -930,6 +959,7 @@ export default function MessageBubble({
             />
           )}
         </div>
+
 
         {/* Telemetry Pill for Assistant Messages */}
         {!isUser && partsText.trim() && (

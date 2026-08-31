@@ -11,6 +11,7 @@ export interface MessageListProps {
   onSeedKnowledgeBase?: () => Promise<void>;
   onSelectCitation?: (docIndex: number) => void;
   selectedModel?: string;
+  isStreaming?: boolean;
 }
 
 export default function MessageList({
@@ -20,6 +21,7 @@ export default function MessageList({
   onSeedKnowledgeBase,
   onSelectCitation,
   selectedModel,
+  isStreaming = false,
 }: MessageListProps) {
   const [isSeeding, setIsSeeding] = useState(false);
 
@@ -152,13 +154,14 @@ export default function MessageList({
         )}
 
         {/* Message history */}
-        {messages.map((m) => (
+        {messages.map((m, idx) => (
           <MessageBubble
             key={m.id}
             message={m}
             isUser={m.role === "user"}
             onSelectCitation={onSelectCitation}
             selectedModel={selectedModel}
+            isStreaming={isStreaming && idx === messages.length - 1}
           />
         ))}
 
