@@ -18,7 +18,7 @@
 
 <br/>
 
-[![Nexus Enterprise AI Co-Worker Interactive Demo](./public/screenshots/nexus-demo.gif)](https://youtu.be/vZSU9izlB1s)
+[![Nexus Enterprise AI Co-Worker Interactive Demo](public/screenshots/nexus-demo.gif)](https://youtu.be/vZSU9izlB1s)
 
 *🎬 **Interactive System Preview**: Real-time Hybrid RAG, Human-in-the-Loop SQL execution, DuckDuckGo web search, and OTel telemetry stream.*  
 *(Click the preview animation above to watch the full HD walkthrough on YouTube)*
