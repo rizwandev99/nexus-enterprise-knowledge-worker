@@ -12,8 +12,8 @@ import { useToast } from "./toast";
 type ChatSession = {
   id: string;
   title: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string | Date;
+  updatedAt: string | Date;
 };
 
 type DeleteTarget =

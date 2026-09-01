@@ -170,14 +170,14 @@ export default function MessageList({
               Ready to assist you with anything you need — from enterprise knowledge retrieval to safe database mutations.
             </p>
 
-            {/* 5. Knowledge Base Seeder Chip */}
+            {/* 5. Knowledge Base Status Chip */}
             {onSeedKnowledgeBase && (
               <button
                 type="button"
                 onClick={handleSeedClick}
                 disabled={isSeeding}
                 className="text-xs font-mono text-slate-200 bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.12] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] rounded-full px-4 py-1.5 transition-all flex items-center gap-2 mx-auto mb-8 cursor-pointer disabled:opacity-50"
-                title="Seed sample governance and architecture docs into PostgreSQL"
+                title="Click to re-index / verify enterprise knowledge documents in PostgreSQL pgvector"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span className="text-slate-400">Enterprise KB:</span>
@@ -187,8 +187,8 @@ export default function MessageList({
                     Ingesting pgvector Chunks...
                   </span>
                 ) : (
-                  <span className="text-slate-200 hover:text-white transition-colors">
-                    Seed Knowledge Base
+                  <span className="text-emerald-300 font-medium hover:text-white transition-colors">
+                    3 Indexed Docs Active (pgvector)
                   </span>
                 )}
               </button>

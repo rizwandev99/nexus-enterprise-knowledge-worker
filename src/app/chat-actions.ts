@@ -6,9 +6,20 @@ import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { revalidatePath } from "next/cache";
 
 export async function getChatSessions() {
-  return await prisma.chatSession.findMany({
-    orderBy: { updatedAt: "desc" },
-  });
+  try {
+    const sessions = await prisma.chatSession.findMany({
+      orderBy: { updatedAt: "desc" },
+    });
+    return sessions.map((s) => ({
+      id: s.id,
+      title: s.title,
+      createdAt: s.createdAt.toISOString(),
+      updatedAt: s.updatedAt.toISOString(),
+    }));
+  } catch (error) {
+    console.error("Error fetching chat sessions:", error);
+    return [];
+  }
 }
 
 export async function createChatSession() {
