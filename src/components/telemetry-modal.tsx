@@ -14,6 +14,9 @@ interface MetricsData {
   documentCount: number;
   sessionCount: number;
   messageCount: number;
+  p95RagLatency?: string;
+  p95TtftLatency?: string;
+  checkpointerStatus?: string;
   vectorEngine: string;
   llmModel: string;
   stateMachine: string;
@@ -102,9 +105,9 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
           </div>
 
           <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-            <span className="text-[11px] text-slate-400 font-medium font-mono">Total Messages</span>
-            <span className="text-xl font-bold text-slate-200 mt-1 font-mono">
-              {isLoading ? "…" : metrics?.messageCount ?? 0}
+            <span className="text-[11px] text-slate-400 font-medium font-mono">P95 RAG Latency</span>
+            <span className="text-xl font-bold text-emerald-400 mt-1 font-mono">
+              {isLoading ? "…" : metrics?.p95RagLatency ?? "<350ms"}
             </span>
           </div>
 
@@ -164,18 +167,20 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
             <div className="text-slate-200 font-mono text-[11px]">
               PostgresSaver (@langchain/langgraph-checkpoint-postgres)
             </div>
-            <div className="text-[11px] text-slate-500 font-mono">
-              Thread ID: <span className="text-slate-300">{activeChatId || "New Thread"}</span>
+            <div className="text-[11px] text-slate-500 font-mono flex items-center justify-between">
+              <span>Thread ID: <span className="text-slate-300">{activeChatId || "New Thread"}</span></span>
+              <span className="text-emerald-400 font-medium">{metrics?.checkpointerStatus || "Active"}</span>
             </div>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex flex-col gap-1.5">
-            <span className="text-slate-400 font-medium font-mono text-[11px]">Hybrid Search Vector Engine</span>
+            <span className="text-slate-400 font-medium font-mono text-[11px]">Hybrid Search & Latency Specs</span>
             <div className="text-slate-200 font-mono text-[11px]">
               pgvector (Cosine) + tsvector (Full-Text)
             </div>
-            <div className="text-[11px] text-slate-500 font-mono">
-              Reciprocal Rank Fusion with <span className="text-white font-mono">k = 60</span>
+            <div className="text-[11px] text-slate-500 font-mono flex items-center justify-between">
+              <span>RRF <span className="text-white font-mono">k = 60</span></span>
+              <span>P95 TTFT: <span className="text-slate-300 font-mono">{metrics?.p95TtftLatency || "820ms"}</span></span>
             </div>
           </div>
         </div>

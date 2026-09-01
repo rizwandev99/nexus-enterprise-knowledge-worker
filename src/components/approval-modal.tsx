@@ -22,13 +22,21 @@ export default function ApprovalModal({
 
   if (!pendingApproval) return null;
 
+  const messageRecord = pendingApproval as unknown as { content?: string; parts?: Array<unknown> };
   const rawApprovalText =
-    pendingApproval.parts?.find(
-      (p: { type: string; text?: string }) =>
-        p.type === "text" && p.text?.includes("__APPROVAL_REQUEST__")
-    )?.text ||
-    (typeof pendingApproval.content === "string" && pendingApproval.content.includes("__APPROVAL_REQUEST__")
-      ? pendingApproval.content
+    (Array.isArray(messageRecord.parts)
+      ? messageRecord.parts
+          .map((p) => {
+            if (typeof p === "string") return p;
+            if (p && typeof p === "object" && "text" in p && typeof (p as { text?: string }).text === "string") {
+              return (p as { text: string }).text;
+            }
+            return "";
+          })
+          .find((txt) => txt.includes("__APPROVAL_REQUEST__")) || ""
+      : "") ||
+    (typeof messageRecord.content === "string" && messageRecord.content.includes("__APPROVAL_REQUEST__")
+      ? messageRecord.content
       : "");
   const approvalText = rawApprovalText
     .replace("__APPROVAL_REQUEST__\n", "")

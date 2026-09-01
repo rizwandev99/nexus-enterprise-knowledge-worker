@@ -376,21 +376,18 @@ export default function ChatInput({
                           </span>
                         </div>
 
-                        {/* 2. LangGraph Stateful Graph */}
+                        {/* 2. SQL Mutation Engine (HITL Safe DML) */}
                         <div className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] transition-colors flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                           <div className="flex items-center gap-2.5 truncate">
                             <div className="w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-slate-200 shrink-0">
-                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="18" cy="5" r="3" />
-                                <circle cx="6" cy="12" r="3" />
-                                <circle cx="18" cy="19" r="3" />
-                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                                <path d="m9 12 2 2 4-4" />
                               </svg>
                             </div>
                             <div className="truncate">
-                              <div className="text-xs font-medium text-slate-200 truncate">LangGraph Stateful Graph</div>
-                              <div className="text-[10px] text-slate-400 font-mono">Cyclic Machine • HITL Interrupt</div>
+                              <div className="text-xs font-medium text-slate-200 truncate">SQL Mutation Engine</div>
+                              <div className="text-[10px] text-slate-400 font-mono">Human-in-the-Loop • HITL Modal</div>
                             </div>
                           </div>
                           <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
@@ -398,17 +395,19 @@ export default function ChatInput({
                           </span>
                         </div>
 
-                        {/* 3. Groq GPT-OSS Fast Inference */}
+                        {/* 3. Live Web Search (DuckDuckGo) */}
                         <div className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] transition-colors flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                           <div className="flex items-center gap-2.5 truncate">
                             <div className="w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-slate-200 shrink-0">
-                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                                <path d="M2 12h20" />
                               </svg>
                             </div>
                             <div className="truncate">
-                              <div className="text-xs font-medium text-slate-200 truncate">Groq GPT-OSS Inference</div>
-                              <div className="text-[10px] text-slate-400 font-mono">Ultra Fast • ~850 tok/s</div>
+                              <div className="text-xs font-medium text-slate-200 truncate">Live Web Search</div>
+                              <div className="text-[10px] text-slate-400 font-mono">DuckDuckGo • Real-Time Web</div>
                             </div>
                           </div>
                           <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
@@ -416,17 +415,18 @@ export default function ChatInput({
                           </span>
                         </div>
 
-                        {/* 4. OpenTelemetry Distributed Tracing */}
+                        {/* 4. Document Parser Engine */}
                         <div className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] transition-colors flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                           <div className="flex items-center gap-2.5 truncate">
                             <div className="w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-slate-200 shrink-0">
-                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                                <polyline points="14 2 14 8 20 8" />
                               </svg>
                             </div>
                             <div className="truncate">
-                              <div className="text-xs font-medium text-slate-200 truncate">OpenTelemetry Tracing</div>
-                              <div className="text-[10px] text-slate-400 font-mono">Distributed • OTLP Exporter</div>
+                              <div className="text-xs font-medium text-slate-200 truncate">Document Parser Engine</div>
+                              <div className="text-[10px] text-slate-400 font-mono">PDF, MD, CSV, JSON • Instant RAG</div>
                             </div>
                           </div>
                           <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">

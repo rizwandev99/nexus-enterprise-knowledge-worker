@@ -24,7 +24,7 @@ function ChatApp() {
   });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>(undefined);
-  const [selectedModel, setSelectedModel] = useState<string>("gpt-oss-120b");
+  const [selectedModel, setSelectedModel] = useState<string>("groq-gpt-oss-120b");
   const [isTelemetryOpen, setIsTelemetryOpen] = useState(false);
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
   const [resolvedApprovals, setResolvedApprovals] = useState<Set<string>>(new Set());
@@ -307,22 +307,11 @@ function ChatApp() {
         <header
           className="h-12 border-b border-white/[0.08] bg-[#0c0d12]/80 backdrop-blur-2xl px-4 flex items-center justify-between relative z-20"
         >
-          {/* Left: Brand squircle (Toggle Drawer) + Sidebar Toggle Button + Nexus AI */}
+          {/* Left: Sidebar Toggle Button + Nexus AI */}
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setIsSidebarOpen((p) => !p)}
-              className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer"
-              aria-label="Toggle Sidebar Sessions Drawer"
-              title="Toggle Sidebar Sessions Drawer (Ctrl+B)"
-            >
-              <svg className="w-3.5 h-3.5 fill-slate-950" viewBox="0 0 24 24">
-                <path d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4772 12 22C12 16.4772 16.4772 12 22 12C16.4772 12 12 7.52285 12 2Z" />
-              </svg>
-            </button>
-
-            <button
-              onClick={() => setIsSidebarOpen((p) => !p)}
-              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
               aria-label="Toggle Sessions Drawer"
               title="Toggle Chat Sessions (Ctrl+B)"
             >

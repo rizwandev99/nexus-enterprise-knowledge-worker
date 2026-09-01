@@ -59,9 +59,27 @@ const BLOCKED_SYSTEM_TARGETS = [
 
 const ALLOWED_TABLES = ["documents", "document_chunks"];
 
+function extractSqlString(raw: unknown): string {
+  if (typeof raw === "string") return raw;
+  if (raw && typeof raw === "object") {
+    const obj = raw as Record<string, unknown>;
+    if (typeof obj.query === "string") return obj.query;
+    if (typeof obj.input === "string") {
+      try {
+        const parsed = JSON.parse(obj.input);
+        if (typeof parsed.query === "string") return parsed.query;
+      } catch {
+        return obj.input;
+      }
+      return obj.input;
+    }
+  }
+  return String(raw || "");
+}
+
 export const executeSqlMutationTool = tool(
-  async ({ query }: { query: string }) => {
-    const sqlString = typeof query === "string" ? query : String(query);
+  async (args: { query: string } | unknown) => {
+    const sqlString = extractSqlString(args);
     const trimmedQuery = sqlString.trim();
     const upperQuery = trimmedQuery.toUpperCase();
     const lowerQuery = trimmedQuery.toLowerCase();
@@ -114,7 +132,7 @@ export const executeSqlMutationTool = tool(
     }
 
     await pool.query(sqlString);
-    return `Successfully executed mutation: ${query}`;
+    return `Successfully executed mutation: ${sqlString}`;
   },
   {
     name: "execute_sql_mutation",
@@ -126,8 +144,8 @@ export const executeSqlMutationTool = tool(
 );
 
 export const executeSqlQueryTool = tool(
-  async ({ query }: { query: string }) => {
-    const sqlString = typeof query === "string" ? query : String(query);
+  async (args: { query: string } | unknown) => {
+    const sqlString = extractSqlString(args);
     const upperQuery = sqlString.trim().toUpperCase();
 
     // 1. Only allow SELECT
