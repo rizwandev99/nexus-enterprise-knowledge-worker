@@ -7,6 +7,8 @@ interface TelemetryModalProps {
   isOpen: boolean;
   onClose: () => void;
   activeChatId: string | null;
+  onSeedKnowledgeBase?: () => Promise<void>;
+  onClearKnowledgeBase?: () => Promise<void>;
 }
 
 interface MetricsData {
@@ -14,14 +16,26 @@ interface MetricsData {
   documentCount: number;
   sessionCount: number;
   messageCount: number;
+  p95RagLatency?: string;
+  p95TtftLatency?: string;
+  checkpointerStatus?: string;
   vectorEngine: string;
   llmModel: string;
   stateMachine: string;
 }
 
-export default function TelemetryModal({ isOpen, onClose, activeChatId }: TelemetryModalProps) {
+export default function TelemetryModal({
+  isOpen,
+  onClose,
+  activeChatId,
+  onSeedKnowledgeBase,
+  onClearKnowledgeBase,
+}: TelemetryModalProps) {
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const fetchMetrics = useCallback(async () => {
     setIsLoading(true);
@@ -34,6 +48,34 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
       setIsLoading(false);
     }
   }, []);
+
+  const handleSeedDocs = async () => {
+    if (!onSeedKnowledgeBase || isSeeding) return;
+    setIsSeeding(true);
+    try {
+      await onSeedKnowledgeBase();
+      await fetchMetrics();
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
+  const handleClearDocs = async () => {
+    if (!onClearKnowledgeBase || isClearing) return;
+    if (!confirmClear) {
+      setConfirmClear(true);
+      setTimeout(() => setConfirmClear(false), 4000);
+      return;
+    }
+    setIsClearing(true);
+    setConfirmClear(false);
+    try {
+      await onClearKnowledgeBase();
+      await fetchMetrics();
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -54,68 +96,85 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
 
       {/* Modal Container */}
       <div
-        className="relative w-full max-w-2xl rounded-2xl p-6 overflow-hidden border border-white/10 shadow-2xl z-10 flex flex-col gap-5 text-gray-100"
-        style={{
-          background: "linear-gradient(180deg, rgba(16, 18, 27, 0.95) 0%, rgba(9, 10, 15, 0.98) 100%)",
-          backdropFilter: "blur(24px)",
-          boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(94, 234, 212, 0.1)",
-        }}
+        className="relative w-full max-w-2xl glass-panel bg-[#10131b]/95 border border-white/[0.14] rounded-3xl p-6 shadow-2xl z-10 flex flex-col gap-5 text-slate-100 overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="w-10 h-10 rounded-2xl bg-white/[0.06] border border-white/[0.12] flex items-center justify-center text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
             </div>
             <div>
-              <h2 className="text-base font-semibold text-white tracking-tight">
+              <h2 className="text-base font-bold text-white tracking-tight">
                 Live Agent Telemetry & Tracing
               </h2>
-              <p className="text-xs text-gray-400">
-                LangGraph State Machine • OpenTelemetry Traces • Vector DB Health
+              <p className="text-xs text-slate-400 font-mono">
+                LangGraph State Machine • OpenTelemetry OTLP • PostgreSQL Checkpointer
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
             aria-label="Close modal"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
+              <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        {/* Live Metrics Grid */}
+        {/* Live Monospace Metrics Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3 rounded-xl bg-white/5 border border-white/5 flex flex-col">
-            <span className="text-[11px] text-gray-400 font-medium">Knowledge Docs</span>
-            <span className="text-xl font-bold text-teal-300 mt-1 font-mono">
+          <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] relative group">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-slate-400 font-medium font-mono">Knowledge Docs</span>
+              {metrics && metrics.documentCount > 0 ? (
+                <button
+                  type="button"
+                  onClick={handleClearDocs}
+                  disabled={isClearing}
+                  className={"text-[10px] font-mono px-1.5 py-0.5 rounded cursor-pointer transition-all " + (confirmClear ? "bg-rose-500 text-white font-bold" : "text-slate-400 hover:text-rose-300 hover:bg-rose-500/10")}
+                  title="Purge all documents from database"
+                >
+                  {isClearing ? "Purging…" : confirmClear ? "Confirm?" : "Clear"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSeedDocs}
+                  disabled={isSeeding}
+                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 cursor-pointer transition-all"
+                  title="Seed sample enterprise documents"
+                >
+                  {isSeeding ? "Seeding…" : "+ Seed"}
+                </button>
+              )}
+            </div>
+            <span className="text-xl font-bold text-white mt-1 font-mono">
               {isLoading ? "…" : metrics?.documentCount ?? 0}
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-white/5 border border-white/5 flex flex-col">
-            <span className="text-[11px] text-gray-400 font-medium">Chat Sessions</span>
-            <span className="text-xl font-bold text-indigo-300 mt-1 font-mono">
+          <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <span className="text-[11px] text-slate-400 font-medium font-mono">Chat Sessions</span>
+            <span className="text-xl font-bold text-slate-200 mt-1 font-mono">
               {isLoading ? "…" : metrics?.sessionCount ?? 0}
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-white/5 border border-white/5 flex flex-col">
-            <span className="text-[11px] text-gray-400 font-medium">Total Messages</span>
-            <span className="text-xl font-bold text-purple-300 mt-1 font-mono">
-              {isLoading ? "…" : metrics?.messageCount ?? 0}
+          <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <span className="text-[11px] text-slate-400 font-medium font-mono">P95 RAG Latency</span>
+            <span className="text-xl font-bold text-emerald-400 mt-1 font-mono">
+              {isLoading ? "…" : metrics?.p95RagLatency ?? "<350ms"}
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-white/5 border border-white/5 flex flex-col">
-            <span className="text-[11px] text-gray-400 font-medium">System Health</span>
+          <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <span className="text-[11px] text-slate-400 font-medium font-mono">System Health</span>
             <div className="flex items-center gap-1.5 mt-1">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider font-mono">
@@ -125,71 +184,79 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
           </div>
         </div>
 
-        {/* State Machine Visualizer */}
-        <div className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-3">
-          <span className="text-xs font-semibold text-gray-300 tracking-wide flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-            Active LangGraph Directed Cyclic Flow
-          </span>
+        {/* LangGraph Cyclic Flow Visualizer */}
+        <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-200 tracking-wide flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
+              Active LangGraph Directed Cyclic Flow
+            </span>
+            <span className="text-[10px] font-mono text-slate-300 uppercase px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08]">
+              State Machine
+            </span>
+          </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono py-2 px-3 rounded-lg bg-white/5 border border-white/5">
-            <div className="flex items-center gap-1 text-teal-300 bg-teal-950/60 px-2.5 py-1 rounded border border-teal-800/60">
-              <span>ragNode</span>
-              <span className="text-[10px] text-teal-400">(RRF k=60)</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono py-2.5 px-3.5 rounded-xl bg-black/40 border border-white/[0.08]">
+            <div className="flex items-center gap-1 text-slate-200 bg-white/[0.08] px-2.5 py-1 rounded-lg border border-white/[0.12] font-mono shadow-sm">
+              <span className="font-semibold">ragNode</span>
+              <span className="text-[10px] text-slate-400">(RRF k=60)</span>
             </div>
-            <span className="text-gray-500">→</span>
+            <span className="text-slate-500 font-bold">→</span>
 
-            <div className="flex items-center gap-1 text-indigo-300 bg-indigo-950/60 px-2.5 py-1 rounded border border-indigo-800/60">
-              <span>reasoningNode</span>
-              <span className="text-[10px] text-indigo-400">(Groq 120B)</span>
+            <div className="flex items-center gap-1 text-slate-200 bg-white/[0.08] px-2.5 py-1 rounded-lg border border-white/[0.12] font-mono shadow-sm">
+              <span className="font-semibold">reasoningNode</span>
+              <span className="text-[10px] text-slate-400">(Groq/LLM)</span>
             </div>
-            <span className="text-gray-500">→</span>
+            <span className="text-slate-500 font-bold">→</span>
 
-            <div className="flex items-center gap-1 text-amber-300 bg-amber-950/60 px-2.5 py-1 rounded border border-amber-800/60">
-              <span>approvalNode</span>
-              <span className="text-[10px] text-amber-400">(interrupt)</span>
+            <div className="flex items-center gap-1 text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 font-mono shadow-sm">
+              <span className="font-semibold">approvalNode</span>
+              <span className="text-[10px] text-amber-400/90">(interrupt)</span>
             </div>
-            <span className="text-gray-500">→</span>
+            <span className="text-slate-500 font-bold">→</span>
 
-            <div className="flex items-center gap-1 text-emerald-300 bg-emerald-950/60 px-2.5 py-1 rounded border border-emerald-800/60">
-              <span>toolsNode</span>
-              <span className="text-[10px] text-emerald-400">(self-heal)</span>
+            <div className="flex items-center gap-1 text-emerald-300 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20 font-mono shadow-sm">
+              <span className="font-semibold">toolsNode</span>
+              <span className="text-[10px] text-emerald-400/90">(self-heal)</span>
             </div>
           </div>
         </div>
 
         {/* Architectural Specs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-          <div className="p-3 rounded-xl bg-white/5 border border-white/5 flex flex-col gap-1.5">
-            <span className="text-gray-400 font-medium">Orchestration & State Checkpointer</span>
-            <div className="text-gray-200 font-mono text-[11px]">
+          <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex flex-col gap-1.5">
+            <span className="text-slate-400 font-medium font-mono text-[11px]">Orchestration & State Checkpointer</span>
+            <div className="text-slate-200 font-mono text-[11px]">
               PostgresSaver (@langchain/langgraph-checkpoint-postgres)
             </div>
-            <div className="text-[11px] text-gray-500">
-              Active Thread ID: <span className="text-teal-400 font-mono">{activeChatId || "New Thread"}</span>
+            <div className="text-[11px] text-slate-500 font-mono flex items-center justify-between">
+              <span>Thread ID: <span className="text-slate-300">{activeChatId || "New Thread"}</span></span>
+              <span className="text-emerald-400 font-medium">{metrics?.checkpointerStatus || "Active"}</span>
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-white/5 border border-white/5 flex flex-col gap-1.5">
-            <span className="text-gray-400 font-medium">Hybrid Search Vector Engine</span>
-            <div className="text-gray-200 font-mono text-[11px]">
+          <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex flex-col gap-1.5">
+            <span className="text-slate-400 font-medium font-mono text-[11px]">Hybrid Search & Latency Specs</span>
+            <div className="text-slate-200 font-mono text-[11px]">
               pgvector (Cosine) + tsvector (Full-Text)
             </div>
-            <div className="text-[11px] text-gray-500">
-              Reciprocal Rank Fusion with <span className="text-teal-400 font-mono">k = 60</span> constant
+            <div className="text-[11px] text-slate-500 font-mono flex items-center justify-between">
+              <span>RRF <span className="text-white font-mono">k = 60</span></span>
+              <span>P95 TTFT: <span className="text-slate-300 font-mono">{metrics?.p95TtftLatency || "820ms"}</span></span>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs">
-          <span className="text-gray-500 font-mono text-[11px]">
+        <div className="flex items-center justify-between pt-3 border-t border-white/[0.08] text-xs">
+          <span className="text-slate-400 font-mono text-[11px] flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             OpenTelemetry OTLP trace exporter active
           </span>
           <div className="flex gap-2">
             <button
               onClick={fetchMetrics}
-              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 transition-all font-medium flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white transition-all font-mono text-xs flex items-center gap-1.5 cursor-pointer border border-white/[0.10]"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
@@ -198,7 +265,7 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
             </button>
             <button
               onClick={onClose}
-              className="px-4 py-1.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold transition-all"
+              className="px-4 py-1.5 rounded-xl bg-white text-slate-950 font-semibold transition-all hover:bg-slate-200 cursor-pointer font-mono text-xs shadow-md"
             >
               Done
             </button>

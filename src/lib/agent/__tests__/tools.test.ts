@@ -84,7 +84,8 @@ describe('Native Agent Tools (Milestone 2)', () => {
   describe('executeSqlMutationTool', () => {
     it('should have correct name and description metadata', () => {
       expect(executeSqlMutationTool.name).toBe('execute_sql_mutation');
-      expect(executeSqlMutationTool.description).toBe('Execute a direct SQL mutation on the database (DANGEROUS)');
+      expect(executeSqlMutationTool.description).toContain('Execute a direct SQL mutation');
+      expect(executeSqlMutationTool.description).toContain('Human-in-the-Loop (HITL)');
     });
 
     it('should successfully invoke and execute a SQL mutation on documents table', async () => {
@@ -178,7 +179,7 @@ describe('Native Agent Tools (Milestone 2)', () => {
   });
 
   describe('nativeTools array', () => {
-    it('should export nativeTools array containing all tools', () => {
+    it('should export nativeTools array containing all enterprise tools', () => {
       expect(nativeTools).toHaveLength(3);
       expect(nativeTools).toContain(addDocumentTool);
       expect(nativeTools).toContain(executeSqlMutationTool);

@@ -1,1057 +1,510 @@
 "use client";
 
-import { useState, useMemo, memo, useRef, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import type { UIMessage } from "@ai-sdk/react";
-import { useToast } from "./toast";
 
 export interface MessageBubbleProps {
   message: UIMessage;
   isUser: boolean;
   onSelectCitation?: (docIndex: number) => void;
   selectedModel?: string;
-  isStreaming?: boolean; // true only for the last message while status === "streaming"
+  isStreaming?: boolean;
 }
 
-interface TextPart {
-  type: "text";
-  text: string;
-}
-
-interface ToolInvocationPart {
-  type: "tool-invocation";
-  toolInvocation: {
-    toolName: string;
-    state: "call" | "result";
-    [key: string]: unknown;
-  };
-}
-
-type MessagePart = TextPart | ToolInvocationPart;
-
-/* ────────────────────────────────────────────────
-   Inline Markdown & Citation Renderer
-──────────────────────────────────────────────── */
-function renderInlineContent(
-  text: string,
-  onSelectCitation?: (docIndex: number) => void
-): React.ReactNode {
-  if (!text) return null;
-
-  // Regex pattern matching:
-  // 1 & 2: [Doc-X] Citation
-  // 3, 4, 5: **bold** or __bold__
-  // 6 & 7: `inline code`
-  // 8, 9, 10: [link text](url)
-  // 11, 12, 13: *italic* or _italic_
-  const tokenRegex =
-    /(\[Doc-(\d+)\])|(\*\*([^*]+)\*\*|__([^_]+)__)|(`([^`]+)`)|(\[([^\]]+)\]\((https?:\/\/[^\s)]+)\))|(\*([^*]+)\*|_([^_]+)_)/g;
-
-  const elements: React.ReactNode[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = tokenRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      elements.push(
-        <span key={`txt-${lastIndex}`}>
-          {text.slice(lastIndex, match.index)}
-        </span>
-      );
-    }
-
-    const fullMatch = match[0];
-
-    if (match[1] && match[2]) {
-      // Interactive [Doc-X] Citation pill
-      const docNum = parseInt(match[2], 10);
-      elements.push(
-        <button
-          key={`cite-${match.index}`}
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onSelectCitation?.(docNum);
-          }}
-          className="inline-flex items-center gap-1 px-2 py-0.5 mx-1 my-0.5 rounded-md text-[11px] font-mono font-semibold bg-teal-500/15 text-teal-300 border border-teal-500/40 hover:bg-teal-500/30 hover:border-teal-400 hover:text-white hover:scale-105 active:scale-95 transition-all duration-150 cursor-pointer shadow-[0_0_8px_rgba(20,184,166,0.2)]"
-          title={`Inspect verified Hybrid RAG context for [Doc-${docNum}] (Click to open Drawer)`}
-        >
-          <svg
-            width="10"
-            height="10"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            className="text-teal-400"
-          >
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-          <span>[Doc-{docNum}]</span>
-        </button>
-      );
-    } else if (match[3]) {
-      // Bold text
-      const boldContent = match[4] || match[5] || "";
-      elements.push(
-        <strong key={`bold-${match.index}`} className="font-semibold text-white">
-          {renderInlineContent(boldContent, onSelectCitation)}
-        </strong>
-      );
-    } else if (match[6] && match[7]) {
-      // Inline code
-      elements.push(
-        <code
-          key={`code-${match.index}`}
-          className="px-1.5 py-0.5 mx-0.5 rounded-md text-xs font-mono bg-teal-500/10 text-teal-300 border border-teal-500/20"
-        >
-          {match[7]}
-        </code>
-      );
-    } else if (match[8]) {
-      // Markdown link
-      const linkText = match[9];
-      const linkUrl = match[10];
-      elements.push(
-        <a
-          key={`link-${match.index}`}
-          href={linkUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-teal-400 hover:text-teal-300 underline underline-offset-2 transition-colors"
-        >
-          {linkText}
-        </a>
-      );
-    } else if (match[11]) {
-      // Italic text
-      const italicContent = match[12] || match[13] || "";
-      elements.push(
-        <em key={`italic-${match.index}`} className="italic text-gray-200">
-          {renderInlineContent(italicContent, onSelectCitation)}
-        </em>
-      );
-    } else {
-      elements.push(<span key={`fallback-${match.index}`}>{fullMatch}</span>);
-    }
-
-    lastIndex = match.index + fullMatch.length;
-  }
-
-  if (lastIndex < text.length) {
-    elements.push(
-      <span key={`txt-${lastIndex}`}>{text.slice(lastIndex)}</span>
-    );
-  }
-
-  return elements.length === 1 && typeof elements[0] === "string" ? elements[0] : <>{elements}</>;
-}
-
-/* ────────────────────────────────────────────────
-   Fenced Code Block Component with Copy Action
-──────────────────────────────────────────────── */
-function CodeBlock({ code, language }: { code: string; language?: string }) {
-  const [copied, setCopied] = useState(false);
-  const { showToast } = useToast();
-
-  const handleCopy = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    showToast("Code snippet copied to clipboard", "success");
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const cleanLang = (language || "code").trim().toLowerCase();
-
-  return (
-    <div className="my-3 rounded-xl border border-white/10 bg-[#090b10] overflow-hidden shadow-2xl">
-      {/* Code Header */}
-      <div className="flex items-center justify-between px-3.5 py-1.5 bg-[#12151e] border-b border-white/5 select-none">
-        <div className="flex items-center gap-2 text-xs font-mono text-gray-400">
-          <span className="w-2 h-2 rounded-full bg-teal-400/80 shadow-[0_0_6px_rgba(20,184,166,0.5)]" />
-          <span className="uppercase text-[11px] font-semibold tracking-wider text-teal-300">
-            {cleanLang}
-          </span>
-        </div>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono text-gray-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
-          title="Copy code to clipboard"
-          aria-label="Copy code to clipboard"
-        >
-          {copied ? (
-            <>
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-teal-400"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              <span className="text-teal-400 font-medium">Copied</span>
-            </>
-          ) : (
-            <>
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-              </svg>
-              <span>Copy</span>
-            </>
-          )}
-        </button>
-      </div>
-
-      {/* Code Content */}
-      <pre className="p-3.5 text-xs sm:text-[13px] font-mono leading-relaxed overflow-x-auto text-gray-200 selection:bg-teal-500/30">
-        <code>{code}</code>
-      </pre>
-    </div>
-  );
-}
-
-/* ────────────────────────────────────────────────
-   Block-Level Markdown Parser Types & Engine
-──────────────────────────────────────────────── */
-type MarkdownBlock =
-  | { type: "code"; language: string; code: string }
-  | { type: "table"; headers: string[]; rows: string[][] }
-  | { type: "heading"; level: number; text: string }
-  | { type: "list"; ordered: boolean; items: string[] }
-  | { type: "blockquote"; text: string }
-  | { type: "hr" }
-  | { type: "paragraph"; text: string };
-
-function parseMarkdownBlocks(raw: string): MarkdownBlock[] {
-  const lines = raw.split(/\r?\n/);
-  const blocks: MarkdownBlock[] = [];
-  let i = 0;
-
-  const isSeparatorLine = (s: string) =>
-    /^\|?[\s:-]+\|?[\s:-|]*$/.test(s) && s.includes("-");
-
-  const parseRow = (rowLine: string) => {
-    let cleaned = rowLine.trim();
-    if (cleaned.startsWith("|")) cleaned = cleaned.slice(1);
-    if (cleaned.endsWith("|")) cleaned = cleaned.slice(0, -1);
-    return cleaned.split("|").map((c) => c.trim());
-  };
-
-  while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    // Empty lines
-    if (!trimmed) {
-      i++;
-      continue;
-    }
-
-    // 1. Fenced Code Block
-    if (trimmed.startsWith("```")) {
-      const language = trimmed.slice(3).trim();
-      i++;
-      const codeLines: string[] = [];
-      while (i < lines.length && !lines[i].trim().startsWith("```")) {
-        codeLines.push(lines[i]);
-        i++;
-      }
-      if (i < lines.length && lines[i].trim().startsWith("```")) {
-        i++; // consume closing ```
-      }
-      blocks.push({
-        type: "code",
-        language,
-        code: codeLines.join("\n"),
-      });
-      continue;
-    }
-
-    // 2. Table Block (Streaming resilient)
-    if (
-      trimmed.startsWith("|") &&
-      (i + 1 >= lines.length || isSeparatorLine(lines[i + 1].trim()) || lines[i + 1].trim().startsWith("|"))
-    ) {
-      const hasSep = i + 1 < lines.length && isSeparatorLine(lines[i + 1].trim());
-      const headers = parseRow(trimmed);
-      i += hasSep ? 2 : 1; // Skip header and separator if present
-      const rows: string[][] = [];
-
-      while (i < lines.length && lines[i].trim().startsWith("|")) {
-        const rowTrimmed = lines[i].trim();
-        if (isSeparatorLine(rowTrimmed)) {
-          i++;
-          continue;
-        }
-        const parsed = parseRow(rowTrimmed);
-        // Pad row to match header length so incomplete in-flight rows don't break layout
-        const paddedRow = [...parsed];
-        while (paddedRow.length < headers.length) {
-          paddedRow.push("");
-        }
-        rows.push(paddedRow.slice(0, Math.max(headers.length, paddedRow.length)));
-        i++;
-      }
-
-      blocks.push({
-        type: "table",
-        headers,
-        rows,
-      });
-      continue;
-    }
-
-    // 3. Headings (#, ##, ###, ####)
-    const headingMatch = line.match(/^(#{1,4})\s+(.+)$/);
-    if (headingMatch) {
-      blocks.push({
-        type: "heading",
-        level: headingMatch[1].length,
-        text: headingMatch[2].trim(),
-      });
-      i++;
-      continue;
-    }
-
-    // 4. Horizontal Rule (---, ***, ___)
-    if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
-      blocks.push({ type: "hr" });
-      i++;
-      continue;
-    }
-
-    // 5. Blockquote (> ...)
-    if (trimmed.startsWith(">")) {
-      const quoteLines: string[] = [];
-      while (i < lines.length && lines[i].trim().startsWith(">")) {
-        quoteLines.push(lines[i].trim().replace(/^>\s?/, ""));
-        i++;
-      }
-      blocks.push({
-        type: "blockquote",
-        text: quoteLines.join("\n"),
-      });
-      continue;
-    }
-
-    // 6. Unordered List (- item, * item, + item)
-    if (/^[-*+]\s+/.test(trimmed)) {
-      const items: string[] = [];
-      while (i < lines.length && /^[-*+]\s+/.test(lines[i].trim())) {
-        items.push(lines[i].trim().replace(/^[-*+]\s+/, ""));
-        i++;
-      }
-      blocks.push({
-        type: "list",
-        ordered: false,
-        items,
-      });
-      continue;
-    }
-
-    // 7. Ordered List (1. item, 2. item)
-    if (/^\d+\.\s+/.test(trimmed)) {
-      const items: string[] = [];
-      while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) {
-        items.push(lines[i].trim().replace(/^\d+\.\s+/, ""));
-        i++;
-      }
-      blocks.push({
-        type: "list",
-        ordered: true,
-        items,
-      });
-      continue;
-    }
-
-    // 8. Paragraph
-    const paraLines: string[] = [];
-    while (
-      i < lines.length &&
-      lines[i].trim() !== "" &&
-      !lines[i].trim().startsWith("```") &&
-      !lines[i].trim().startsWith(">") &&
-      !lines[i].match(/^(#{1,4})\s+/) &&
-      !/^(-{3,}|\*{3,}|_{3,})$/.test(lines[i].trim()) &&
-      !/^[-*+]\s+/.test(lines[i].trim()) &&
-      !/^\d+\.\s+/.test(lines[i].trim()) &&
-      !lines[i].trim().startsWith("|")
-    ) {
-      paraLines.push(lines[i]);
-      i++;
-    }
-
-    if (paraLines.length > 0) {
-      blocks.push({
-        type: "paragraph",
-        text: paraLines.join("\n"),
-      });
-    }
-  }
-
-  return blocks;
-}
-
-/* ────────────────────────────────────────────────
-   Markdown Block Renderer
-   Wrapped in React.memo so React skips re-render if
-   props haven't changed — critical for 850 tok/s streaming.
-──────────────────────────────────────────────── */
-const RenderMarkdown = memo(function RenderMarkdown({
-  content,
-  isUser,
-  onSelectCitation,
-}: {
-  content: string;
-  isUser: boolean;
-  onSelectCitation?: (docIndex: number) => void;
-}) {
-  // Attached document preview for user messages
-  if (isUser && content.includes("--- ATTACHED DOCUMENT CONTENT")) {
-    const match = content.match(/\[ATTACHED DOCUMENT:\s*([^\]]+)\]/);
-    const docName = match ? match[1] : "Document";
-    const userPrompt = content.split("\n\n[ATTACHED DOCUMENT:")[0].trim();
-
-    return (
-      <div className="space-y-2.5">
-        {userPrompt && <div className="leading-relaxed">{userPrompt}</div>}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-mono bg-white/10 border border-white/20 text-teal-200 shadow-sm">
-          <svg
-            className="w-4 h-4 text-teal-400 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-            />
-          </svg>
-          <span className="truncate max-w-[280px] sm:max-w-[400px]">Attached: {docName}</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (isUser) {
-    return <div className="leading-relaxed">{renderInlineContent(content, onSelectCitation)}</div>;
-  }
-
-  // Memoize the expensive parse — skips re-parse if content string is identical
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const blocks = useMemo(() => parseMarkdownBlocks(content), [content]);
-
-  return (
-    <div className="space-y-2.5 text-[13.5px] sm:text-sm leading-relaxed text-gray-200">
-      {blocks.map((block, idx) => {
-        switch (block.type) {
-          case "code":
-            return <CodeBlock key={idx} code={block.code} language={block.language} />;
-
-          case "table":
-            return (
-              <div
-                key={idx}
-                className="my-3 overflow-x-auto rounded-xl border border-white/10 bg-[#0c0e15]/80 backdrop-blur-md shadow-xl"
-              >
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead className="bg-white/5 border-b border-white/10 text-teal-300 font-mono font-semibold">
-                    <tr>
-                      {block.headers.map((h, hIdx) => (
-                        <th key={hIdx} className="px-3.5 py-2.5 tracking-wide">
-                          {renderInlineContent(h, onSelectCitation)}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5 text-gray-300">
-                    {block.rows.map((row, rIdx) => (
-                      <tr key={rIdx} className="hover:bg-white/[0.02] transition-colors">
-                        {row.map((cell, cIdx) => (
-                          <td key={cIdx} className="px-3.5 py-2">
-                            {renderInlineContent(cell, onSelectCitation)}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            );
-
-          case "heading": {
-            if (block.level === 1) {
-              return (
-                <h1
-                  key={idx}
-                  className="text-lg font-bold text-teal-300 mt-4 mb-2 first:mt-0 tracking-tight"
-                >
-                  {renderInlineContent(block.text, onSelectCitation)}
-                </h1>
-              );
-            }
-            if (block.level === 2) {
-              return (
-                <h2
-                  key={idx}
-                  className="text-base font-semibold text-teal-200 mt-3 mb-1.5 first:mt-0 tracking-tight"
-                >
-                  {renderInlineContent(block.text, onSelectCitation)}
-                </h2>
-              );
-            }
-            if (block.level === 3) {
-              return (
-                <h3
-                  key={idx}
-                  className="text-sm font-semibold text-teal-100 mt-2.5 mb-1 first:mt-0"
-                >
-                  {renderInlineContent(block.text, onSelectCitation)}
-                </h3>
-              );
-            }
-            return (
-              <h4
-                key={idx}
-                className="text-xs font-bold uppercase tracking-wider text-teal-400 mt-2 mb-1 first:mt-0"
-              >
-                {renderInlineContent(block.text, onSelectCitation)}
-              </h4>
-            );
-          }
-
-          case "list": {
-            if (block.ordered) {
-              return (
-                <ol key={idx} className="my-2 space-y-1.5 pl-1">
-                  {block.items.map((item, itemIdx) => (
-                    <li key={itemIdx} className="flex items-start gap-2.5">
-                      <span className="text-teal-400 text-xs font-mono font-bold mt-0.5 select-none shrink-0">
-                        {itemIdx + 1}.
-                      </span>
-                      <span className="flex-1">
-                        {renderInlineContent(item, onSelectCitation)}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              );
-            }
-            return (
-              <ul key={idx} className="my-2 space-y-1.5 pl-1">
-                {block.items.map((item, itemIdx) => (
-                  <li key={itemIdx} className="flex items-start gap-2.5">
-                    <span className="text-teal-400 text-sm leading-none mt-1 select-none shrink-0">
-                      •
-                    </span>
-                    <span className="flex-1">
-                      {renderInlineContent(item, onSelectCitation)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            );
-          }
-
-          case "blockquote":
-            return (
-              <blockquote
-                key={idx}
-                className="border-l-2 border-teal-500/60 pl-3.5 my-2.5 text-gray-300 italic bg-teal-500/5 py-1.5 rounded-r-lg"
-              >
-                {renderInlineContent(block.text, onSelectCitation)}
-              </blockquote>
-            );
-
-          case "hr":
-            return <hr key={idx} className="my-3.5 border-white/10" />;
-
-          case "paragraph":
-          default:
-            return (
-              <p key={idx} className="leading-relaxed">
-                {renderInlineContent(block.text, onSelectCitation)}
-              </p>
-            );
-        }
-      })}
-    </div>
-  );
-});
-
-/* ────────────────────────────────────────────────
-   Main MessageBubble Component
-──────────────────────────────────────────────── */
 export default function MessageBubble({
   message,
   isUser,
   onSelectCitation,
-  selectedModel = "groq-gpt-oss-120b",
+  selectedModel = "gpt-oss-120b",
   isStreaming = false,
 }: MessageBubbleProps) {
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
+  const [copiedCodeIdx, setCopiedCodeIdx] = useState<number | null>(null);
   const [showTelemetryPopover, setShowTelemetryPopover] = useState(false);
-  const { showToast } = useToast();
 
-  // ── Direct DOM streaming (ChatGPT/Claude technique) ───────────────────────
-  // While isStreaming === true, we write text directly to a DOM node via ref.
-  // This completely bypasses React's reconciler and VDOM diff, so 850 tok/s
-  // from Groq never touches the React render cycle at all.
-  // When streaming ends (isStreaming → false), React takes over and renders
-  // the final full-markdown view.
-  const streamingDivRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!isStreaming || !streamingDivRef.current) return;
-    const parts = message.parts as MessagePart[] | undefined;
-    const text = Array.isArray(parts)
-      ? parts.filter((p): p is TextPart => p.type === "text").map((p) => p.text).join("")
-      : typeof (message as { content?: string }).content === "string"
-        ? (message as { content?: string }).content!
-        : "";
-    streamingDivRef.current.textContent = text;
-  });
-  // ── End streaming bypass ──────────────────────────────────────────────────
-
-  const parts = message.parts as MessagePart[] | undefined;
-
-  const partsText = Array.isArray(parts)
-    ? (parts as MessagePart[])
-        .filter((p): p is TextPart => p.type === "text")
-        .map((p) => p.text)
-        .join("")
-    : typeof (message as { content?: string }).content === "string"
-    ? (message as { content?: string }).content!
-    : "";
-
-  // Estimated Telemetry metrics for assistant responses
-  const telemetry = useMemo(() => {
-    const charLen = partsText.length;
-    const completionTokens = Math.max(38, Math.round(charLen / 3.7));
-    const promptTokens = Math.max(145, Math.round(completionTokens * 0.65));
-    const totalTokens = promptTokens + completionTokens;
-
-    // Model-specific pricing and latency estimates
-    let costPerMillion = 0.59;
-    let ttft = 380;
-    let speed = "~850 tok/s";
-    let engine = "Groq LPU Tensor Processing";
-
-    if (selectedModel.includes("gpt-4o")) {
-      costPerMillion = 5.0;
-      ttft = 680;
-      speed = "~95 tok/s";
-      engine = "OpenAI GPT-4o Cluster";
-    } else if (selectedModel.includes("claude")) {
-      costPerMillion = 3.5;
-      ttft = 540;
-      speed = "~120 tok/s";
-      engine = "Anthropic Bedrock Inference";
-    } else if (selectedModel.includes("deepseek")) {
-      costPerMillion = 1.2;
-      ttft = 490;
-      speed = "~240 tok/s";
-      engine = "DeepSeek R1 CoT Engine";
+  const partsText = useMemo(() => {
+    let text = "";
+    if (message.parts && Array.isArray(message.parts) && message.parts.length > 0) {
+      text = message.parts
+        .map((p) => {
+          if (typeof p === "string") return p;
+          if (p && typeof p === "object" && "text" in p && typeof (p as { text?: string }).text === "string") {
+            return (p as { text: string }).text;
+          }
+          return "";
+        })
+        .join("");
     }
-
-    const cost = ((totalTokens / 1_000_000) * costPerMillion).toFixed(4);
-    const latencyMs = Math.min(850, Math.max(290, Math.round(ttft + completionTokens * 0.35)));
-
-    return {
-      completionTokens,
-      promptTokens,
-      totalTokens,
-      cost: cost === "0.0000" ? "0.0008" : cost,
-      latencyMs,
-      speed,
-      engine,
-    };
-  }, [partsText, selectedModel]);
-
-  if (
-    partsText === "[HUMAN_APPROVAL_YES]" ||
-    partsText === "[HUMAN_APPROVAL_NO]" ||
-    partsText.includes("__APPROVAL_REQUEST__")
-  ) {
-    return null;
-  }
-
-  const hasContent =
-    partsText.trim() ||
-    (Array.isArray(parts) && parts.some((p) => p.type === "tool-invocation"));
-  if (!hasContent) return null;
+    if (!text && typeof (message as unknown as { content?: string }).content === "string") {
+      text = (message as unknown as { content: string }).content;
+    }
+    return text || "";
+  }, [message]);
 
   const handleCopy = (textToCopy: string) => {
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
-    showToast("Message copied to clipboard", "success");
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 2200);
+  };
+
+  const handleCopyCode = (codeText: string, idx: number) => {
+    navigator.clipboard.writeText(codeText);
+    setCopiedCodeIdx(idx);
+    setTimeout(() => setCopiedCodeIdx(null), 2000);
   };
 
   const handleFeedback = (type: "up" | "down") => {
-    if (feedback === type) {
-      setFeedback(null);
-      return;
-    }
-    setFeedback(type);
-    if (type === "up") {
-      showToast("Response rated helpful (+1). Quality logged to telemetry.", "success");
-    } else {
-      showToast("Feedback noted (-1). Flagged for evaluation dataset.", "info");
-    }
+    setFeedback((prev) => (prev === type ? null : type));
   };
 
-  return (
-    <div className={`group flex msg-animate relative ${isUser ? "justify-end" : "justify-start"}`}>
-      {/* Avatar for AI */}
-      {!isUser && (
-        <div
-          className="shrink-0 w-7 h-7 rounded-lg mr-3 flex items-center justify-center text-xs font-bold mt-1 self-start select-none"
-          style={{
-            background: "linear-gradient(135deg, #14b8a6, #6366f1)",
-            color: "#fff",
-            boxShadow: "0 0 12px rgba(20, 184, 166, 0.35)",
-          }}
-          aria-hidden="true"
-        >
-          N
-        </div>
-      )}
+  const attachmentMatch = partsText.match(
+    /\[ATTACHED DOCUMENT: (.+?) \((\d+(?:\.\d+)?\s*(?:B|KB|MB))\)\]/
+  );
+  const attachedFileName = attachmentMatch ? attachmentMatch[1] : null;
+  const attachedFileSize = attachmentMatch ? attachmentMatch[2] : null;
 
-      <div
-        className={`relative max-w-[88%] sm:max-w-[82%] rounded-2xl transition-all ${
-          isUser ? "rounded-tr-sm" : "rounded-tl-sm"
-        }`}
-        style={
-          isUser
-            ? {
-                background: "linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)",
-                color: "#fff",
-                padding: "12px 18px",
-                boxShadow: "0 4px 20px rgba(20, 184, 166, 0.25)",
-              }
-            : {
-                background: "rgba(17, 19, 26, 0.85)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                color: "var(--color-text-primary)",
-                padding: "14px 18px",
-                boxShadow: "0 4px 24px rgba(0, 0, 0, 0.4)",
-              }
-        }
-      >
-        {/* Header row with role badge + Actions */}
-        <div className="flex items-center justify-between gap-4 mb-2">
+  const cleanUserText = partsText
+    .replace(/\[ATTACHED DOCUMENT: .+?\(\d+(?:\.\d+)?\s*(?:B|KB|MB)\)\][\s\S]*$/g, "")
+    .trim();
+
+  const citationMatches = useMemo(() => {
+    if (isUser) return [];
+    const set = new Set<number>();
+    const re = /\[Doc[-\u2010-\u2015\u2212\s]?(\d+)\]/gi;
+    let m;
+    while ((m = re.exec(partsText)) !== null) {
+      set.add(parseInt(m[1], 10));
+    }
+    return Array.from(set);
+  }, [partsText, isUser]);
+
+  const telemetry = useMemo(() => {
+    const promptToks = Math.max(12, Math.round(partsText.length / 5));
+    const completionToks = Math.max(18, Math.round(partsText.length / 3.8));
+    const totalToks = promptToks + completionToks;
+    const latency = isStreaming ? 42 : Math.max(85, Math.round(totalToks * 1.8));
+    const cost = ((promptToks * 0.15 + completionToks * 0.6) / 1_000_000).toFixed(6);
+
+    return {
+      promptTokens: promptToks,
+      completionTokens: completionToks,
+      totalTokens: totalToks,
+      latencyMs: latency,
+      cost: cost,
+      engine: selectedModel || "gpt-oss-120b",
+      speed: "850 tok/s",
+    };
+  }, [partsText, selectedModel, isStreaming]);
+
+  const renderFormattedContent = (content: string) => {
+    const codeBlockRegex = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
+    const blocks: { type: "text" | "code"; content: string; language?: string }[] = [];
+
+    let lastIdx = 0;
+    let match;
+
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+      if (match.index > lastIdx) {
+        blocks.push({
+          type: "text",
+          content: content.slice(lastIdx, match.index),
+        });
+      }
+      blocks.push({
+        type: "code",
+        language: match[1] || "text",
+        content: match[2].trim(),
+      });
+      lastIdx = codeBlockRegex.lastIndex;
+    }
+
+    if (lastIdx < content.length) {
+      blocks.push({
+        type: "text",
+        content: content.slice(lastIdx),
+      });
+    }
+
+    return blocks.map((block, bIdx) => {
+      if (block.type === "code") {
+        const isCopied = copiedCodeIdx === bIdx;
+        return (
           <div
-            className="text-[10px] font-semibold uppercase tracking-widest font-mono flex items-center gap-2"
-            style={{
-              color: isUser ? "rgba(255,255,255,0.7)" : "#5eead4",
-              letterSpacing: "0.12em",
-            }}
+            key={bIdx}
+            className="my-3 rounded-2xl overflow-hidden border border-white/[0.12] bg-[#10131c] text-xs font-mono shadow-md"
           >
-            <span>{isUser ? "You" : "Nexus Agent"}</span>
-            {!isUser && (
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-white/5 text-gray-400 font-mono font-normal">
-                Hybrid RAG
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1">
-            {/* Thumbs Up / Down Feedback buttons for Assistant messages */}
-            {!isUser && (
-              <div className="flex items-center gap-0.5 mr-1">
-                <button
-                  type="button"
-                  onClick={() => handleFeedback("up")}
-                  className={`p-1 rounded-md transition-all ${
-                    feedback === "up"
-                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                      : "text-gray-400 hover:text-white hover:bg-white/5 opacity-70 group-hover:opacity-100"
-                  }`}
-                  title="Mark response helpful (+1)"
-                  aria-label="Thumbs up"
-                >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill={feedback === "up" ? "currentColor" : "none"}
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
-                  </svg>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleFeedback("down")}
-                  className={`p-1 rounded-md transition-all ${
-                    feedback === "down"
-                      ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
-                      : "text-gray-400 hover:text-white hover:bg-white/5 opacity-70 group-hover:opacity-100"
-                  }`}
-                  title="Flag response issue (-1)"
-                  aria-label="Thumbs down"
-                >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill={feedback === "down" ? "currentColor" : "none"}
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3" />
-                  </svg>
-                </button>
-              </div>
-            )}
-
-            {/* Copy Button */}
-            <button
-              onClick={() => handleCopy(partsText)}
-              className="opacity-70 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-white/10 text-gray-400 hover:text-white flex items-center gap-1 text-[11px] cursor-pointer"
-              title="Copy message"
-              aria-label="Copy message"
-            >
-              {copied ? (
-                <>
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-teal-400"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span className="text-teal-400 font-mono">Copied</span>
-                </>
-              ) : (
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Content: direct DOM write while streaming, full markdown when done */}
-        <div className="text-sm leading-relaxed">
-          {isStreaming && !isUser ? (
-            // ── ChatGPT/Claude technique: bypass React entirely during stream ──
-            // The useEffect above writes textContent directly to this node.
-            // Zero VDOM diff, zero parseMarkdownBlocks, zero re-renders.
-            <div
-              ref={streamingDivRef}
-              className="whitespace-pre-wrap text-gray-200 text-[13.5px] sm:text-sm leading-relaxed"
-            />
-          ) : Array.isArray(parts) && parts.length > 0 ? (
-            parts.map((part, index) => {
-              if (part.type === "text") {
-                return (
-                  <RenderMarkdown
-                    key={index}
-                    content={part.text}
-                    isUser={isUser}
-                    onSelectCitation={onSelectCitation}
-                  />
-                );
-              }
-
-              if (part.type === "tool-invocation") {
-                const isDone = part.toolInvocation.state === "result";
-                return (
-                  <div
-                    key={index}
-                    className="my-3 flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-all"
-                    style={{
-                      background: isDone ? "rgba(20, 184, 166, 0.12)" : "rgba(255, 255, 255, 0.05)",
-                      border: `1px solid ${isDone ? "rgba(20, 184, 166, 0.3)" : "rgba(255, 255, 255, 0.1)"}`,
-                    }}
-                  >
-                    {isDone ? (
-                      <span className="text-teal-400">
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      </span>
-                    ) : (
-                      <div
-                        className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent animate-spin"
-                        style={{ borderColor: "#2dd4bf", borderTopColor: "transparent" }}
-                      />
-                    )}
-                    <span
-                      className="font-mono text-xs"
-                      style={{ color: isDone ? "#5eead4" : "var(--color-text-secondary)" }}
-                    >
-                      {isDone ? "Executed Tool" : "Invoking Tool"}:{" "}
-                      <span
-                        style={{
-                          color: isDone ? "#5eead4" : "#2dd4bf",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {part.toolInvocation.toolName}
-                      </span>
-                      {!isDone && "…"}
-                    </span>
-                  </div>
-                );
-              }
-              return null;
-            })
-          ) : (
-            <RenderMarkdown
-              content={partsText}
-              isUser={isUser}
-              onSelectCitation={onSelectCitation}
-            />
-          )}
-        </div>
-
-
-        {/* Telemetry Pill for Assistant Messages */}
-        {!isUser && partsText.trim() && (
-          <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between relative">
-            <div
-              className="relative"
-              onMouseEnter={() => setShowTelemetryPopover(true)}
-              onMouseLeave={() => setShowTelemetryPopover(false)}
-            >
-              {/* Pill Button */}
+            <div className="flex items-center justify-between px-3.5 py-1.5 bg-[#181c26]/90 border-b border-white/[0.10] text-[11px] text-slate-300">
+              <span className="font-semibold uppercase tracking-wider">{block.language}</span>
               <button
                 type="button"
-                onClick={() => setShowTelemetryPopover((p) => !p)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-medium text-gray-400 bg-white/5 border border-white/10 hover:border-teal-500/30 hover:text-teal-300 transition-all cursor-pointer"
-                title="View latency, token, and cost telemetry breakdown"
+                onClick={() => handleCopyCode(block.content, bIdx)}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-lg hover:bg-white/[0.10] text-slate-300 hover:text-white transition-colors cursor-pointer"
+                aria-label="copy code to clipboard"
               >
-                <span className="text-teal-400">⚡</span>
-                <span>{telemetry.totalTokens} tokens</span>
-                <span className="text-gray-600">·</span>
-                <span>${telemetry.cost}</span>
-                <span className="text-gray-600">·</span>
-                <span>{telemetry.latencyMs}ms TTFT</span>
+                {isCopied ? <span>Copied!</span> : <span>Copy</span>}
               </button>
+            </div>
+            <pre className="p-3.5 overflow-x-auto text-slate-200 leading-relaxed">
+              <code>{block.content}</code>
+            </pre>
+          </div>
+        );
+      }
 
-              {/* Hover Popover Breakdown */}
-              {showTelemetryPopover && (
-                <div
-                  className="absolute bottom-full mb-2 left-0 z-50 w-72 p-3 rounded-xl border border-white/15 shadow-2xl text-xs space-y-2 animate-in fade-in zoom-in-95"
-                  style={{
-                    background:
-                      "linear-gradient(180deg, rgba(17, 19, 26, 0.98) 0%, rgba(9, 10, 15, 0.98) 100%)",
-                    backdropFilter: "blur(20px)",
-                    boxShadow:
-                      "0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(20, 184, 166, 0.15)",
-                  }}
-                >
-                  <div className="flex items-center justify-between pb-1.5 border-b border-white/10 font-mono text-[11px]">
-                    <span className="font-semibold text-teal-300 flex items-center gap-1.5">
-                      <span>⚡</span> Execution Telemetry
-                    </span>
-                    <span className="text-gray-400">{telemetry.speed}</span>
-                  </div>
+      return renderTextParagraphs(block.content, bIdx);
+    });
+  };
 
-                  <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-                    <div className="p-1.5 rounded bg-white/5 flex flex-col">
-                      <span className="text-gray-400">Prompt Tokens</span>
-                      <span className="text-gray-200 font-bold">{telemetry.promptTokens}</span>
-                    </div>
-                    <div className="p-1.5 rounded bg-white/5 flex flex-col">
-                      <span className="text-gray-400">Output Tokens</span>
-                      <span className="text-teal-300 font-bold">{telemetry.completionTokens}</span>
-                    </div>
-                    <div className="p-1.5 rounded bg-white/5 flex flex-col">
-                      <span className="text-gray-400">TTFT Latency</span>
-                      <span className="text-indigo-300 font-bold">{telemetry.latencyMs} ms</span>
-                    </div>
-                    <div className="p-1.5 rounded bg-white/5 flex flex-col">
-                      <span className="text-gray-400">Est. Cost</span>
-                      <span className="text-emerald-300 font-bold">${telemetry.cost}</span>
-                    </div>
-                  </div>
+  const renderTextParagraphs = (text: string, baseKey: number) => {
+    const lines = text.split("\n");
+    const elements: React.ReactNode[] = [];
+    let tableBuffer: string[] = [];
 
-                  <div className="text-[10px] text-gray-400 font-mono pt-1 border-t border-white/5 flex items-center justify-between">
-                    <span>Engine:</span>
-                    <span className="text-gray-300 truncate max-w-[160px]">{telemetry.engine}</span>
-                  </div>
-                </div>
-              )}
+    const flushTable = (k: number) => {
+      if (tableBuffer.length === 0) return;
+      const rows = tableBuffer.map((r) => {
+        let parts = r.trim().split("|").map((c) => c.trim());
+        if (parts.length > 0 && parts[0] === "") parts.shift();
+        if (parts.length > 0 && parts[parts.length - 1] === "") parts.pop();
+        return parts;
+      });
+      const header = rows[0] || [];
+      const colCount = Math.max(1, header.length);
+      const isDivider = (r: string[]) => r.every((c) => /^[:-]+$/.test(c));
+      const bodyRows = rows.slice(1).filter((r) => !isDivider(r));
+
+      elements.push(
+        <div key={"tbl-" + k} className="my-3 overflow-x-auto rounded-2xl border border-white/[0.12] bg-[#10131c]/90 shadow-md">
+          <table className="w-full text-xs text-left text-slate-200">
+            <thead className="text-[11px] uppercase tracking-wider font-mono bg-[#181c26] text-slate-200 border-b border-white/[0.10]">
+              <tr>
+                {header.map((col, idx) => (
+                  <th key={idx} className="px-3.5 py-2.5 font-semibold">
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/[0.08]">
+              {bodyRows.map((row, rIdx) => {
+                const paddedRow = [...row];
+                while (paddedRow.length < colCount) {
+                  paddedRow.push("...");
+                }
+                return (
+                  <tr key={rIdx} className="hover:bg-white/[0.04] transition-colors">
+                    {paddedRow.map((cell, cIdx) => (
+                      <td key={cIdx} className="px-3.5 py-2">
+                        {renderInlineElements(cell)}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      );
+      tableBuffer = [];
+    };
+
+    lines.forEach((line, lIdx) => {
+      if (line.trim().startsWith("|")) {
+        tableBuffer.push(line);
+      } else {
+        if (tableBuffer.length > 0) flushTable(baseKey * 1000 + lIdx);
+
+        if (line.startsWith("### ")) {
+          elements.push(
+            <h3 key={lIdx} className="text-sm font-semibold text-white tracking-tight mt-3 mb-1">
+              {renderInlineElements(line.replace("### ", ""))}
+            </h3>
+          );
+        } else if (line.startsWith("## ")) {
+          elements.push(
+            <h2 key={lIdx} className="text-base font-bold text-white tracking-tight mt-4 mb-1">
+              {renderInlineElements(line.replace("## ", ""))}
+            </h2>
+          );
+        } else if (line.startsWith("# ")) {
+          elements.push(
+            <h1 key={lIdx} className="text-lg font-bold text-white tracking-tight mt-4 mb-2">
+              {renderInlineElements(line.replace("# ", ""))}
+            </h1>
+          );
+        } else if (line.startsWith("- ") || line.startsWith("* ")) {
+          elements.push(
+            <li key={lIdx} className="ml-4 list-disc text-slate-300 text-xs sm:text-sm my-0.5">
+              {renderInlineElements(line.replace(/^[-*]\s+/, ""))}
+            </li>
+          );
+        } else if (line.trim().length > 0) {
+          elements.push(
+            <p key={lIdx} className="text-xs sm:text-sm text-slate-200 leading-relaxed my-1">
+              {renderInlineElements(line)}
+            </p>
+          );
+        }
+      }
+    });
+
+    if (tableBuffer.length > 0) flushTable(baseKey * 1000 + lines.length);
+
+    return elements;
+  };
+
+  const renderInlineElements = (text: string) => {
+    const parts = text.split(/(\[Doc[-\u2010-\u2015\u2212\s]?\d+\]|\*\*.*?\*\*|`[^`]+`)/gi);
+
+    return parts.map((part, pIdx) => {
+      const docMatch = part.match(/\[Doc[-\u2010-\u2015\u2212\s]?(\d+)\]/i);
+      if (docMatch) {
+        const docNum = parseInt(docMatch[1], 10);
+        return (
+          <button
+            key={pIdx}
+            type="button"
+            onClick={() => onSelectCitation?.(docNum)}
+            className="inline-flex items-center gap-1 mx-1 px-2 py-0.5 rounded-lg text-[11px] font-mono font-semibold bg-white/[0.08] border border-white/[0.14] text-slate-200 hover:bg-white/[0.16] hover:text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-all cursor-pointer"
+            aria-label={"Doc-" + docNum}
+          >
+            <span>[Doc-{docNum}]</span>
+          </button>
+        );
+      }
+
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return (
+          <strong key={pIdx} className="font-semibold text-white">
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+
+      if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
+        return (
+          <code key={pIdx} className="px-1.5 py-0.5 rounded-md bg-white/[0.08] font-mono text-[11px] text-slate-200 border border-white/[0.12]">
+            {part.slice(1, -1)}
+          </code>
+        );
+      }
+
+      return part;
+    });
+  };
+
+  if (!isUser && !partsText.trim() && !isStreaming) {
+    return null;
+  }
+
+  return (
+    <div className="w-full flex flex-col gap-2 my-2">
+      {/* Header with Avatar Squircle, Name, Timestamp */}
+      <div className="flex items-center gap-2.5 px-1">
+        {isUser ? (
+          <div className="w-7 h-7 rounded-xl bg-white/[0.08] border border-white/[0.14] flex items-center justify-center text-slate-200 font-mono text-xs font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+            U
+          </div>
+        ) : (
+          <div className="w-7 h-7 rounded-xl bg-white flex items-center justify-center shadow-[0_2px_12px_rgba(255,255,255,0.18)]">
+            <svg className="w-4 h-4 fill-slate-950" viewBox="0 0 24 24">
+              <path d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4772 12 22C12 16.4772 16.4772 12 22 12C16.4772 12 12 7.52285 12 2Z" />
+            </svg>
+          </div>
+        )}
+        <span className="text-xs font-mono text-slate-400">
+          {isUser ? "User • 2:40 pm" : "Nexus AI • 2:40 pm"}
+        </span>
+      </div>
+
+      {/* Message Card Body (Rich Pronounced Glass Panel) */}
+      <div className="rounded-2xl px-4 py-3.5 glass-panel text-slate-100 text-sm leading-relaxed">
+        {isUser && attachedFileName && (
+          <div className="mb-3 inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-mono bg-white/[0.06] border border-white/[0.12] text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+            <span>📄</span>
+            <span className="font-semibold">Attached: {attachedFileName}{attachedFileSize ? " (" + attachedFileSize + ")" : ""}</span>
+          </div>
+        )}
+
+        {isUser ? (
+          <p className="text-xs sm:text-sm text-slate-100 font-sans leading-relaxed whitespace-pre-wrap">
+            {cleanUserText || partsText}
+          </p>
+        ) : !partsText.trim() ? (
+          isStreaming ? (
+            <div className="flex items-center gap-2.5 py-1 text-xs font-mono text-slate-300">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce" />
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:150ms]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:300ms]" />
+              </span>
+              <span className="animate-pulse text-slate-300">Synthesizing response...</span>
+            </div>
+          ) : null
+        ) : (
+          renderFormattedContent(partsText)
+        )}
+
+        {/* Overlapping 3D Citation Stack */}
+        {!isUser && citationMatches.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-white/[0.08]">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+                Verified Sources ({citationMatches.length})
+              </span>
+              <button
+                type="button"
+                onClick={() => onSelectCitation?.(citationMatches[0])}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-mono bg-white/[0.06] hover:bg-white/[0.12] border border-white/[0.12] text-slate-200 hover:text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-all duration-200 cursor-pointer"
+              >
+                <span>✦ Inspect Citations</span>
+              </button>
             </div>
 
-            <div className="text-[10px] font-mono text-gray-500">
-              pgvector RRF k=60
+            <div
+              onClick={() => onSelectCitation?.(citationMatches[0])}
+              className="relative cursor-pointer group mt-2 pt-1.5 pb-1"
+            >
+              {/* Back Card: -rotate-1.5 */}
+              <div className="absolute inset-0 rounded-2xl bg-[#141824]/60 border border-white/[0.06] shadow-md transform -rotate-1.5 group-hover:rotate-0 transition-transform duration-300" />
+              {/* Middle Card: rotate-1 */}
+              <div className="absolute inset-0 rounded-2xl bg-[#181e2e]/80 border border-white/[0.08] shadow-md transform rotate-1 group-hover:rotate-0 transition-transform duration-300" />
+              {/* Front Top Card */}
+              <div className="relative rounded-2xl p-3 bg-[#10141e] border border-white/[0.12] shadow-lg flex items-center justify-between group-hover:border-white/[0.22] transition-all duration-300">
+                <div className="flex items-center gap-2.5 truncate">
+                  <span className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-white/[0.08] text-slate-200 border border-white/[0.12]">
+                    [Doc-{citationMatches[0]}]
+                  </span>
+                  <span className="text-xs text-slate-200 truncate font-medium">
+                    Verified Enterprise Policy & Governance
+                  </span>
+                </div>
+                <span className="text-xs text-slate-400 font-mono ml-2 shrink-0 group-hover:text-slate-200 transition-colors">
+                  View →
+                </span>
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Avatar for User */}
-      {isUser && (
-        <div
-          className="shrink-0 w-7 h-7 rounded-lg ml-3 flex items-center justify-center text-xs font-bold mt-1 self-start select-none"
-          style={{
-            background: "rgba(255, 255, 255, 0.1)",
-            border: "1px solid rgba(255, 255, 255, 0.15)",
-            color: "#e2e8f0",
-          }}
-          aria-hidden="true"
+      {/* Frosted Action Pills Below Bubble */}
+      <div className="flex items-center gap-1.5 mt-1 px-1">
+        <button
+          type="button"
+          onClick={() => handleCopy(cleanUserText || partsText)}
+          className={
+            copied
+              ? "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold bg-white text-slate-950 border border-white shadow-md transition-all active:scale-95 cursor-pointer"
+              : "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-mono text-slate-300 hover:text-white bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.10] backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-all duration-200 active:scale-95 cursor-pointer"
+          }
+          title={copied ? "Copied to clipboard" : "Copy message"}
+          aria-label="Copy message"
         >
-          U
-        </div>
-      )}
+          {copied ? (
+            <>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-950">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>Copied!</span>
+            </>
+          ) : (
+            <>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+              </svg>
+              <span>Copy</span>
+            </>
+          )}
+        </button>
+
+        {!isUser && (
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => handleFeedback("up")}
+              className={"p-1.5 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer " + (feedback === "up" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm" : "text-slate-400 hover:text-slate-200 bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.10] backdrop-blur-md shadow-sm")}
+              title="Helpful (+1)"
+              aria-label="Thumbs up"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill={feedback === "up" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 10v12" />
+                <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleFeedback("down")}
+              className={"p-1.5 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer " + (feedback === "down" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30 shadow-sm" : "text-slate-400 hover:text-slate-200 bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.10] backdrop-blur-md shadow-sm")}
+              title="Issue (-1)"
+              aria-label="Thumbs down"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill={feedback === "down" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 14V2" />
+                <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {!isUser && partsText.trim() && (
+          <div
+            className="relative"
+            onMouseEnter={() => setShowTelemetryPopover(true)}
+            onMouseLeave={() => setShowTelemetryPopover(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setShowTelemetryPopover((p) => !p)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] font-mono font-medium text-slate-300 hover:text-white bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.10] backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-all duration-200 active:scale-95 cursor-pointer"
+              title="View latency, token, and cost telemetry"
+            >
+              <span className="text-slate-400">⚡</span>
+              <span>{telemetry.totalTokens} tok</span>
+              <span className="text-slate-500">·</span>
+              <span>{telemetry.latencyMs}ms</span>
+            </button>
+
+            {showTelemetryPopover && (
+              <div className="absolute bottom-full mb-2 left-0 z-50 w-72 p-3.5 rounded-2xl border border-white/[0.12] shadow-2xl text-xs space-y-2.5 bg-[#10131b]/95 backdrop-blur-2xl animate-in fade-in zoom-in-95">
+                <div className="flex items-center justify-between pb-1.5 border-b border-white/[0.08] font-mono text-[11px]">
+                  <span className="font-semibold text-white flex items-center gap-1.5">
+                    <span>⚡</span> Execution Telemetry
+                  </span>
+                  <span className="text-slate-400">{telemetry.speed}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] flex flex-col">
+                    <span className="text-slate-400">Prompt Tokens</span>
+                    <span className="text-white font-bold">{telemetry.promptTokens}</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] flex flex-col">
+                    <span className="text-slate-400">Output Tokens</span>
+                    <span className="text-slate-200 font-bold">{telemetry.completionTokens}</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] flex flex-col">
+                    <span className="text-slate-400">TTFT Latency</span>
+                    <span className="text-slate-200 font-bold">{telemetry.latencyMs} ms</span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] flex flex-col">
+                    <span className="text-slate-400">Est. Cost</span>
+                    <span className="text-emerald-400 font-bold">${telemetry.cost}</span>
+                  </div>
+                </div>
+
+                <div className="text-[10px] text-slate-400 font-mono pt-1 border-t border-white/[0.08] flex items-center justify-between">
+                  <span>Engine:</span>
+                  <span className="text-slate-300 truncate max-w-[160px]">{telemetry.engine}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-

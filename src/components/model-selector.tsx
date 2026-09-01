@@ -22,7 +22,7 @@ export const AVAILABLE_MODELS: ModelOption[] = [
     speedToks: "~850 tok/s",
     description: "Flagship 120B open-weights model on Groq LPU with fast tool calling",
     tag: "Default",
-    badgeClass: "bg-teal-500/15 text-teal-300 border-teal-500/30",
+    badgeClass: "bg-violet-500/15 text-slate-300 border-slate-700/60",
   },
   {
     id: "groq-qwen-3.8-27b",
@@ -32,7 +32,7 @@ export const AVAILABLE_MODELS: ModelOption[] = [
     speedToks: "~1200 tok/s",
     description: "High-speed dense reasoning model optimized for sub-second latency",
     tag: "Fast",
-    badgeClass: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
+    badgeClass: "bg-slate-800 text-slate-200 border-slate-700/60",
   },
   {
     id: "gpt-4o",
@@ -42,7 +42,7 @@ export const AVAILABLE_MODELS: ModelOption[] = [
     speedToks: "~95 tok/s",
     description: "State-of-the-art multimodal reasoning and complex planning",
     tag: "Omni",
-    badgeClass: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+    badgeClass: "bg-slate-800 text-slate-200 border-slate-700/60",
   },
   {
     id: "claude-3-5-sonnet",
@@ -52,7 +52,7 @@ export const AVAILABLE_MODELS: ModelOption[] = [
     speedToks: "~120 tok/s",
     description: "Industry-leading agentic tool use and nuanced code synthesis",
     tag: "Top Tier",
-    badgeClass: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+    badgeClass: "bg-slate-800 text-slate-200 border-slate-700/60",
   },
   {
     id: "deepseek-r1",
@@ -62,7 +62,7 @@ export const AVAILABLE_MODELS: ModelOption[] = [
     speedToks: "~240 tok/s",
     description: "Reinforcement-learned reasoning with internal verification steps",
     tag: "Reasoning",
-    badgeClass: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+    badgeClass: "bg-slate-800 text-slate-200 border-slate-700/60",
   },
 ];
 
@@ -126,7 +126,7 @@ export default function ModelSelector({
     switch (provider) {
       case "Groq":
         return (
-          <svg className="w-3.5 h-3.5 text-teal-400" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="w-3.5 h-3.5 text-violet-400" viewBox="0 0 24 24" fill="currentColor">
             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
           </svg>
         );
@@ -161,12 +161,12 @@ export default function ModelSelector({
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`inline-flex items-center gap-2 rounded-full border transition-all duration-200 cursor-pointer ${
+        className={`inline-flex items-center gap-2 rounded-xl border transition-all duration-200 cursor-pointer ${
           compact ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-xs"
         } ${
           isOpen
-            ? "bg-white/10 border-teal-500/50 text-white shadow-[0_0_15px_rgba(20,184,166,0.25)]"
-            : "bg-[#181a24] border-white/10 text-gray-300 hover:text-white hover:border-white/20 hover:bg-[#1e212e]"
+            ? "bg-white/[0.1] border-white/20 text-white shadow-md"
+            : "bg-white/[0.04] border-white/[0.08] text-slate-300 hover:text-white hover:border-white/20 hover:bg-white/[0.08]"
         }`}
         title="Select AI Inference Engine"
       >
@@ -177,14 +177,14 @@ export default function ModelSelector({
         </span>
 
         {/* Speed / Badge Pill */}
-        <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-teal-500/10 text-teal-300 border border-teal-500/30">
+        <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-800/80 text-slate-300 border border-slate-700/60">
           {activeModel.speedToks}
         </span>
 
         {/* Chevron */}
         <svg
-          className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${
-            isOpen ? "rotate-180 text-teal-300" : ""
+          className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+            isOpen ? "rotate-180 text-slate-300" : ""
           }`}
           fill="none"
           viewBox="0 0 24 24"
@@ -199,25 +199,20 @@ export default function ModelSelector({
       {isOpen && (
         <div
           role="listbox"
-          className={`absolute z-50 w-72 sm:w-80 rounded-2xl p-1.5 shadow-2xl border border-white/10 transition-all duration-200 animate-in fade-in zoom-in-95 ${
+          className={`absolute z-50 w-72 sm:w-80 rounded-2xl p-2 border border-white/[0.12] transition-all duration-200 animate-in fade-in zoom-in-95 bg-[#10121a]/95 backdrop-blur-3xl shadow-[0_24px_60px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.15)] ${
             align === "top"
               ? "bottom-full mb-2 left-0"
               : align === "right"
               ? "top-full mt-2 right-0"
               : "top-full mt-2 left-0"
           }`}
-          style={{
-            background: "linear-gradient(180deg, rgba(19, 21, 31, 0.98) 0%, rgba(12, 13, 19, 0.98) 100%)",
-            backdropFilter: "blur(24px)",
-            boxShadow: "0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(20, 184, 166, 0.1)",
-          }}
         >
           {/* Menu Header */}
-          <div className="px-3 py-2 border-b border-white/5 flex items-center justify-between mb-1">
-            <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-gray-400">
+          <div className="px-3 py-2 border-b border-white/[0.08] flex items-center justify-between mb-1">
+            <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-slate-400">
               Inference Model
             </span>
-            <span className="text-[10px] text-teal-400 font-mono">
+            <span className="text-[10px] text-slate-400 font-mono">
               Enterprise Multi-Provider
             </span>
           </div>
@@ -235,8 +230,8 @@ export default function ModelSelector({
                   onClick={() => handleSelect(model.id)}
                   className={`w-full text-left p-2.5 rounded-xl transition-all duration-150 flex flex-col gap-1 cursor-pointer group ${
                     isSelected
-                      ? "bg-teal-500/10 border border-teal-500/30 text-white shadow-sm"
-                      : "hover:bg-white/5 border border-transparent text-gray-300"
+                      ? "bg-white/[0.08] border border-white/[0.15] text-white shadow-sm"
+                      : "hover:bg-white/[0.05] border border-transparent text-slate-300"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -244,7 +239,7 @@ export default function ModelSelector({
                       <span className="shrink-0">{renderProviderIcon(model.provider)}</span>
                       <span
                         className={`text-xs font-semibold tracking-tight ${
-                          isSelected ? "text-teal-300" : "text-gray-100 group-hover:text-white"
+                          isSelected ? "text-white" : "text-slate-200 group-hover:text-white"
                         }`}
                       >
                         {model.name}
@@ -253,14 +248,14 @@ export default function ModelSelector({
 
                     <div className="flex items-center gap-1.5">
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${model.badgeClass}`}
+                        className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold border bg-white/[0.04] text-slate-300 border-white/[0.08]"
                       >
                         {model.speedBadge}
                       </span>
 
                       {isSelected && (
                         <svg
-                          className="w-4 h-4 text-teal-400 shrink-0"
+                          className="w-4 h-4 text-white shrink-0"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -277,11 +272,11 @@ export default function ModelSelector({
                   </div>
 
                   {/* Description & Speed */}
-                  <div className="flex items-center justify-between text-[11px] text-gray-400 pl-5.5">
-                    <span className="truncate pr-2 text-gray-400 group-hover:text-gray-300">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 pl-5.5">
+                    <span className="truncate pr-2 text-slate-400 group-hover:text-slate-300">
                       {model.description}
                     </span>
-                    <span className="font-mono text-gray-500 text-[10px] shrink-0">
+                    <span className="font-mono text-slate-500 text-[10px] shrink-0">
                       {model.speedToks}
                     </span>
                   </div>

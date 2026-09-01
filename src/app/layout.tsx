@@ -15,11 +15,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nexus Enterprise Knowledge Worker",
+  title: "Nexus AI — Enterprise Knowledge Worker",
   description:
-    "An enterprise-grade autonomous AI knowledge worker with Hybrid RAG (pgvector + tsvector RRF), Human-in-the-Loop governance, cyclic self-correction, and OpenTelemetry observability. Built with LangGraph.js, Next.js 15, and PostgreSQL.",
+    "Autonomous LangGraph.js RAG & Stateful Enterprise AI with Hybrid Search (pgvector + tsvector RRF), Human-in-the-Loop governance, cyclic self-correction, and OpenTelemetry observability.",
   keywords: [
     "AI agent",
+    "Nexus AI",
     "RAG",
     "LangGraph",
     "enterprise",
@@ -30,16 +31,16 @@ export const metadata: Metadata = {
     "Next.js",
   ],
   openGraph: {
-    title: "Nexus Enterprise Knowledge Worker",
-    description: "Hybrid RAG • LangGraph State Machine • HITL Governance • OpenTelemetry",
+    title: "Nexus AI — Enterprise Knowledge Worker",
+    description: "Autonomous LangGraph.js RAG & Stateful Enterprise AI",
     url: "https://nexus-enterprise-knowledge-worker.vercel.app",
-    siteName: "Nexus Enterprise Knowledge Worker",
+    siteName: "Nexus AI — Enterprise Knowledge Worker",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Nexus Enterprise Knowledge Worker — AI Agent with Hybrid RAG",
+        alt: "Nexus AI — Enterprise Knowledge Worker",
       },
     ],
     locale: "en_US",
@@ -47,8 +48,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Nexus Enterprise Knowledge Worker",
-    description: "Hybrid RAG • LangGraph State Machine • HITL Governance • OpenTelemetry",
+    title: "Nexus AI — Enterprise Knowledge Worker",
+    description: "Autonomous LangGraph.js RAG & Stateful Enterprise AI",
     images: ["/og-image.jpg"],
     creator: "@rizwandev99",
   },

@@ -73,9 +73,9 @@ const ICON: Record<ToastType, React.ReactNode> = {
 };
 
 const COLORS: Record<ToastType, { icon: string; bar: string }> = {
-  success: { icon: "var(--color-success)", bar: "var(--color-success)" },
-  error:   { icon: "var(--color-error)",   bar: "var(--color-error)"   },
-  info:    { icon: "var(--color-brand)",   bar: "var(--color-brand)"   },
+  success: { icon: "#10b981", bar: "#10b981" },
+  error:   { icon: "#f43f5e", bar: "#f43f5e" },
+  info:    { icon: "#6366f1", bar: "#6366f1" },
 };
 
 function ToastBubble({
@@ -98,25 +98,22 @@ function ToastBubble({
   return (
     <div
       role="alert"
-      className="flex items-center gap-3 pl-3 pr-4 py-3 rounded-xl min-w-[240px] max-w-[360px] relative overflow-hidden"
+      className="flex items-center gap-3 pl-3 pr-4 py-3 rounded-2xl min-w-[240px] max-w-[360px] relative overflow-hidden bg-slate-900/90 backdrop-blur-2xl border border-slate-700/50 shadow-2xl"
       style={{
-        background: "var(--color-surface)",
-        border: "1px solid var(--color-border-strong)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
         animation: leaving ? "toast-out 0.3s cubic-bezier(0.4,0,1,1) forwards" : "toast-in 0.3s cubic-bezier(0.16,1,0.3,1) forwards",
       }}
     >
       {/* Left accent bar */}
       <div
-        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
+        className="absolute left-0 top-0 bottom-0 w-[3px]"
         style={{ background: colors.bar }}
       />
 
       {/* Icon */}
       <div
-        className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center ml-1"
+        className="shrink-0 w-7 h-7 rounded-xl flex items-center justify-center ml-1"
         style={{
-          background: `${colors.icon}1a`,
+          background: `${colors.icon}20`,
           color: colors.icon,
         }}
       >
@@ -125,8 +122,7 @@ function ToastBubble({
 
       {/* Text */}
       <span
-        className="text-sm leading-snug flex-1"
-        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-sans)" }}
+        className="text-xs leading-snug flex-1 text-slate-200"
       >
         {toast.message}
       </span>
@@ -134,9 +130,8 @@ function ToastBubble({
       {/* Dismiss */}
       <button
         onClick={() => { setLeaving(true); setTimeout(() => onRemove(toast.id), 300); }}
-        className="shrink-0 ml-1 rounded-md p-1 transition-opacity opacity-40 hover:opacity-100"
+        className="shrink-0 ml-1 rounded-lg p-1 text-slate-400 hover:text-white transition-colors"
         aria-label="Dismiss"
-        style={{ color: "var(--color-text-secondary)" }}
       >
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
           <line x1="18" y1="6" x2="6" y2="18" />
@@ -157,3 +152,4 @@ export function useToast() {
   return ctx;
 }
 
+export default ToastProvider;

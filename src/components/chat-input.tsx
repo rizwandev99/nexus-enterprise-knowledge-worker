@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import ModelSelector from "./model-selector";
 
 export interface ChatInputProps {
@@ -9,14 +9,15 @@ export interface ChatInputProps {
   selectedPrompt?: string;
   onClearSelectedPrompt?: () => void;
   selectedModel?: string;
-  onSelectModel?: (model: string) => void;
+  onSelectModel?: (modelId: string) => void;
 }
 
-interface AttachedFile {
-  name: string;
-  size: number;
-  text: string;
-}
+const SUGGESTION_CHIPS = [
+  { label: "Search documents", prompt: "Search documents for enterprise security compliance" },
+  { label: "SQL Mutation", prompt: "Execute SQL Mutation: UPDATE documents SET title = 'Updated Policy' WHERE id = 'doc-1';" },
+  { label: "Audit Logs", prompt: "Review system audit logs and recent agent mutations" },
+  { label: "System SLA", prompt: "Check system SLA, uptime metrics and telemetry status" },
+];
 
 export default function ChatInput({
   onSend,
@@ -27,24 +28,81 @@ export default function ChatInput({
   onSelectModel,
 }: ChatInputProps) {
   const [input, setInput] = useState("");
-  const [isFocused, setIsFocused] = useState(false);
-  const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null);
+  const [isToolsPopoverOpen, setIsToolsPopoverOpen] = useState(false);
+  const [attachedFile, setAttachedFile] = useState<{
+    name: string;
+    content: string;
+    size: number;
+  } | null>(null);
   const [isParsingFile, setIsParsingFile] = useState(false);
   const [parseError, setParseError] = useState<string | null>(null);
-
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const toolsPopoverRef = useRef<HTMLDivElement>(null);
 
-  // Sync selected prompt from feature bento card click
+  // Close tools popover on outside click or Escape
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        toolsPopoverRef.current &&
+        !toolsPopoverRef.current.contains(e.target as Node)
+      ) {
+        setIsToolsPopoverOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isToolsPopoverOpen) {
+        setIsToolsPopoverOpen(false);
+      }
+    };
+
+    if (isToolsPopoverOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isToolsPopoverOpen]);
+
   useEffect(() => {
     if (selectedPrompt) {
       setInput(selectedPrompt);
       onClearSelectedPrompt?.();
+      textareaRef.current?.focus();
     }
   }, [selectedPrompt, onClearSelectedPrompt]);
+
+  const handleSubmit = () => {
+    const trimmed = input.trim();
+    if ((!trimmed && !attachedFile) || isLoading || isParsingFile) return;
+
+    let payload = trimmed;
+    if (attachedFile) {
+      payload = trimmed
+        ? trimmed + "\n\n[ATTACHED DOCUMENT: " + attachedFile.name + " (" + formatFileSize(attachedFile.size) + ")]\n--- ATTACHED DOCUMENT CONTENT\n" + attachedFile.content
+        : "[ATTACHED DOCUMENT: " + attachedFile.name + " (" + formatFileSize(attachedFile.size) + ")]\n--- ATTACHED DOCUMENT CONTENT\n" + attachedFile.content;
+    }
+
+    onSend(payload);
+    setInput("");
+    setAttachedFile(null);
+    setParseError(null);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > 20 * 1024 * 1024) {
+      setParseError("File exceeds 20MB maximum upload limit.");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
 
     setIsParsingFile(true);
     setParseError(null);
@@ -58,103 +116,83 @@ export default function ChatInput({
         body: formData,
       });
 
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to parse document");
+      }
+
       const data = await res.json();
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Failed to parse file");
-      }
-
       setAttachedFile({
-        name: data.filename,
-        size: data.size,
-        text: data.text,
+        name: data.filename || file.name,
+        content: data.text,
+        size: data.size || file.size,
       });
-
-      if (!input.trim()) {
-        setInput(`Ingest document: ${data.filename}`);
-      }
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : "Error reading file";
-      setParseError(errMsg);
+      const msg = err instanceof Error ? err.message : "Failed to extract text from file";
+      setParseError(msg);
     } finally {
       setIsParsingFile(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
-  const handleSubmit = useCallback(
-    (e?: React.FormEvent) => {
-      e?.preventDefault();
-      const text = input.trim();
-      if ((!text && !attachedFile) || isLoading || isParsingFile) return;
-
-      let fullPayload = text || (attachedFile ? `Ingest document: ${attachedFile.name}` : "");
-
-      if (attachedFile) {
-        fullPayload += `\n\n[ATTACHED DOCUMENT: ${attachedFile.name}]\n--- ATTACHED DOCUMENT CONTENT (${attachedFile.name}) ---\n${attachedFile.text}\n--- END ATTACHED DOCUMENT CONTENT ---`;
-      }
-
-      setInput("");
-      setAttachedFile(null);
-      setParseError(null);
-      onSend(fullPayload);
-    },
-    [input, attachedFile, isLoading, isParsingFile, onSend]
-  );
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  };
 
   const canSend = (input.trim().length > 0 || attachedFile !== null) && !isLoading && !isParsingFile;
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
   return (
-    <div className="shrink-0 px-4 pb-6 pt-2 relative z-20">
-      <form
-        onSubmit={handleSubmit}
-        aria-label="Chat input form"
-        className="max-w-3xl mx-auto relative w-full"
-      >
-        {/* Main Input Container */}
-        <div
-          className="relative rounded-2xl p-4 transition-all duration-200"
-          style={{
-            background: "rgba(18, 20, 27, 0.92)",
-            border: `1px solid ${isFocused ? "#14b8a6" : "rgba(255, 255, 255, 0.1)"}`,
-            backdropFilter: "blur(24px)",
-            boxShadow: isFocused
-              ? "0 0 0 3px rgba(20, 184, 166, 0.2), 0 12px 36px rgba(0, 0, 0, 0.6)"
-              : "0 8px 32px rgba(0, 0, 0, 0.5)",
-          }}
-        >
-          {/* Top Row: Sparkle Icon + Attached File Badge + Parsing Indicator */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 text-gray-400">
-              <svg
-                className="w-4 h-4 text-teal-400"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-              </svg>
-              <span className="text-[11px] font-mono text-gray-400 font-medium">
-                Enterprise Knowledge Worker
-              </span>
-            </div>
+    <div className="w-full px-4 pb-4 pt-1 shrink-0 relative z-20">
+      <div className="max-w-2xl mx-auto">
+        {/* Floating Suggestion Chips above Input */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mb-2.5 px-1">
+          {SUGGESTION_CHIPS.map((chip) => (
+            <button
+              key={chip.label}
+              type="button"
+              onClick={() => {
+                setInput(chip.prompt);
+                textareaRef.current?.focus();
+              }}
+              className="text-xs font-medium text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.10] backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] rounded-full px-3 py-1 transition-all shrink-0 cursor-pointer"
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
 
-            {/* Attached File Pill Badge */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+          className="w-full"
+        >
+          {/* Floating rounded-2xl rich glass input */}
+          <div className="relative rounded-2xl p-3 glass-input focus-within:border-white/30 focus-within:ring-1 focus-within:ring-white/20 transition-all">
             {attachedFile && (
-              <div className="flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-mono bg-teal-500/10 border border-teal-500/30 text-teal-300">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              <div className="mb-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono bg-white/[0.06] border border-white/[0.12] text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+                <svg
+                  className="w-3.5 h-3.5 text-slate-300"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                  <polyline points="14 2 14 8 20 8" />
                 </svg>
-                <span className="truncate max-w-[200px]">{attachedFile.name}</span>
-                <span className="text-gray-400 text-[10px]">({formatFileSize(attachedFile.size)})</span>
+                <span className="truncate max-w-[200px] font-medium">{attachedFile.name}</span>
+                <span className="text-slate-400 text-[10px]">({formatFileSize(attachedFile.size)})</span>
                 <button
                   type="button"
                   onClick={() => setAttachedFile(null)}
-                  className="ml-1 text-gray-400 hover:text-white transition-colors"
+                  className="text-slate-400 hover:text-white transition-colors ml-2 cursor-pointer"
                   aria-label="Remove attachment"
                 >
                   ✕
@@ -162,145 +200,241 @@ export default function ChatInput({
               </div>
             )}
 
-            {isParsingFile && (
-              <div className="flex items-center gap-1.5 text-xs text-teal-400 animate-pulse font-mono">
-                <div className="w-3 h-3 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
-                Reading document text…
+            {parseError && (
+              <div className="mb-2 text-xs font-mono text-rose-300 bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-xl flex items-center justify-between">
+                <span>{parseError}</span>
+                <button
+                  type="button"
+                  onClick={() => setParseError(null)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  ✕
+                </button>
               </div>
             )}
-          </div>
 
-          {/* Parse Error Notification */}
-          {parseError && (
-            <div className="mb-2 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-1.5 rounded-lg flex items-center justify-between">
-              <span>{parseError}</span>
-              <button
-                type="button"
-                onClick={() => setParseError(null)}
-                className="text-gray-400 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
-          {/* Text Area */}
-          <textarea
-            aria-label="Ask me anything"
-            rows={2}
-            className="w-full resize-none bg-transparent text-sm leading-relaxed focus:outline-none placeholder:text-gray-500 placeholder:font-light"
-            style={{
-              color: "var(--color-text-primary)",
-              fontFamily: "var(--font-sans)",
-              minHeight: "48px",
-              maxHeight: "160px",
-            }}
-            placeholder={
-              isLoading
-                ? "Nexus agent processing query…"
-                : isParsingFile
-                ? "Extracting document content…"
-                : "Ask anything, search internal docs, or attach files..."
-            }
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              e.target.style.height = "auto";
-              e.target.style.height = Math.min(e.target.scrollHeight, 160) + "px";
-            }}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit();
-              }
-            }}
-            disabled={isLoading || isParsingFile}
-          />
-
-          {/* Hidden File Input */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            accept=".txt,.md,.pdf,.json,.csv,.doc,.docx,.js,.ts,.py,.html,.css,.log"
-            onChange={handleFileChange}
-          />
-
-          {/* Bottom Bar: Model Selector + Attach Button + Send Button */}
-          <div className="flex items-center justify-between pt-3 mt-1 border-t border-white/5">
-            {/* Left Actions: Attach File Pill + ModelSelector */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading || isParsingFile}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#1a1d26] text-gray-300 border border-white/10 hover:border-teal-500/40 hover:text-white transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
-                title="Attach Document (.pdf, .txt, .md, .csv)"
-              >
-                <svg
-                  className="w-3.5 h-3.5 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
-                  />
-                </svg>
-                <span className="hidden xs:inline">{attachedFile ? "Change file" : "Attach file"}</span>
-                <span className="xs:hidden">{attachedFile ? "File" : "Attach"}</span>
-              </button>
-
-              {/* ModelSelector Component */}
-              {onSelectModel && (
-                <ModelSelector
-                  selectedModel={selectedModel}
-                  onSelectModel={onSelectModel}
-                  align="top"
-                />
-              )}
-            </div>
-
-            {/* Right Action: Submit Button */}
-            <button
-              type="submit"
-              disabled={!canSend}
-              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-90"
+            {/* Textarea */}
+            <textarea
+              ref={textareaRef}
+              aria-label="Ask me anything, search knowledge base, or run SQL mutations..."
+              rows={1}
+              className="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 outline-none resize-none font-normal leading-relaxed px-1 py-1"
               style={{
-                background: canSend ? "#14b8a6" : "rgba(255, 255, 255, 0.06)",
-                color: canSend ? "#090a0f" : "var(--color-text-muted)",
-                boxShadow: canSend ? "0 0 16px rgba(20, 184, 166, 0.4)" : "none",
-                cursor: canSend ? "pointer" : "default",
+                minHeight: "40px",
+                maxHeight: "160px",
               }}
-              aria-label="Send message"
-              title="Send message (Enter)"
-            >
-              {isLoading || isParsingFile ? (
-                <div className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <svg
-                  className="w-5 h-5 font-bold"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
+              placeholder={
+                isLoading
+                  ? "Nexus AI processing query..."
+                  : isParsingFile
+                  ? "Extracting document content..."
+                  : "Ask me anything, search knowledge base, or run SQL mutations..."
+              }
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                e.target.style.height = "auto";
+                e.target.style.height = Math.min(e.target.scrollHeight, 160) + "px";
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+              disabled={isLoading || isParsingFile}
+            />
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept=".txt,.md,.pdf,.json,.csv,.doc,.docx,.js,.ts,.py,.html,.css,.log"
+              onChange={handleFileChange}
+            />
+
+            {/* Bottom Bar Controls */}
+            <div className="flex items-center justify-between pt-2 mt-1 border-t border-white/[0.08]">
+              {/* Bottom Bar Left: Attachment (Paperclip), Canvas (Layers) */}
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading || isParsingFile}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer disabled:opacity-50 inline-flex items-center justify-center"
+                  title="Attach Document (.pdf, .txt, .md, .csv)"
+                  aria-label="Attach Document"
                 >
-                  <path
+                  <svg
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M5 10l7-7m0 0l7 7m-7-7v18"
+                  >
+                    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 17.97 8.8l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                  </svg>
+                </button>
+
+                {/* Enterprise Tools & Integrations Popover on Layers button */}
+                <div className="relative" ref={toolsPopoverRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsToolsPopoverOpen((p) => !p)}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer inline-flex items-center justify-center ${
+                      isToolsPopoverOpen
+                        ? "bg-white/20 text-white border border-white/25 shadow-sm"
+                        : "text-slate-400 hover:text-white hover:bg-white/[0.08]"
+                    }`}
+                    title="Enterprise Tools & Integrations"
+                    aria-label="Enterprise Tools & Integrations"
+                    aria-expanded={isToolsPopoverOpen}
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
+                      <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
+                      <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
+                    </svg>
+                  </button>
+
+                  {isToolsPopoverOpen && (
+                    <div
+                      className="absolute bottom-full mb-3 left-0 z-50 w-72 sm:w-80 rounded-2xl p-3.5 bg-[#10131a]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl animate-in fade-in zoom-in-95 space-y-2.5"
+                      style={{
+                        boxShadow: "0 24px 60px rgba(0,0,0,0.85), inset 0 1px 1px rgba(255,255,255,0.15)",
+                      }}
+                    >
+                      {/* Header */}
+                      <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-mono font-semibold text-white">
+                            Enterprise Tools & Integrations
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
+                          3 Active
+                        </span>
+                      </div>
+
+                      {/* Integration Cards List */}
+                      <div className="space-y-1.5">
+                        {/* 1. PostgreSQL pgvector (Hybrid RAG) */}
+                        <div className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] transition-colors flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div className="w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-slate-200 shrink-0">
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                                <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" />
+                                <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" />
+                              </svg>
+                            </div>
+                            <div className="truncate">
+                              <div className="text-xs font-medium text-slate-200 truncate">PostgreSQL pgvector</div>
+                              <div className="text-[10px] text-slate-400 font-mono">Hybrid RAG • RRF Ranked</div>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
+                            Active
+                          </span>
+                        </div>
+
+                        {/* 2. SQL Mutation Engine (HITL Safe DML) */}
+                        <div className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] transition-colors flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div className="w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-slate-200 shrink-0">
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                                <path d="m9 12 2 2 4-4" />
+                              </svg>
+                            </div>
+                            <div className="truncate">
+                              <div className="text-xs font-medium text-slate-200 truncate">SQL Mutation Engine</div>
+                              <div className="text-[10px] text-slate-400 font-mono">Human-in-the-Loop • HITL Modal</div>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
+                            Active
+                          </span>
+                        </div>
+
+                        {/* 3. Document Parser Engine */}
+                        <div className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] transition-colors flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div className="w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-slate-200 shrink-0">
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                                <polyline points="14 2 14 8 20 8" />
+                              </svg>
+                            </div>
+                            <div className="truncate">
+                              <div className="text-xs font-medium text-slate-200 truncate">Document Parser Engine</div>
+                              <div className="text-[10px] text-slate-400 font-mono">PDF, MD, CSV, JSON • Instant RAG</div>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
+                            Active
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom Bar Right: Model Selector badge / dropdown, Send Button */}
+              <div className="flex items-center gap-2">
+                {onSelectModel ? (
+                  <ModelSelector
+                    selectedModel={selectedModel}
+                    onSelectModel={onSelectModel}
+                    compact
+                    align="top"
                   />
-                </svg>
-              )}
-            </button>
+                ) : (
+                  <div className="text-xs font-mono text-slate-400 bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-1">
+                    Groq GPT-OSS 120B ~850 tok/s
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={!canSend}
+                  className="w-8 h-8 rounded-xl bg-white text-slate-950 hover:bg-slate-200 flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shadow-sm active:scale-95"
+                  aria-label="Send message"
+                  title="Send message (Enter)"
+                >
+                  {isLoading || isParsingFile ? (
+                    <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <svg
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m5 12 7-7 7 7" />
+                      <path d="M12 19V5" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

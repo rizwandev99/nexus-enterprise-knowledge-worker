@@ -74,7 +74,14 @@ export async function POST(req: Request) {
   const jsonBody = await req.json();
   const { messages } = jsonBody;
   const chatId = url.searchParams.get("chatId") || jsonBody.chatId || jsonBody.body?.chatId;
-  const modelId = jsonBody.modelId || jsonBody.body?.modelId || url.searchParams.get("modelId") || "groq-gpt-oss-120b";
+  const modelId =
+    jsonBody.modelId ||
+    jsonBody.body?.modelId ||
+    jsonBody.model ||
+    jsonBody.body?.model ||
+    url.searchParams.get("modelId") ||
+    url.searchParams.get("model") ||
+    "groq-gpt-oss-120b";
 
   if (!chatId) {
     return new Response(JSON.stringify({ error: "Missing chatId" }), { status: 400 });
@@ -149,169 +156,229 @@ export async function POST(req: Request) {
           }
         };
 
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- streamEvents input type is polymorphic
-          const eventStream = await workflow.streamEvents(graphInput as any, config);
+        let currentWorkflow = workflow;
+        let streamSucceeded = false;
+        const autoFallbackModels: SupportedModelId[] = [
+          "groq-qwen-3.8-27b",
+          "groq-gpt-oss-120b",
+        ];
 
-          for await (const event of eventStream) {
-            // Stream text tokens from the LLM & record Time to First Token (TTFT)
-            if (event.event === "on_chat_model_stream" && event.data?.chunk?.content) {
-              if (firstTokenTime === null) {
-                firstTokenTime = performance.now();
-              }
-
-              const rawContent = event.data.chunk.content;
-              let delta = "";
-              if (typeof rawContent === "string") {
-                delta = rawContent;
-              } else if (Array.isArray(rawContent)) {
-                delta = rawContent
-                  .map((p) => (typeof p === "string" ? p : (p as { text?: string })?.text || ""))
-                  .join("");
-              } else if (rawContent && typeof rawContent === "object") {
-                delta = (rawContent as { text?: string }).text || "";
-              }
-
-              if (delta) {
-                assistantContent += delta;
-                ensureTextBlockOpen();
-                writer.write({ type: "text-delta", id: textBlockId!, delta });
-              }
-
-              // Update token counts if model reports usage metadata in stream chunks
-              const chunkUsage = event.data?.chunk?.usage_metadata;
-              if (chunkUsage?.input_tokens) {
-                promptTokens = chunkUsage.input_tokens;
-              }
-            }
-
-            // Capture structured citations from ragNode
-            if (event.event === "on_chain_end" && event.name === "rag" && event.data?.output?.citations) {
-              retrievedCitations = event.data.output.citations;
-            }
-
-            // Signal tool start to the frontend
-            if (event.event === "on_tool_start") {
-              writer.write({
-                type: "tool-input-available",
-                toolCallId: event.run_id,
-                toolName: event.name,
-                input: event.data?.input ?? {},
-              });
-            }
-
-            // Signal tool completion to the frontend
-            if (event.event === "on_tool_end") {
-              const output = event.data?.output;
-              writer.write({
-                type: "tool-output-available",
-                toolCallId: event.run_id,
-                output: typeof output === "string" ? output : JSON.stringify(output),
-              });
-            }
-          }
-
-          // Close the text block if we opened one
-          if (textBlockId) {
-            writer.write({ type: "text-end", id: textBlockId });
-          }
-
-          const endTime = performance.now();
-          const ttftMs = firstTokenTime !== null ? Math.round(firstTokenTime - startTime) : Math.round(endTime - startTime);
-          const totalDurationMs = Math.round(endTime - startTime);
-          const completionTokens = estimateTokenCount(assistantContent);
-          const costEstimate = estimateTokenCost(modelId, promptTokens, completionTokens);
-
-          // If citations were not captured from event stream, fetch from graph state
-          const finalState = await workflow.getState(config);
-          if (retrievedCitations.length === 0 && finalState.values?.citations?.length > 0) {
-            retrievedCitations = finalState.values.citations;
-          }
-
-          // Stream custom telemetry event with latency, token count, estimated cost, and citations
-          const telemetryPayload: TelemetryMetrics = {
-            modelId,
-            ttftMs,
-            totalDurationMs,
-            tokens: {
-              prompt: promptTokens,
-              completion: completionTokens,
-              total: promptTokens + completionTokens,
-            },
-            costUsd: costEstimate.totalCost,
-            citations: retrievedCitations,
-            timestamp: new Date().toISOString(),
-          };
-
+        for (let attempt = 0; attempt <= autoFallbackModels.length; attempt++) {
           try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            writer.write({
-              type: "custom",
-              name: "telemetry",
-              value: telemetryPayload,
-            } as any);
-          } catch (telemetryErr) {
-            console.warn("[route] Telemetry event stream write skipped:", telemetryErr);
-          }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- streamEvents input type is polymorphic
+            const eventStream = await currentWorkflow.streamEvents(graphInput as any, config);
 
-          if (assistantContent.trim()) {
-            try {
-              await saveMessage(chatId, "assistant", assistantContent);
-            } catch (err) {
-              console.error("[route] Warning: Could not save assistant message:", err);
+            for await (const event of eventStream) {
+              // Stream text tokens from the LLM & record Time to First Token (TTFT)
+              if (event.event === "on_chat_model_stream" && event.data?.chunk?.content) {
+                if (firstTokenTime === null) {
+                  firstTokenTime = performance.now();
+                }
+
+                const rawContent = event.data.chunk.content;
+                let delta = "";
+                if (typeof rawContent === "string") {
+                  delta = rawContent;
+                } else if (Array.isArray(rawContent)) {
+                  delta = rawContent
+                    .map((p) => (typeof p === "string" ? p : (p as { text?: string })?.text || ""))
+                    .join("");
+                } else if (rawContent && typeof rawContent === "object") {
+                  delta = (rawContent as { text?: string }).text || "";
+                }
+
+                if (delta) {
+                  assistantContent += delta;
+                  ensureTextBlockOpen();
+                  writer.write({ type: "text-delta", id: textBlockId!, delta });
+                }
+
+                // Update token counts if model reports usage metadata in stream chunks
+                const chunkUsage = event.data?.chunk?.usage_metadata;
+                if (chunkUsage?.input_tokens) {
+                  promptTokens = chunkUsage.input_tokens;
+                }
+              }
+
+              // Capture structured citations from ragNode
+              if (event.event === "on_chain_end" && event.name === "rag" && event.data?.output?.citations) {
+                retrievedCitations = event.data.output.citations;
+              }
+
+              // Signal tool start to the frontend
+              if (event.event === "on_tool_start") {
+                writer.write({
+                  type: "tool-input-available",
+                  toolCallId: event.run_id,
+                  toolName: event.name,
+                  input: event.data?.input ?? {},
+                });
+              }
+
+              // Signal tool completion to the frontend
+              if (event.event === "on_tool_end") {
+                const output = event.data?.output;
+                writer.write({
+                  type: "tool-output-available",
+                  toolCallId: event.run_id,
+                  output: typeof output === "string" ? output : JSON.stringify(output),
+                });
+              }
             }
-          }
 
-          // ── Check if LangGraph paused at an interrupt (HITL) ─────────────
-          console.log("[route] finalState.next:", finalState.next);
+            const finalState = await currentWorkflow.getState(config);
 
-          if (finalState.next.length > 0) {
-            const allMessages = finalState.values.messages ?? [];
-            const lastStateMsg = allMessages[allMessages.length - 1];
-            console.log("[route] HITL detected. Last message tool_calls:", lastStateMsg?.tool_calls);
+            // If streamEvents did not capture text deltas directly (e.g. from multi-cycle tool loopback),
+            // recover the assistant text from finalState messages
+            if (!assistantContent.trim() && finalState.next.length === 0) {
+              const allMessages = (finalState.values?.messages ?? []) as Array<Record<string, unknown>>;
+              for (let i = allMessages.length - 1; i >= 0; i--) {
+                const msg = allMessages[i];
+                const isAi =
+                  typeof (msg as { _getType?: () => string })._getType === "function"
+                    ? (msg as { _getType: () => string })._getType() === "ai"
+                    : msg.role === "assistant";
 
-            if (lastStateMsg?.tool_calls?.length > 0) {
-              const sensitiveCall = lastStateMsg.tool_calls.find((tc: { name: string }) => tc.name.includes("execute_sql_mutation")) || lastStateMsg.tool_calls[0];
-              writeApprovalNotice(writer, sensitiveCall);
+                const raw = msg.content;
+                const text =
+                  typeof raw === "string"
+                    ? raw
+                    : Array.isArray(raw)
+                    ? raw.map((p) => (typeof p === "string" ? p : (p as { text?: string })?.text || "")).join("")
+                    : "";
+
+                if (isAi && text.trim() && !text.includes("__APPROVAL_REQUEST__")) {
+                  assistantContent = text;
+                  ensureTextBlockOpen();
+                  writer.write({ type: "text-delta", id: textBlockId!, delta: text });
+                  break;
+                }
+              }
             }
-          }
 
-        } catch (streamErr: unknown) {
-          // ── Handle LangGraph GraphInterrupt (thrown during streamEvents) ──
-          // interrupt() in approvalNode throws GraphInterrupt which propagates
-          // through streamEvents. We catch it here and convert it to an approval
-          // notice instead of an error.
-          if (isGraphInterrupt(streamErr)) {
-            console.log("[route] GraphInterrupt caught — triggering HITL approval.");
-
-            // Close any open text block before writing the approval
+            // Close the text block if we opened one
             if (textBlockId) {
               writer.write({ type: "text-end", id: textBlockId });
             }
 
-            // Get the paused state to find the pending tool call
+            const endTime = performance.now();
+            const ttftMs = firstTokenTime !== null ? Math.round(firstTokenTime - startTime) : Math.round(endTime - startTime);
+            const totalDurationMs = Math.round(endTime - startTime);
+            const completionTokens = estimateTokenCount(assistantContent);
+            const costEstimate = estimateTokenCost(modelId, promptTokens, completionTokens);
+
+            // If citations were not captured from event stream, fetch from graph state
+            if (retrievedCitations.length === 0 && finalState.values?.citations?.length > 0) {
+              retrievedCitations = finalState.values.citations;
+            }
+
+            // Stream custom telemetry event with latency, token count, estimated cost, and citations
+            const telemetryPayload: TelemetryMetrics = {
+              modelId,
+              ttftMs,
+              totalDurationMs,
+              tokens: {
+                prompt: promptTokens,
+                completion: completionTokens,
+                total: promptTokens + completionTokens,
+              },
+              costUsd: costEstimate.totalCost,
+              citations: retrievedCitations,
+              timestamp: new Date().toISOString(),
+            };
+
             try {
-              const pausedState = await workflow.getState(config);
-              console.log("[route] Paused state next:", pausedState.next);
-              const allMessages = pausedState.values.messages ?? [];
+              writer.write({
+                type: "data-telemetry",
+                data: telemetryPayload,
+              });
+            } catch (telemetryErr) {
+              console.warn("[route] Telemetry event stream write skipped:", telemetryErr);
+            }
+
+            if (assistantContent.trim()) {
+              try {
+                await saveMessage(chatId, "assistant", assistantContent);
+              } catch (err) {
+                console.error("[route] Warning: Could not save assistant message:", err);
+              }
+            }
+
+            // ── Check if LangGraph paused at an interrupt (HITL) ─────────────
+            console.log("[route] finalState.next:", finalState.next);
+
+            if (finalState.next.length > 0) {
+              const allMessages = finalState.values.messages ?? [];
               const lastStateMsg = allMessages[allMessages.length - 1];
+              console.log("[route] HITL detected. Last message tool_calls:", lastStateMsg?.tool_calls);
 
               if (lastStateMsg?.tool_calls?.length > 0) {
                 const sensitiveCall = lastStateMsg.tool_calls.find((tc: { name: string }) => tc.name.includes("execute_sql_mutation")) || lastStateMsg.tool_calls[0];
                 writeApprovalNotice(writer, sensitiveCall);
-              } else {
-                // Interrupt without a specific tool call — show generic notice
-                writeApprovalNotice(writer, {
-                  name: "sensitive_operation",
-                  args: {},
-                });
               }
-            } catch (stateErr) {
-              console.error("[route] Could not read paused state:", stateErr);
-              writeApprovalNotice(writer, { name: "sensitive_operation", args: {} });
             }
-          } else {
-            // Re-throw non-interrupt errors to be caught by the outer catch
+
+            streamSucceeded = true;
+            break; // Success — exit fallback loop
+
+          } catch (streamErr: unknown) {
+            // ── Handle LangGraph GraphInterrupt (thrown during streamEvents) ──
+            if (isGraphInterrupt(streamErr)) {
+              console.log("[route] GraphInterrupt caught — triggering HITL approval.");
+
+              if (textBlockId) {
+                writer.write({ type: "text-end", id: textBlockId });
+              }
+
+              try {
+                const pausedState = await currentWorkflow.getState(config);
+                const allMessages = pausedState.values.messages ?? [];
+                const lastStateMsg = allMessages[allMessages.length - 1];
+
+                if (lastStateMsg?.tool_calls?.length > 0) {
+                  const sensitiveCall = lastStateMsg.tool_calls.find((tc: { name: string }) => tc.name.includes("execute_sql_mutation")) || lastStateMsg.tool_calls[0];
+                  writeApprovalNotice(writer, sensitiveCall);
+                } else {
+                  writeApprovalNotice(writer, {
+                    name: "sensitive_operation",
+                    args: {},
+                  });
+                }
+              } catch (stateErr) {
+                console.error("[route] Could not read paused state:", stateErr);
+                writeApprovalNotice(writer, { name: "sensitive_operation", args: {} });
+              }
+              streamSucceeded = true;
+              break;
+            }
+
+            // ── Check for Rate Limits (429) or Model Errors to trigger transparent failover ──
+            const errString = String(streamErr);
+            const isRecoverableError =
+              (streamErr as { status?: number })?.status === 429 ||
+              (streamErr as { status?: number })?.status === 400 ||
+              errString.includes("429") ||
+              errString.includes("400") ||
+              errString.includes("rate_limit") ||
+              errString.includes("Rate limit") ||
+              errString.includes("tokens per day") ||
+              errString.includes("RateLimitQuotaExhaustedError") ||
+              errString.includes("tool calling");
+
+            if (isRecoverableError && attempt < autoFallbackModels.length) {
+              const nextFallback = autoFallbackModels[attempt];
+              console.warn(`[route] Recoverable error encountered on current model. Auto-failing over to ${nextFallback}...`);
+              // Reset text buffer and instantiate fallback graph
+              assistantContent = "";
+              if (textBlockId) {
+                writer.write({ type: "text-end", id: textBlockId });
+                textBlockId = null;
+              }
+              currentWorkflow = await createAgentGraph({ modelId: nextFallback });
+              continue;
+            }
+
+            // If not rate limit or fallbacks exhausted, rethrow
             throw streamErr;
           }
         }
