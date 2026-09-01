@@ -24,15 +24,23 @@ export default function MessageBubble({
   const [showTelemetryPopover, setShowTelemetryPopover] = useState(false);
 
   const partsText = useMemo(() => {
-    return (
-      message.parts
-        ?.map((p) => {
-          if (p.type === "text") return p.text;
+    let text = "";
+    if (message.parts && Array.isArray(message.parts) && message.parts.length > 0) {
+      text = message.parts
+        .map((p) => {
+          if (typeof p === "string") return p;
+          if (p && typeof p === "object" && "text" in p && typeof (p as { text?: string }).text === "string") {
+            return (p as { text: string }).text;
+          }
           return "";
         })
-        .join("") || ""
-    );
-  }, [message.parts]);
+        .join("");
+    }
+    if (!text && typeof (message as unknown as { content?: string }).content === "string") {
+      text = (message as unknown as { content: string }).content;
+    }
+    return text || "";
+  }, [message]);
 
   const handleCopy = (textToCopy: string) => {
     navigator.clipboard.writeText(textToCopy);
