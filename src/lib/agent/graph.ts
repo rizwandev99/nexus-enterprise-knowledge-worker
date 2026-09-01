@@ -222,9 +222,9 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
   const fallbackModelNames = [
     "qwen/qwen3.8-27b",
     "qwen/qwen3.6-27b",
-    "groq/compound-mini",
     "openai/gpt-oss-120b",
     "openai/gpt-oss-20b",
+    "openai/gpt-oss-safeguard-20b",
   ];
 
   const fallbackInstances = [];
@@ -334,11 +334,11 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
     } catch (invokeErr: unknown) {
       console.warn("[reasoningNode] Primary model invocation threw error, executing resilient fallback cascade:", invokeErr);
       const backupModelNames = [
-        "qwen/qwen3.6-27b",
         "qwen/qwen3.8-27b",
+        "qwen/qwen3.6-27b",
         "openai/gpt-oss-120b",
         "openai/gpt-oss-20b",
-        "allam-2-7b",
+        "openai/gpt-oss-safeguard-20b",
       ];
       let resolved = false;
       let lastErr = invokeErr;

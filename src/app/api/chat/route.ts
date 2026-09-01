@@ -352,19 +352,22 @@ export async function POST(req: Request) {
               break;
             }
 
-            // ── Check for Rate Limits (429) to trigger transparent failover ──
+            // ── Check for Rate Limits (429) or Model Errors to trigger transparent failover ──
             const errString = String(streamErr);
-            const isRateLimit =
+            const isRecoverableError =
               (streamErr as { status?: number })?.status === 429 ||
+              (streamErr as { status?: number })?.status === 400 ||
               errString.includes("429") ||
+              errString.includes("400") ||
               errString.includes("rate_limit") ||
               errString.includes("Rate limit") ||
               errString.includes("tokens per day") ||
-              errString.includes("RateLimitQuotaExhaustedError");
+              errString.includes("RateLimitQuotaExhaustedError") ||
+              errString.includes("tool calling");
 
-            if (isRateLimit && attempt < autoFallbackModels.length) {
+            if (isRecoverableError && attempt < autoFallbackModels.length) {
               const nextFallback = autoFallbackModels[attempt];
-              console.warn(`[route] 429 Quota exhausted on current model. Auto-failing over to ${nextFallback}...`);
+              console.warn(`[route] Recoverable error encountered on current model. Auto-failing over to ${nextFallback}...`);
               // Reset text buffer and instantiate fallback graph
               assistantContent = "";
               if (textBlockId) {
