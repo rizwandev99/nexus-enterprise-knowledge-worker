@@ -53,6 +53,12 @@ export async function getChatMessages(chatId: string) {
 
 export async function saveMessage(chatId: string, role: string, content: string) {
   const cleanContent = (content || "").replace(/\0/g, "").replace(/\u0000/g, "");
+  // Ensure ChatSession exists to satisfy foreign key constraint
+  await prisma.chatSession.upsert({
+    where: { id: chatId },
+    update: { updatedAt: new Date() },
+    create: { id: chatId, title: "New Chat" },
+  });
   return await prisma.message.create({
     data: { chatId, role, content: cleanContent },
   });

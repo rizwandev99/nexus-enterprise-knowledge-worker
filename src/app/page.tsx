@@ -16,7 +16,12 @@ import {
 } from "./chat-actions";
 
 function ChatApp() {
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  const [activeChatId, setActiveChatId] = useState<string>(() => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return "session-" + Date.now();
+  });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>(undefined);
   const [selectedModel, setSelectedModel] = useState<string>("gpt-oss-120b");
@@ -38,7 +43,7 @@ function ChatApp() {
     status,
     setMessages,
   } = useChat({
-    id: activeChatId || undefined,
+    id: activeChatId,
   });
 
   const isLoading = status === "submitted" || status === "streaming";
@@ -50,41 +55,40 @@ function ChatApp() {
     }
   }, [messages]);
 
-  // Load chat messages when activeChatId changes
-  useEffect(() => {
-    if (!activeChatId) {
-      setMessages([]);
-      return;
-    }
+  const handleSelectChat = useCallback(
+    async (id: string) => {
+      if (!id) {
+        // Start a fresh new chat session
+        const newId =
+          typeof crypto !== "undefined" && crypto.randomUUID
+            ? crypto.randomUUID()
+            : "session-" + Date.now();
+        setActiveChatId(newId);
+        setMessages([]);
+        setResolvedApprovals(new Set());
+        return;
+      }
 
-    let isMounted = true;
-    getChatMessages(activeChatId).then((history) => {
-      if (!isMounted) return;
-      const formatted: UIMessage[] = history.map((msg) => ({
-        id: msg.id,
-        role: msg.role as "user" | "assistant",
-        parts: [{ type: "text" as const, text: msg.content }],
-      }));
-      setMessages(formatted);
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [activeChatId, setMessages]);
+      setActiveChatId(id);
+      setResolvedApprovals(new Set());
+      try {
+        const history = await getChatMessages(id);
+        const formatted: UIMessage[] = history.map((msg) => ({
+          id: msg.id,
+          role: msg.role as "user" | "assistant",
+          parts: [{ type: "text" as const, text: msg.content }],
+        }));
+        setMessages(formatted);
+      } catch (err) {
+        console.error("Failed to load chat history:", err);
+        setMessages([]);
+      }
+    },
+    [setMessages]
+  );
 
   const handleSend = useCallback(
     (promptText: string, options?: { webSearch?: boolean }) => {
-      const generatedChatId =
-        activeChatId ||
-        (typeof crypto !== "undefined" && crypto.randomUUID
-          ? crypto.randomUUID()
-          : "session-" + Date.now());
-
-      if (!activeChatId) {
-        setActiveChatId(generatedChatId);
-      }
-
       sendMessage(
         {
           role: "user",
@@ -92,7 +96,7 @@ function ChatApp() {
         },
         {
           body: {
-            chatId: generatedChatId,
+            chatId: activeChatId,
             model: selectedModel,
             webSearch: options?.webSearch ?? false,
           },
@@ -244,7 +248,7 @@ function ChatApp() {
       <Sidebar
         activeChatId={activeChatId}
         onSelectChat={(id) => {
-          setActiveChatId(id);
+          handleSelectChat(id);
           if (typeof window !== "undefined" && window.innerWidth < 768) setIsSidebarOpen(false);
         }}
         isOpen={isSidebarOpen}

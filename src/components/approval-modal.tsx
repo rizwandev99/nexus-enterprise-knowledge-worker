@@ -22,11 +22,18 @@ export default function ApprovalModal({
 
   if (!pendingApproval) return null;
 
-  const approvalPart = pendingApproval.parts?.find(
-    (p: { type: string; text?: string }) =>
-      p.type === "text" && p.text?.includes("__APPROVAL_REQUEST__")
-  ) as { type: "text"; text: string } | undefined;
-  const approvalText = approvalPart?.text?.replace("__APPROVAL_REQUEST__\n", "");
+  const rawApprovalText =
+    pendingApproval.parts?.find(
+      (p: { type: string; text?: string }) =>
+        p.type === "text" && p.text?.includes("__APPROVAL_REQUEST__")
+    )?.text ||
+    (typeof pendingApproval.content === "string" && pendingApproval.content.includes("__APPROVAL_REQUEST__")
+      ? pendingApproval.content
+      : "");
+  const approvalText = rawApprovalText
+    .replace("__APPROVAL_REQUEST__\n", "")
+    .replace("__APPROVAL_REQUEST__", "")
+    .trim();
 
   return (
     /* Backdrop */

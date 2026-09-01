@@ -161,12 +161,12 @@ export default function ModelSelector({
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`inline-flex items-center gap-2 rounded-full border transition-all duration-200 cursor-pointer ${
+        className={`inline-flex items-center gap-2 rounded-xl border transition-all duration-200 cursor-pointer ${
           compact ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-xs"
         } ${
           isOpen
-            ? "bg-white/10 border-slate-600 text-white shadow-md"
-            : "bg-[#202736]/90 border-slate-700/50 text-slate-300 hover:text-white hover:border-white/20 hover:bg-slate-800/80"
+            ? "bg-white/[0.1] border-white/20 text-white shadow-md"
+            : "bg-white/[0.04] border-white/[0.08] text-slate-300 hover:text-white hover:border-white/20 hover:bg-white/[0.08]"
         }`}
         title="Select AI Inference Engine"
       >
@@ -199,23 +199,20 @@ export default function ModelSelector({
       {isOpen && (
         <div
           role="listbox"
-          className={`absolute z-50 w-72 sm:w-80 rounded-3xl p-2 shadow-2xl border border-slate-700/50 transition-all duration-200 animate-in fade-in zoom-in-95 bg-slate-900/95 backdrop-blur-2xl ${
+          className={`absolute z-50 w-72 sm:w-80 rounded-2xl p-2 border border-white/[0.12] transition-all duration-200 animate-in fade-in zoom-in-95 bg-[#10121a]/95 backdrop-blur-3xl shadow-[0_24px_60px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.15)] ${
             align === "top"
               ? "bottom-full mb-2 left-0"
               : align === "right"
               ? "top-full mt-2 right-0"
               : "top-full mt-2 left-0"
           }`}
-          style={{
-            boxShadow: "0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(99, 102, 241, 0.15)",
-          }}
         >
           {/* Menu Header */}
-          <div className="px-3 py-2 border-b border-slate-700/40 flex items-center justify-between mb-1">
+          <div className="px-3 py-2 border-b border-white/[0.08] flex items-center justify-between mb-1">
             <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-slate-400">
               Inference Model
             </span>
-            <span className="text-[10px] text-violet-400 font-mono">
+            <span className="text-[10px] text-slate-400 font-mono">
               Enterprise Multi-Provider
             </span>
           </div>
@@ -231,10 +228,10 @@ export default function ModelSelector({
                   role="option"
                   aria-selected={isSelected}
                   onClick={() => handleSelect(model.id)}
-                  className={`w-full text-left p-2.5 rounded-2xl transition-all duration-150 flex flex-col gap-1 cursor-pointer group ${
+                  className={`w-full text-left p-2.5 rounded-xl transition-all duration-150 flex flex-col gap-1 cursor-pointer group ${
                     isSelected
-                      ? "bg-violet-500/15 border border-slate-700/60 text-white shadow-sm"
-                      : "hover:bg-white/5 border border-transparent text-slate-300"
+                      ? "bg-white/[0.08] border border-white/[0.15] text-white shadow-sm"
+                      : "hover:bg-white/[0.05] border border-transparent text-slate-300"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -242,7 +239,7 @@ export default function ModelSelector({
                       <span className="shrink-0">{renderProviderIcon(model.provider)}</span>
                       <span
                         className={`text-xs font-semibold tracking-tight ${
-                          isSelected ? "text-slate-300" : "text-slate-100 group-hover:text-white"
+                          isSelected ? "text-white" : "text-slate-200 group-hover:text-white"
                         }`}
                       >
                         {model.name}
@@ -251,14 +248,14 @@ export default function ModelSelector({
 
                     <div className="flex items-center gap-1.5">
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${model.badgeClass}`}
+                        className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold border bg-white/[0.04] text-slate-300 border-white/[0.08]"
                       >
                         {model.speedBadge}
                       </span>
 
                       {isSelected && (
                         <svg
-                          className="w-4 h-4 text-violet-400 shrink-0"
+                          className="w-4 h-4 text-white shrink-0"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
