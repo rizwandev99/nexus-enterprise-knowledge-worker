@@ -47,10 +47,9 @@ export function resolveModel(requestedModelId?: string) {
         };
       }
       if (groqKey) {
-        console.warn("[createAgentGraph] Warning: OPENAI_API_KEY missing for 'gpt-4o'. Falling back to Groq GPT-OSS 120B.");
         return {
           model: new ChatGroq({
-            model: defaultGroqModel,
+            model: "openai/gpt-oss-120b",
             apiKey: groqKey,
             temperature: 0,
             streaming: true,
@@ -59,7 +58,6 @@ export function resolveModel(requestedModelId?: string) {
           provider: "groq" as const,
         };
       }
-      console.warn("[createAgentGraph] Warning: Neither OPENAI_API_KEY nor GROQ_API_KEY found for 'gpt-4o'. Initializing safe placeholder.");
       return {
         model: new ChatOpenAI({
           model: "gpt-4o",
@@ -89,10 +87,9 @@ export function resolveModel(requestedModelId?: string) {
         };
       }
       if (groqKey) {
-        console.warn("[createAgentGraph] Warning: ANTHROPIC_API_KEY missing for 'claude-3-5-sonnet'. Falling back to Groq GPT-OSS 120B.");
         return {
           model: new ChatGroq({
-            model: defaultGroqModel,
+            model: "openai/gpt-oss-120b",
             apiKey: groqKey,
             temperature: 0,
             streaming: true,
@@ -101,29 +98,15 @@ export function resolveModel(requestedModelId?: string) {
           provider: "groq" as const,
         };
       }
-      if (openaiKey) {
-        console.warn("[createAgentGraph] Warning: ANTHROPIC_API_KEY missing for 'claude-3-5-sonnet'. Falling back to OpenAI GPT-4o.");
-        return {
-          model: new ChatOpenAI({
-            model: process.env.OPENAI_MODEL || "gpt-4o",
-            apiKey: openaiKey,
-            temperature: 0,
-            streaming: true,
-          }),
-          resolvedModelId: "gpt-4o" as const,
-          provider: "openai" as const,
-        };
-      }
-      console.warn("[createAgentGraph] Warning: No API keys found for 'claude-3-5-sonnet'. Initializing safe placeholder.");
       return {
-        model: new ChatGroq({
-          model: defaultGroqModel,
+        model: new ChatOpenAI({
+          model: "claude-3-5-sonnet",
           apiKey: "missing-key",
           temperature: 0,
           streaming: true,
         }),
-        resolvedModelId: "groq-gpt-oss-120b" as const,
-        provider: "groq" as const,
+        resolvedModelId: "claude-3-5-sonnet" as const,
+        provider: "anthropic" as const,
       };
     }
 
@@ -131,10 +114,10 @@ export function resolveModel(requestedModelId?: string) {
       if (deepseekKey) {
         return {
           model: new ChatOpenAI({
-            model: process.env.DEEPSEEK_MODEL || "deepseek-reasoner",
+            model: "deepseek-reasoner",
             apiKey: deepseekKey,
             configuration: {
-              baseURL: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com",
+              baseURL: "https://api.deepseek.com/v1",
             },
             temperature: 0,
             streaming: true,
@@ -146,38 +129,24 @@ export function resolveModel(requestedModelId?: string) {
       if (groqKey) {
         return {
           model: new ChatGroq({
-            model: process.env.GROQ_DEEPSEEK_MODEL || defaultGroqModel,
+            model: "openai/gpt-oss-120b",
             apiKey: groqKey,
             temperature: 0,
             streaming: true,
           }),
-          resolvedModelId: "deepseek-r1" as const,
+          resolvedModelId: "groq-gpt-oss-120b" as const,
           provider: "groq" as const,
         };
       }
-      if (openaiKey) {
-        console.warn("[createAgentGraph] Warning: DEEPSEEK_API_KEY missing for 'deepseek-r1'. Falling back to OpenAI GPT-4o.");
-        return {
-          model: new ChatOpenAI({
-            model: process.env.OPENAI_MODEL || "gpt-4o",
-            apiKey: openaiKey,
-            temperature: 0,
-            streaming: true,
-          }),
-          resolvedModelId: "gpt-4o" as const,
-          provider: "openai" as const,
-        };
-      }
-      console.warn("[createAgentGraph] Warning: No API keys found for 'deepseek-r1'. Initializing safe placeholder.");
       return {
-        model: new ChatGroq({
-          model: defaultGroqModel,
+        model: new ChatOpenAI({
+          model: "deepseek-reasoner",
           apiKey: "missing-key",
           temperature: 0,
           streaming: true,
         }),
         resolvedModelId: "deepseek-r1" as const,
-        provider: "groq" as const,
+        provider: "deepseek" as const,
       };
     }
 
@@ -185,7 +154,7 @@ export function resolveModel(requestedModelId?: string) {
       if (groqKey) {
         return {
           model: new ChatGroq({
-            model: defaultGroqQwenModel,
+            model: "qwen/qwen3.8-27b",
             apiKey: groqKey,
             temperature: 0,
             streaming: true,
@@ -194,23 +163,9 @@ export function resolveModel(requestedModelId?: string) {
           provider: "groq" as const,
         };
       }
-      if (openaiKey) {
-        console.warn("[createAgentGraph] Warning: GROQ_API_KEY missing for 'groq-qwen-3.8-27b'. Falling back to OpenAI GPT-4o.");
-        return {
-          model: new ChatOpenAI({
-            model: process.env.OPENAI_MODEL || "gpt-4o",
-            apiKey: openaiKey,
-            temperature: 0,
-            streaming: true,
-          }),
-          resolvedModelId: "gpt-4o" as const,
-          provider: "openai" as const,
-        };
-      }
-      console.warn("[createAgentGraph] Warning: Neither GROQ_API_KEY nor OPENAI_API_KEY found for 'groq-qwen-3.8-27b'. Initializing safe placeholder.");
       return {
         model: new ChatGroq({
-          model: defaultGroqQwenModel,
+          model: "qwen/qwen3.8-27b",
           apiKey: "missing-key",
           temperature: 0,
           streaming: true,
@@ -235,20 +190,6 @@ export function resolveModel(requestedModelId?: string) {
           provider: "groq" as const,
         };
       }
-      if (openaiKey) {
-        console.warn("[createAgentGraph] Warning: GROQ_API_KEY missing for 'groq-gpt-oss-120b'. Falling back to OpenAI GPT-4o.");
-        return {
-          model: new ChatOpenAI({
-            model: process.env.OPENAI_MODEL || "gpt-4o",
-            apiKey: openaiKey,
-            temperature: 0,
-            streaming: true,
-          }),
-          resolvedModelId: "gpt-4o" as const,
-          provider: "openai" as const,
-        };
-      }
-      console.warn("[createAgentGraph] Warning: Neither GROQ_API_KEY nor OPENAI_API_KEY found. Initializing safe placeholder.");
       return {
         model: new ChatGroq({
           model: defaultGroqModel,
@@ -273,10 +214,40 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
   const isWebSearchEnabled = typeof options === "object" ? Boolean(options?.webSearch) : false;
 
   // ==========================================
-  // 1. PREPARING THE AI BRAIN WITH NATIVE TOOLS
+  // 1. PREPARING THE AI BRAIN WITH MULTI-TIER FALLBACKS
   // ==========================================
   const { model: baseModel } = resolveModel(requestedModelId);
-  const model = baseModel.bindTools(nativeTools);
+  const primaryBoundModel = baseModel.bindTools(nativeTools);
+
+  // Ranked quality fallback chain across all active Groq models
+  const groqKey = process.env.GROQ_API_KEY;
+  const fallbackModelNames = [
+    "openai/gpt-oss-120b",
+    "qwen/qwen3.8-27b",
+    "openai/gpt-oss-20b",
+    "qwen/qwen3.6-27b",
+    "groq/compound-mini",
+  ];
+
+  const fallbackInstances = [];
+  if (groqKey) {
+    for (const modelName of fallbackModelNames) {
+      fallbackInstances.push(
+        new ChatGroq({
+          model: modelName,
+          apiKey: groqKey,
+          temperature: 0,
+          streaming: true,
+        }).bindTools(nativeTools)
+      );
+    }
+  }
+
+  // Bind tools and attach fallback chain so rate limits or errors auto-cascade internally
+  const model =
+    fallbackInstances.length > 0
+      ? primaryBoundModel.withFallbacks({ fallbacks: fallbackInstances })
+      : primaryBoundModel;
 
   // ==========================================
   // 2. CREATING THE STATIONS (NODES) FOR OUR FLOWCHART
