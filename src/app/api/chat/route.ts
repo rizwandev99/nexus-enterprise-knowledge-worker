@@ -222,6 +222,36 @@ export async function POST(req: Request) {
             }
           }
 
+          const finalState = await workflow.getState(config);
+
+          // If streamEvents did not capture text deltas directly (e.g. from multi-cycle tool loopback),
+          // recover the assistant text from finalState messages
+          if (!assistantContent.trim() && finalState.next.length === 0) {
+            const allMessages = (finalState.values?.messages ?? []) as Array<Record<string, unknown>>;
+            for (let i = allMessages.length - 1; i >= 0; i--) {
+              const msg = allMessages[i];
+              const isAi =
+                typeof (msg as { _getType?: () => string })._getType === "function"
+                  ? (msg as { _getType: () => string })._getType() === "ai"
+                  : msg.role === "assistant";
+
+              const raw = msg.content;
+              const text =
+                typeof raw === "string"
+                  ? raw
+                  : Array.isArray(raw)
+                  ? raw.map((p) => (typeof p === "string" ? p : (p as { text?: string })?.text || "")).join("")
+                  : "";
+
+              if (isAi && text.trim() && !text.includes("__APPROVAL_REQUEST__")) {
+                assistantContent = text;
+                ensureTextBlockOpen();
+                writer.write({ type: "text-delta", id: textBlockId!, delta: text });
+                break;
+              }
+            }
+          }
+
           // Close the text block if we opened one
           if (textBlockId) {
             writer.write({ type: "text-end", id: textBlockId });
@@ -234,7 +264,6 @@ export async function POST(req: Request) {
           const costEstimate = estimateTokenCost(modelId, promptTokens, completionTokens);
 
           // If citations were not captured from event stream, fetch from graph state
-          const finalState = await workflow.getState(config);
           if (retrievedCitations.length === 0 && finalState.values?.citations?.length > 0) {
             retrievedCitations = finalState.values.citations;
           }

@@ -1,5 +1,4 @@
-// src/lib/agent/graph.ts
-import { SystemMessage, AIMessage, BaseMessage, ToolCall } from "@langchain/core/messages";
+import { SystemMessage, AIMessage, BaseMessage, ToolCall, ToolMessage } from "@langchain/core/messages";
 import { StateGraph, END, START, interrupt } from "@langchain/langgraph";
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 import { ChatGroq } from "@langchain/groq";
@@ -374,11 +373,10 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
       if (!decision.approved) {
         return {
           messages: [
-            {
-              role: "tool",
-              tool_call_id: sensitiveCall.id,
+            new ToolMessage({
+              tool_call_id: sensitiveCall.id || "mutation-call",
               content: "Tool execution aborted by human approval rejection.",
-            },
+            }),
           ],
         };
       }
@@ -389,12 +387,26 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
 
   // STATION 4: The Worker (toolExecutionNode)
   const toolExecutionNode = async (state: typeof AgentState.State) => {
-    const lastMsg = state.messages[state.messages.length - 1] as AIMessage;
-    const toolCalls = lastMsg.tool_calls || [];
-    const results = [];
+    // Locate the latest AIMessage with tool_calls in state
+    let targetAiMsg: AIMessage | undefined;
+    for (let i = state.messages.length - 1; i >= 0; i--) {
+      const msg = state.messages[i] as AIMessage;
+      if (msg && msg.tool_calls && msg.tool_calls.length > 0) {
+        targetAiMsg = msg;
+        break;
+      }
+    }
+
+    const toolCalls = targetAiMsg?.tool_calls || [];
+    const results: ToolMessage[] = [];
     let hasError = false;
 
     for (const call of toolCalls) {
+      const alreadyHandled = state.messages.some(
+        (m) => (m as { tool_call_id?: string }).tool_call_id === call.id
+      );
+      if (alreadyHandled) continue;
+
       try {
         const targetTool = nativeTools.find((t) => t.name === call.name);
         if (!targetTool) throw new Error(`Tool ${call.name} not available.`);
@@ -402,20 +414,21 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const output = await (targetTool as { invoke: (args: Record<string, unknown>) => Promise<string> }).invoke(call.args);
 
-        results.push({
-          role: "tool",
-          tool_call_id: call.id,
-          content: typeof output === "string" ? output : JSON.stringify(output),
-        });
+        results.push(
+          new ToolMessage({
+            tool_call_id: call.id || "tool-call",
+            content: typeof output === "string" ? output : JSON.stringify(output),
+          })
+        );
       } catch (err: unknown) {
         hasError = true;
         const errMsg = err instanceof Error ? err.message : String(err);
-        results.push({
-          role: "tool",
-          tool_call_id: call.id,
-          content: `RUNTIME EXCEPTION: ${errMsg}`,
-          isError: true,
-        });
+        results.push(
+          new ToolMessage({
+            tool_call_id: call.id || "tool-call",
+            content: `RUNTIME EXCEPTION: ${errMsg}`,
+          })
+        );
       }
     }
 
