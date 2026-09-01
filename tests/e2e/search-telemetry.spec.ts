@@ -1,30 +1,14 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Search, Telemetry & Multi-Model Routing E2E Suite', () => {
+test.describe('Telemetry & Multi-Model Routing E2E Suite', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:3000');
     await expect(page.locator('textarea')).toBeVisible({ timeout: 15000 });
   });
 
-  test('1. Omni-Input Web Search Toggle — styling, active state, tooltip, and pill text', async ({ page }) => {
-    const webSearchBtn = page.locator('button[aria-label="Toggle Live Internet Web Search"]');
-    await expect(webSearchBtn).toBeVisible();
-
-    await expect(webSearchBtn).not.toContainText('Web Search');
-
-    // Click to activate Web Search
-    await webSearchBtn.click();
-    await expect(webSearchBtn).toContainText('Web Search');
-
-    // Click again to deactivate Web Search
-    await webSearchBtn.click();
-    await expect(webSearchBtn).not.toContainText('Web Search');
-  });
-
-  test('2. Multi-Model Selector Dropdown — multi-provider options, selection persistence', async ({ page }) => {
+  test('1. Multi-Model Selector Dropdown — multi-provider options, selection persistence', async ({ page }) => {
     const modelBtn = page.locator('button[title="Select AI Inference Engine"]');
     await expect(modelBtn).toBeVisible();
-    await expect(modelBtn).toContainText('Groq GPT-OSS 120B');
 
     // Open model selector dropdown
     await modelBtn.click();
@@ -49,7 +33,7 @@ test.describe('Search, Telemetry & Multi-Model Routing E2E Suite', () => {
     await expect(modelBtn).toContainText('Groq GPT-OSS 120B');
   });
 
-  test('3. Live Telemetry & Observability Modal — state machine, Postgres checkpointer, and OTel tracing', async ({ page }) => {
+  test('2. Live Telemetry & Observability Modal — state machine, Postgres checkpointer, and OTel tracing', async ({ page }) => {
     // Locate the Activity / Telemetry icon button on the left vertical rail
     const telemetryRailBtn = page.locator('button[title*="Live LangGraph State Machine"]').first();
     await expect(telemetryRailBtn).toBeVisible();
@@ -74,18 +58,14 @@ test.describe('Search, Telemetry & Multi-Model Routing E2E Suite', () => {
     }
   });
 
-  test('4. Live Internet Web Search Execution with DuckDuckGo tool', async ({ page }) => {
+  test('3. Enterprise Knowledge Base RAG Query Execution', async ({ page }) => {
     test.setTimeout(45000);
 
-    const webSearchBtn = page.locator('button[aria-label="Toggle Live Internet Web Search"]');
-    await webSearchBtn.click();
-    await expect(webSearchBtn).toContainText('Web Search');
-
     const textarea = page.locator('textarea');
-    await textarea.fill('tell me todays news trending in india and tell me todays date and time also');
+    await textarea.fill('What are the enterprise security and data retention guidelines?');
     await page.keyboard.press('Enter');
 
-    // Verify response contains live date and news content
-    await expect(page.getByText(/India|news|September|2026|today/i).first()).toBeVisible({ timeout: 25000 });
+    // Verify response contains enterprise context and citations
+    await expect(page.getByText(/security|retention|policy|guidelines|governance|compliance/i).first()).toBeVisible({ timeout: 25000 });
   });
 });

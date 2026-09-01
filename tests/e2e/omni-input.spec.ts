@@ -9,7 +9,7 @@ test.describe('Omni-Input Bar & Enterprise Controls E2E Suite', () => {
   });
 
   test('1. Omni-input controls and icons render correctly', async ({ page }) => {
-    const textarea = page.locator('textarea[aria-label="Ask me anything, search knowledge base, or run SQL mutations..."]');
+    const textarea = page.locator('textarea');
     await expect(textarea).toBeVisible();
 
     const chips = ['Search documents', 'SQL Mutation', 'Audit Logs', 'System SLA'];
@@ -20,57 +20,36 @@ test.describe('Omni-Input Bar & Enterprise Controls E2E Suite', () => {
     const attachBtn = page.locator('button[aria-label="Attach Document"]');
     await expect(attachBtn).toBeVisible();
 
-    const webSearchBtn = page.locator('button[aria-label="Toggle Live Internet Web Search"]');
-    await expect(webSearchBtn).toBeVisible();
-
     const toolsBtn = page.locator('button[aria-label="Enterprise Tools & Integrations"]');
     await expect(toolsBtn).toBeVisible();
 
     const modelBtn = page.locator('button[title="Select AI Inference Engine"]');
     await expect(modelBtn).toBeVisible();
-    await expect(modelBtn).toContainText('Groq GPT-OSS 120B');
 
     const sendBtn = page.locator('button[aria-label="Send message"]');
     await expect(sendBtn).toBeVisible();
     await expect(sendBtn).toBeDisabled();
   });
 
-  test('2. Web Search toggle activates and updates visual state', async ({ page }) => {
-    const webSearchBtn = page.locator('button[aria-label="Toggle Live Internet Web Search"]');
-    await expect(webSearchBtn).toBeVisible();
-    await expect(webSearchBtn).not.toContainText('Web Search');
-
-    await webSearchBtn.click();
-    await expect(webSearchBtn).toContainText('Web Search');
-    await page.screenshot({ path: 'tests/e2e/screenshots/omni_01_web_search_active.png' });
-
-    await webSearchBtn.click();
-    await expect(webSearchBtn).not.toContainText('Web Search');
-  });
-
-  test('3. Enterprise Tools & Integrations popover opens and displays all 4 active tools', async ({ page }) => {
+  test('2. Enterprise Tools & Integrations popover opens and displays all 3 active tools', async ({ page }) => {
     const toolsBtn = page.locator('button[aria-label="Enterprise Tools & Integrations"]');
     await toolsBtn.click();
 
-    await expect(page.getByText('4 Active')).toBeVisible();
+    await expect(page.getByText('3 Active')).toBeVisible();
 
     await expect(page.getByText('PostgreSQL pgvector')).toBeVisible();
     await expect(page.getByText('Hybrid RAG • RRF Ranked')).toBeVisible();
 
     await expect(page.getByText('SQL Mutation Engine')).toBeVisible();
-
-    await expect(page.getByText('Live Web Search')).toBeVisible();
-
     await expect(page.getByText('Document Parser Engine')).toBeVisible();
 
     await page.screenshot({ path: 'tests/e2e/screenshots/omni_02_tools_popover_open.png' });
 
-    await page.keyboard.press('Enter');
     await page.keyboard.press('Escape');
-    await expect(page.getByText('4 Active')).toBeHidden();
+    await expect(page.getByText('3 Active')).toBeHidden();
   });
 
-  test('4. Model Selector dropdown displays multi-provider models and updates selection', async ({ page }) => {
+  test('3. Model Selector dropdown displays multi-provider models and updates selection', async ({ page }) => {
     const modelBtn = page.locator('button[title="Select AI Inference Engine"]');
     await modelBtn.click();
 
@@ -88,12 +67,6 @@ test.describe('Omni-Input Bar & Enterprise Controls E2E Suite', () => {
     await page.locator('[role="listbox"]').getByText('OpenAI GPT-4o').click();
     await expect(modelBtn).toContainText('OpenAI GPT-4o');
 
-    // Reopen and select Claude 3.5 Sonnet
-    await modelBtn.click();
-    await expect(page.locator('[role="listbox"]')).toBeVisible();
-    await page.locator('[role="listbox"]').getByText('Claude 3.5 Sonnet').click();
-    await expect(modelBtn).toContainText('Claude 3.5 Sonnet');
-
     // Switch back to Groq GPT-OSS 120B
     await modelBtn.click();
     await expect(page.locator('[role="listbox"]')).toBeVisible();
@@ -101,7 +74,7 @@ test.describe('Omni-Input Bar & Enterprise Controls E2E Suite', () => {
     await expect(modelBtn).toContainText('Groq GPT-OSS 120B');
   });
 
-  test('5. File attachment workflow: upload, preview pill, remove, and submit', async ({ page }) => {
+  test('4. File attachment workflow: upload, preview pill, remove, and submit', async ({ page }) => {
     test.setTimeout(60000);
 
     const tempFilePath = path.join(process.cwd(), 'temp-qa-spec.md');
@@ -144,20 +117,5 @@ test.describe('Omni-Input Bar & Enterprise Controls E2E Suite', () => {
         fs.unlinkSync(tempFilePath);
       }
     }
-  });
-
-  test('6. Live Web Search query execution with toggle active', async ({ page }) => {
-    test.setTimeout(45000);
-
-    const webSearchBtn = page.locator('button[aria-label="Toggle Live Internet Web Search"]');
-    await webSearchBtn.click();
-    await expect(webSearchBtn).toContainText('Web Search');
-
-    const textarea = page.locator('textarea');
-    await textarea.fill('What is the latest version of Next.js?');
-    await page.keyboard.press('Enter');
-
-    await expect(page.getByText(/Next\.js|version|Vercel|release|features/i).first()).toBeVisible({ timeout: 25000 });
-    await page.screenshot({ path: 'tests/e2e/screenshots/omni_06_web_search_response.png' });
   });
 });

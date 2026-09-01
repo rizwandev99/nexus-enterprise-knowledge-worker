@@ -89,7 +89,7 @@ function ChatApp() {
   );
 
   const handleSend = useCallback(
-    (promptText: string, options?: { webSearch?: boolean }) => {
+    (promptText: string) => {
       sendMessage(
         {
           role: "user",
@@ -99,7 +99,6 @@ function ChatApp() {
           body: {
             chatId: activeChatId,
             model: selectedModel,
-            webSearch: options?.webSearch ?? false,
           },
         }
       );

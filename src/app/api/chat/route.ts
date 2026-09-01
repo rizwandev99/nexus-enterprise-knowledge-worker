@@ -82,10 +82,6 @@ export async function POST(req: Request) {
     url.searchParams.get("modelId") ||
     url.searchParams.get("model") ||
     "groq-gpt-oss-120b";
-  const webSearch =
-    jsonBody.webSearch === true ||
-    jsonBody.body?.webSearch === true ||
-    url.searchParams.get("webSearch") === "true";
 
   if (!chatId) {
     return new Response(JSON.stringify({ error: "Missing chatId" }), { status: 400 });
@@ -94,7 +90,7 @@ export async function POST(req: Request) {
   // ── Create our LangGraph agent workflow with dynamic model routing ───────
   let workflow: Awaited<ReturnType<typeof createAgentGraph>>;
   try {
-    workflow = await createAgentGraph({ modelId, webSearch });
+    workflow = await createAgentGraph({ modelId });
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : String(error);
     console.error("Failed to create agent graph:", error);
@@ -375,7 +371,7 @@ export async function POST(req: Request) {
                 writer.write({ type: "text-end", id: textBlockId });
                 textBlockId = null;
               }
-              currentWorkflow = await createAgentGraph({ modelId: nextFallback, webSearch });
+              currentWorkflow = await createAgentGraph({ modelId: nextFallback });
               continue;
             }
 

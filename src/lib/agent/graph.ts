@@ -11,7 +11,6 @@ import { SupportedModelId } from "./pricing";
 
 export interface AgentGraphOptions {
   modelId?: string;
-  webSearch?: boolean;
 }
 
 // Module-level singleton — persists across HTTP requests so paused HITL
@@ -134,7 +133,7 @@ export function resolveModel(requestedModelId?: string) {
             temperature: 0,
             streaming: true,
           }),
-          resolvedModelId: "groq-gpt-oss-120b" as const,
+          resolvedModelId: "deepseek-r1" as const,
           provider: "groq" as const,
         };
       }
@@ -211,7 +210,6 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
   }
 
   const requestedModelId = typeof options === "string" ? options : options?.modelId;
-  const isWebSearchEnabled = typeof options === "object" ? Boolean(options?.webSearch) : false;
 
   // ==========================================
   // 1. PREPARING THE AI BRAIN WITH MULTI-TIER FALLBACKS
@@ -296,16 +294,6 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
             .join("\n\n")
         : "No specific documents were retrieved for this query.";
 
-    const webSearchDirectives = isWebSearchEnabled
-      ? `\n\nWEB SEARCH MODE ACTIVE (USER ENABLED):\n` +
-        `- The user has explicitly enabled live Web Search.\n` +
-        `- When the user asks for current news, today's trending topics, real-time facts, weather, stock prices, or external web information, YOU MUST IMMEDIATELY INVOKE the 'web_search' tool.\n` +
-        `- Formulate clean, targeted search queries (e.g. "top news headlines India ${isoDate}").\n` +
-        `- After receiving the tool results, synthesize the information into a well-structured summary with numbered items and markdown links [Source Title](URL).`
-      : `\n\nWEB SEARCH CAPABILITY:\n` +
-        `- You have access to the 'web_search' tool via DuckDuckGo.\n` +
-        `- When asked for live internet news, real-time external facts, or current web documentation, ALWAYS call the 'web_search' tool to retrieve live data before answering.`;
-
     const systemPrompt = new SystemMessage(
       `You are a helpful, enterprise-grade AI knowledge worker.\n\n` +
         `CURRENT SYSTEM TIME & DATE (GROUND TRUTH):\n` +
@@ -331,8 +319,7 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
         `- Emitting the 'execute_sql_mutation' tool call is the SOLE action that triggers this approval modal in the UI. Refusing or explaining in text breaks the workflow and prevents the approval prompt from appearing.\n` +
         `- Your job is to construct the valid SQL query (e.g., "UPDATE documents SET title = 'ARCHIVED';") and call 'execute_sql_mutation' immediately.\n` +
         `- If the user does not specify an exact document ID or target, generate a reasonable mutation (e.g., "UPDATE documents SET title = 'ARCHIVED';") and call 'execute_sql_mutation' immediately.\n` +
-        `- If the SQL mutation execution fails in PostgreSQL, report the error. NEVER refuse to emit the tool call.` +
-        webSearchDirectives
+        `- If the SQL mutation execution fails in PostgreSQL, report the error. NEVER refuse to emit the tool call.`
     );
 
     const conversationHistory = state.messages.filter((m: BaseMessage) => {

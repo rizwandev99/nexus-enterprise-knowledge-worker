@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import ModelSelector from "./model-selector";
 
 export interface ChatInputProps {
-  onSend: (text: string, options?: { webSearch?: boolean }) => void;
+  onSend: (text: string) => void;
   isLoading: boolean;
   selectedPrompt?: string;
   onClearSelectedPrompt?: () => void;
@@ -28,7 +28,6 @@ export default function ChatInput({
   onSelectModel,
 }: ChatInputProps) {
   const [input, setInput] = useState("");
-  const [isSearchActive, setIsSearchActive] = useState(false);
   const [isToolsPopoverOpen, setIsToolsPopoverOpen] = useState(false);
   const [attachedFile, setAttachedFile] = useState<{
     name: string;
@@ -86,7 +85,7 @@ export default function ChatInput({
         : "[ATTACHED DOCUMENT: " + attachedFile.name + " (" + formatFileSize(attachedFile.size) + ")]\n--- ATTACHED DOCUMENT CONTENT\n" + attachedFile.content;
     }
 
-    onSend(payload, { webSearch: isSearchActive });
+    onSend(payload);
     setInput("");
     setAttachedFile(null);
     setParseError(null);
@@ -256,7 +255,7 @@ export default function ChatInput({
 
             {/* Bottom Bar Controls */}
             <div className="flex items-center justify-between pt-2 mt-1 border-t border-white/[0.08]">
-              {/* Bottom Bar Left: Attachment (Paperclip), Search pill toggle (Globe), Canvas (Layers) */}
+              {/* Bottom Bar Left: Attachment (Paperclip), Canvas (Layers) */}
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <button
                   type="button"
@@ -277,33 +276,6 @@ export default function ChatInput({
                   >
                     <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 17.97 8.8l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                   </svg>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsSearchActive((p) => !p)}
-                  className={`inline-flex items-center gap-1.5 text-xs transition-all cursor-pointer ${
-                    isSearchActive
-                      ? "bg-white/[0.08] text-white border border-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] rounded-full px-2.5 py-1 font-medium"
-                      : "p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.08]"
-                  }`}
-                  title="Toggle Live Internet Web Search"
-                  aria-label="Toggle Live Internet Web Search"
-                >
-                  <svg
-                    className="w-4 h-4 shrink-0"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-                    <path d="M2 12h20" />
-                  </svg>
-                  {isSearchActive && <span className="text-xs font-medium">Web Search</span>}
                 </button>
 
                 {/* Enterprise Tools & Integrations Popover on Layers button */}
@@ -350,7 +322,7 @@ export default function ChatInput({
                           </span>
                         </div>
                         <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
-                          4 Active
+                          3 Active
                         </span>
                       </div>
 
@@ -395,27 +367,7 @@ export default function ChatInput({
                           </span>
                         </div>
 
-                        {/* 3. Live Web Search (DuckDuckGo) */}
-                        <div className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] transition-colors flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                          <div className="flex items-center gap-2.5 truncate">
-                            <div className="w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-slate-200 shrink-0">
-                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-                                <path d="M2 12h20" />
-                              </svg>
-                            </div>
-                            <div className="truncate">
-                              <div className="text-xs font-medium text-slate-200 truncate">Live Web Search</div>
-                              <div className="text-[10px] text-slate-400 font-mono">DuckDuckGo • Real-Time Web</div>
-                            </div>
-                          </div>
-                          <span className="text-[10px] font-mono font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded shrink-0">
-                            Active
-                          </span>
-                        </div>
-
-                        {/* 4. Document Parser Engine */}
+                        {/* 3. Document Parser Engine */}
                         <div className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.08] transition-colors flex items-center justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                           <div className="flex items-center gap-2.5 truncate">
                             <div className="w-7 h-7 rounded-lg bg-white/[0.08] border border-white/[0.12] flex items-center justify-center text-slate-200 shrink-0">
