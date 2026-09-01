@@ -41,6 +41,7 @@ export default function Sidebar({
   onOpenTelemetry?: () => void;
   onExportChat?: () => void;
   onSeedKnowledgeBase?: () => Promise<void>;
+  onClearKnowledgeBase?: () => Promise<void>;
 }) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);

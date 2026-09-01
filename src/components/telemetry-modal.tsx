@@ -7,6 +7,8 @@ interface TelemetryModalProps {
   isOpen: boolean;
   onClose: () => void;
   activeChatId: string | null;
+  onSeedKnowledgeBase?: () => Promise<void>;
+  onClearKnowledgeBase?: () => Promise<void>;
 }
 
 interface MetricsData {
@@ -22,9 +24,18 @@ interface MetricsData {
   stateMachine: string;
 }
 
-export default function TelemetryModal({ isOpen, onClose, activeChatId }: TelemetryModalProps) {
+export default function TelemetryModal({
+  isOpen,
+  onClose,
+  activeChatId,
+  onSeedKnowledgeBase,
+  onClearKnowledgeBase,
+}: TelemetryModalProps) {
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const fetchMetrics = useCallback(async () => {
     setIsLoading(true);
@@ -37,6 +48,34 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
       setIsLoading(false);
     }
   }, []);
+
+  const handleSeedDocs = async () => {
+    if (!onSeedKnowledgeBase || isSeeding) return;
+    setIsSeeding(true);
+    try {
+      await onSeedKnowledgeBase();
+      await fetchMetrics();
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
+  const handleClearDocs = async () => {
+    if (!onClearKnowledgeBase || isClearing) return;
+    if (!confirmClear) {
+      setConfirmClear(true);
+      setTimeout(() => setConfirmClear(false), 4000);
+      return;
+    }
+    setIsClearing(true);
+    setConfirmClear(false);
+    try {
+      await onClearKnowledgeBase();
+      await fetchMetrics();
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -90,8 +129,31 @@ export default function TelemetryModal({ isOpen, onClose, activeChatId }: Teleme
 
         {/* Live Monospace Metrics Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-            <span className="text-[11px] text-slate-400 font-medium font-mono">Knowledge Docs</span>
+          <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col justify-between shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] relative group">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-slate-400 font-medium font-mono">Knowledge Docs</span>
+              {metrics && metrics.documentCount > 0 ? (
+                <button
+                  type="button"
+                  onClick={handleClearDocs}
+                  disabled={isClearing}
+                  className={"text-[10px] font-mono px-1.5 py-0.5 rounded cursor-pointer transition-all " + (confirmClear ? "bg-rose-500 text-white font-bold" : "text-slate-400 hover:text-rose-300 hover:bg-rose-500/10")}
+                  title="Purge all documents from database"
+                >
+                  {isClearing ? "Purging…" : confirmClear ? "Confirm?" : "Clear"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSeedDocs}
+                  disabled={isSeeding}
+                  className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 cursor-pointer transition-all"
+                  title="Seed sample enterprise documents"
+                >
+                  {isSeeding ? "Seeding…" : "+ Seed"}
+                </button>
+              )}
+            </div>
             <span className="text-xl font-bold text-white mt-1 font-mono">
               {isLoading ? "…" : metrics?.documentCount ?? 0}
             </span>

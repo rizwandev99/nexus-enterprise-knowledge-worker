@@ -13,6 +13,7 @@ import {
   getChatMessages,
   fetchCitationDetails,
   seedSampleKnowledgeBase,
+  clearKnowledgeBase,
 } from "./chat-actions";
 
 function ChatApp() {
@@ -187,6 +188,20 @@ function ChatApp() {
     }
   }, [showToast]);
 
+  const handleClearKnowledgeBase = useCallback(async () => {
+    try {
+      const res = await clearKnowledgeBase();
+      if (res.success) {
+        showToast("Knowledge base purged. All documents cleared.", "success");
+        setSidebarRefreshTrigger((p) => p + 1);
+      } else {
+        showToast("Failed to clear knowledge base: " + res.message, "error");
+      }
+    } catch (err) {
+      showToast("Error clearing knowledge base: " + String(err), "error");
+    }
+  }, [showToast]);
+
   // Detect pending approval messages (searching from latest message backwards and skipping already resolved approvals)
   const pendingApproval =
     messages.findLast((m) => {
@@ -270,14 +285,16 @@ function ChatApp() {
         onReject={handleReject}
       />
 
-      {/* State & Telemetry Inspector Modal */ }
+      {/* State & Telemetry Inspector Modal */}
       <TelemetryModal
         isOpen={isTelemetryOpen}
         onClose={() => setIsTelemetryOpen(false)}
         activeChatId={activeChatId}
+        onSeedKnowledgeBase={handleSeedKnowledgeBase}
+        onClearKnowledgeBase={handleClearKnowledgeBase}
       />
 
-      {/* Slide-over Citation Drawer */ }
+      {/* Slide-over Citation Drawer */}
       <CitationDrawer
         isOpen={isCitationDrawerOpen}
         onClose={() => setIsCitationDrawerOpen(false)}
@@ -285,7 +302,7 @@ function ChatApp() {
         isLoading={isCitationLoading}
       />
 
-      {/* Sidebar with icon rail & session drawer */ }
+      {/* Sidebar with icon rail & session drawer */}
       <Sidebar
         activeChatId={activeChatId}
         onSelectChat={(id) => {
@@ -299,6 +316,7 @@ function ChatApp() {
         onOpenTelemetry={() => setIsTelemetryOpen(true)}
         onExportChat={handleExportChat}
         onSeedKnowledgeBase={handleSeedKnowledgeBase}
+        onClearKnowledgeBase={handleClearKnowledgeBase}
       />
 
       {/* Main Container */}
@@ -366,6 +384,7 @@ function ChatApp() {
           messagesEndRef={messagesEndRef}
           onSelectPrompt={(prompt) => handleSend(prompt)}
           onSeedKnowledgeBase={handleSeedKnowledgeBase}
+          onClearKnowledgeBase={handleClearKnowledgeBase}
           onSelectCitation={handleCitationClick}
           onOpenTelemetry={() => setIsTelemetryOpen(true)}
           selectedModel={selectedModel}

@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "../lib/db/prisma";
+import { setSeededFlag } from "../lib/db/hybrid-search";
 import { ChatGroq } from "@langchain/groq";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { revalidatePath } from "next/cache";
@@ -236,6 +237,27 @@ The orchestration tier is powered by LangGraph.js:
         ? `Successfully seeded ${addedCount} enterprise documents into PostgreSQL!`
         : "Knowledge base is already up to date with 3 enterprise documents.",
   };
+}
+
+export async function clearKnowledgeBase() {
+  try {
+    await prisma.$transaction([
+      prisma.documentChunk.deleteMany({}),
+      prisma.document.deleteMany({}),
+    ]);
+    setSeededFlag(true);
+    revalidatePath("/");
+    return {
+      success: true,
+      message: "Knowledge base successfully purged. All pgvector documents and chunks cleared.",
+    };
+  } catch (error) {
+    console.error("Failed to clear knowledge base:", error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Failed to clear knowledge base",
+    };
+  }
 }
 
 interface DocumentRecord {

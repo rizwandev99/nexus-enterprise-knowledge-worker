@@ -9,6 +9,7 @@ export interface MessageListProps {
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   onSelectPrompt?: (prompt: string) => void;
   onSeedKnowledgeBase?: () => Promise<void>;
+  onClearKnowledgeBase?: () => Promise<void>;
   onSelectCitation?: (docIndex: number) => void;
   onOpenTelemetry?: () => void;
   selectedModel?: string;
@@ -20,12 +21,15 @@ export default function MessageList({
   messagesEndRef,
   onSelectPrompt,
   onSeedKnowledgeBase,
+  onClearKnowledgeBase,
   onSelectCitation,
   onOpenTelemetry,
   selectedModel,
   isStreaming,
 }: MessageListProps) {
   const [isSeeding, setIsSeeding] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const handleSeedClick = async () => {
     if (!onSeedKnowledgeBase || isSeeding) return;
@@ -34,6 +38,22 @@ export default function MessageList({
       await onSeedKnowledgeBase();
     } finally {
       setIsSeeding(false);
+    }
+  };
+
+  const handleClearClick = async () => {
+    if (!onClearKnowledgeBase || isClearing) return;
+    if (!confirmClear) {
+      setConfirmClear(true);
+      setTimeout(() => setConfirmClear(false), 4000);
+      return;
+    }
+    setIsClearing(true);
+    setConfirmClear(false);
+    try {
+      await onClearKnowledgeBase();
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -170,29 +190,59 @@ export default function MessageList({
               Ready to assist you with anything you need — from enterprise knowledge retrieval to safe database mutations.
             </p>
 
-            {/* 5. Knowledge Base Status Chip */}
-            {onSeedKnowledgeBase && (
-              <button
-                type="button"
-                onClick={handleSeedClick}
-                disabled={isSeeding}
-                className="text-xs font-mono text-slate-200 bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.12] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] rounded-full px-4 py-1.5 transition-all flex items-center gap-2 mx-auto mb-8 cursor-pointer disabled:opacity-50"
-                title="Click to re-index / verify enterprise knowledge documents in PostgreSQL pgvector"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-slate-400">Enterprise KB:</span>
-                {isSeeding ? (
-                  <span className="inline-flex items-center gap-1.5 text-slate-200">
-                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Ingesting pgvector Chunks...
-                  </span>
-                ) : (
-                  <span className="text-emerald-300 font-medium hover:text-white transition-colors">
-                    3 Indexed Docs Active (pgvector)
-                  </span>
-                )}
-              </button>
-            )}
+            {/* 5. Knowledge Base Controls (Seed & Clear) */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-8 select-none">
+              {onSeedKnowledgeBase && (
+                <button
+                  type="button"
+                  onClick={handleSeedClick}
+                  disabled={isSeeding || isClearing}
+                  className="text-xs font-mono text-slate-200 bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.12] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] rounded-full px-3.5 py-1.5 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  title="Seed sample governance and SLA documents into PostgreSQL pgvector"
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-slate-400 font-normal">KB:</span>
+                  {isSeeding ? (
+                    <span className="inline-flex items-center gap-1.5 text-slate-200">
+                      <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Seeding Docs...
+                    </span>
+                  ) : (
+                    <span className="text-emerald-300 font-medium hover:text-white transition-colors">
+                      + Seed Sample Docs
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {onClearKnowledgeBase && (
+                <button
+                  type="button"
+                  onClick={handleClearClick}
+                  disabled={isSeeding || isClearing}
+                  className={"text-xs font-mono border backdrop-blur-xl rounded-full px-3.5 py-1.5 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 " + (confirmClear ? "bg-rose-500/20 text-rose-200 border-rose-500/40 animate-pulse shadow-[0_0_12px_rgba(244,63,94,0.3)]" : "bg-white/[0.04] text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 border-white/[0.10] hover:border-rose-500/30")}
+                  title="Purge all documents and vector embeddings from PostgreSQL database"
+                >
+                  {isClearing ? (
+                    <span className="inline-flex items-center gap-1.5 text-rose-200">
+                      <span className="w-3 h-3 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" />
+                      Purging PostgreSQL...
+                    </span>
+                  ) : confirmClear ? (
+                    <span className="font-semibold text-rose-300">
+                      Click to Confirm Clear
+                    </span>
+                  ) : (
+                    <>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                      <span>Clear KB</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
 
             {/* 6. Bento Grid (4 Cards in 2x2 grid with pronounced Rich Glassmorphism) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full text-left">

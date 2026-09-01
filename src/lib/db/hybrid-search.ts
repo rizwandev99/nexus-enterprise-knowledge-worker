@@ -73,6 +73,10 @@ The orchestration tier is powered by LangGraph.js:
 
 let isSeededInMemory = false;
 
+export function setSeededFlag(val: boolean) {
+  isSeededInMemory = val;
+}
+
 /**
  * Disaster-proof auto-seeding hook:
  * Ensures the PostgreSQL database always contains the 3 core enterprise governance documents.
