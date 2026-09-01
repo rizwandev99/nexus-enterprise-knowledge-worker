@@ -188,14 +188,34 @@ function ChatApp() {
   }, [showToast]);
 
   // Detect pending approval messages
-  const approvalMarkerMsg = messages.find((m) =>
-    m.role === "assistant" &&
-    m.parts?.some((p) => p.type === "text" && (p as { type: "text"; text: string }).text?.includes("__APPROVAL_REQUEST__"))
-  );
+  const approvalMarkerMsg = messages.find((m) => {
+    if (m.role !== "assistant") return false;
+    const txt =
+      (typeof (m as unknown as { content?: string }).content === "string"
+        ? (m as unknown as { content: string }).content
+        : "") +
+      (Array.isArray(m.parts)
+        ? m.parts
+            .map((p) => {
+              if (typeof p === "string") return p;
+              if (p && typeof p === "object" && "text" in p && typeof (p as { text?: string }).text === "string") {
+                return (p as { text: string }).text;
+              }
+              return "";
+            })
+            .join("")
+        : "");
+    return txt.includes("__APPROVAL_REQUEST__");
+  });
+
   const pendingApproval =
     approvalMarkerMsg && !resolvedApprovals.has(approvalMarkerMsg.id)
       ? approvalMarkerMsg
       : null;
+
+  if (typeof window !== "undefined") {
+    console.log("[page.tsx] messages count:", messages.length, "pendingApproval:", Boolean(pendingApproval), "messages:", messages);
+  }
 
   const handleApprove = useCallback(() => {
     if (!pendingApproval) return;

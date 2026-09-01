@@ -255,12 +255,10 @@ export async function POST(req: Request) {
           };
 
           try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             writer.write({
-              type: "custom",
-              name: "telemetry",
-              value: telemetryPayload,
-            } as any);
+              type: "data-telemetry",
+              data: telemetryPayload,
+            });
           } catch (telemetryErr) {
             console.warn("[route] Telemetry event stream write skipped:", telemetryErr);
           }

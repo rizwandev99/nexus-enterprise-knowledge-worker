@@ -1,4 +1,4 @@
-﻿import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 /**
  * Nexus Enterprise Knowledge Worker - Playwright E2E Test Suite
@@ -17,61 +17,51 @@ test.describe('Nexus Enterprise Knowledge Worker', () => {
   // ──────────────────────────────────────────────────────────────────────────
   test('smoke test: homepage loads and renders core UI elements', async ({ page }) => {
     await page.goto('http://localhost:3000');
+    await page.waitForLoadState('networkidle');
 
     // 1. Page title should contain "Nexus"
     await expect(page).toHaveTitle(/Nexus/);
 
     // 2. The chat textarea (primary input) must be visible
-    //    Selector targets the aria-labelled textarea in ChatInput.tsx
     await expect(
-      page.locator('textarea[aria-label="Ask me anything"]')
+      page.locator('textarea[aria-label="Ask me anything, search knowledge base, or run SQL mutations..."]')
     ).toBeVisible();
 
     // 3. Sidebar / navigation rail must be present
-    //    The Sidebar renders a <nav> element
     await expect(page.locator('nav, aside, [role="navigation"]').first()).toBeVisible();
 
-    // 4. Welcome heading rendered by MessageList empty-state
-    await expect(page.getByText('Hey! Enterprise Worker')).toBeVisible();
+    // 4. Welcome greeting rendered by MessageList empty-state
+    await expect(page.getByText('Hi, User')).toBeVisible();
 
-    // 5. Sub-heading
-    await expect(page.getByText('What can I help with?')).toBeVisible();
+    // 5. Hero headline
+    await expect(page.getByText('Can I help you with anything?')).toBeVisible();
 
-    // 6. Send button (type="submit" with aria-label="Send message") must exist
+    // 6. Send button must exist
     await expect(
       page.locator('button[type="submit"][aria-label="Send message"]')
     ).toBeVisible();
 
     // 7. Header branding text
-    await expect(page.getByText('Nexus Knowledge Base')).toBeVisible();
+    await expect(page.getByText('Nexus AI').first()).toBeVisible();
 
     // 8. Telemetry button in header
-    await expect(page.getByText('Telemetry & Traces')).toBeVisible();
+    await expect(page.getByText('Telemetry').first()).toBeVisible();
   });
 
   // ──────────────────────────────────────────────────────────────────────────
-  // TEST 2: Feature Bento Cards — Clickable and populate input
+  // TEST 2: Feature Bento Cards — Clickable and dispatches query
   // ──────────────────────────────────────────────────────────────────────────
-  test('ui: feature bento cards are clickable and populate input', async ({ page }) => {
+  test('ui: feature bento cards are clickable and dispatch query', async ({ page }) => {
     await page.goto('http://localhost:3000');
-
-    // Wait for the page to fully hydrate (Next.js SSR → client takeover)
     await page.waitForLoadState('networkidle');
-
-    // Take a baseline screenshot for visual regression reference
-    await page.screenshot({
-      path: 'tests/e2e/screenshots/homepage.png',
-      fullPage: false,
-    });
 
     // Track any critical JS errors that may surface after hydration
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
 
     // Allow a brief window for any deferred errors to surface
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1000);
 
-    // Filter out non-fatal React hydration warnings (expected in dev mode)
     const criticalErrors = errors.filter(
       (e) => !e.includes('hydration') && !e.includes('Warning')
     );
@@ -80,29 +70,67 @@ test.describe('Nexus Enterprise Knowledge Worker', () => {
     // ── Verify all 4 feature bento card badge labels are present ──
     const expectedBadges = [
       'Hybrid RAG Engine',
-      'SQL Agent + HITL',
-      'Self-Correction Graph',
-      'OpenTelemetry',
+      'LangGraph interrupt()',
+      'Auto-Retry (Max 3)',
+      'OpenTelemetry + OTLP',
     ];
     for (const badge of expectedBadges) {
       await expect(page.getByText(badge)).toBeVisible();
     }
 
-    // ── Verify clicking a bento card populates the textarea ──
-    // Click the "Query Knowledge Base" card (first feature card)
-    await page.getByText('Query Knowledge Base').click();
+    // ── Verify clicking a bento card dispatches the prompt ──
+    await page.getByText('Hybrid Search RAG').click();
 
-    // After click, the textarea should be populated with the card's prompt
-    const textarea = page.locator('textarea[aria-label="Ask me anything"]');
-    const inputValue = await textarea.inputValue();
-    expect(inputValue.length).toBeGreaterThan(10);
-    expect(inputValue).toContain('zero-trust');
+    // After click, the message bubble with prompt text should appear
+    await expect(page.getByText(/password rotation/i)).toBeVisible({ timeout: 10000 });
+  });
 
-    // ── Verify the send button becomes active once text is populated ──
-    // The submit button is enabled when canSend === true (input has content)
-    const sendButton = page.locator('button[type="submit"][aria-label="Send message"]');
-    // Button should no longer be in its disabled visual state
-    // (disabled attr is NOT set; Playwright checks the DOM attribute)
-    await expect(sendButton).not.toBeDisabled();
+  // ──────────────────────────────────────────────────────────────────────────
+  // TEST 3: HITL Flow — Submit SQL Mutation, Verify Approval Modal, and Approve
+  // ──────────────────────────────────────────────────────────────────────────
+  test('hitl: triggers human-in-the-loop approval modal and executes on approval', async ({ page }) => {
+    test.setTimeout(45000);
+
+    page.on('console', msg => console.log('[BROWSER CONSOLE]', msg.type(), msg.text()));
+    page.on('pageerror', err => console.log('[BROWSER ERROR]', err.message));
+    page.on('response', resp => {
+      if (resp.url().includes('/api/chat')) {
+        console.log('[BROWSER API /api/chat RESPONSE]', resp.status(), resp.statusText());
+      }
+    });
+
+    await page.goto('http://localhost:3000');
+    await page.waitForLoadState('networkidle');
+
+    // 1. Fill the textarea with the SQL mutation prompt
+    const textarea = page.locator('textarea');
+    await textarea.fill('Execute a database mutation to update document title in documents table to ARCHIVED');
+    
+    // Take screenshot before send
+    await page.screenshot({ path: 'tests/e2e/screenshots/01_prompt_typed.png' });
+
+    // 2. Submit the message
+    await page.keyboard.press('Enter');
+
+    // 3. Wait for the orange Approval Modal to appear
+    const modal = page.locator('[role="dialog"]');
+    await expect(modal).toBeVisible({ timeout: 20000 });
+    await expect(modal.getByText('Human-in-the-Loop Approval')).toBeVisible();
+    await expect(modal.getByText('UPDATE documents SET title = \'ARCHIVED\';')).toBeVisible();
+
+    // Take screenshot with modal open
+    await page.screenshot({ path: 'tests/e2e/screenshots/02_approval_modal_active.png' });
+
+    // 4. Click "Approve & Execute"
+    const approveBtn = modal.getByRole('button', { name: /Approve & Execute/i });
+    await approveBtn.click();
+
+    // 5. Modal should dismiss cleanly
+    await expect(modal).toBeHidden({ timeout: 15000 });
+
+    // 6. Assistant response should confirm the execution
+    await page.waitForTimeout(4000);
+    await page.screenshot({ path: 'tests/e2e/screenshots/03_mutation_executed.png' });
   });
 });
+

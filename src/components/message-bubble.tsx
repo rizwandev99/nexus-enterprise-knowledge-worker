@@ -296,8 +296,8 @@ export default function MessageBubble({
           </div>
         ) : (
           <div className="w-7 h-7 rounded-xl bg-white flex items-center justify-center shadow-[0_2px_12px_rgba(255,255,255,0.18)]">
-            <svg className="w-4 h-4 fill-slate-950" viewBox="0 0 32 32">
-              <path d="M16 3.5C14.3 3.5 13.1 5.8 12.5 8.8 11.7 12.3 8.8 15.2 5.2 15.9c-1.2.2-1.2 2 0 2.2 3.6.7 6.5 3.6 7.1.6 3 1.8 5.3 3.5 5.3s2.9-2.3 3.5-5.3c.8-3.5 3.7-6.4 7.3-7.1 1.2-.2 1.2-2 0-2.2-3.6-.7-6.5-3.6-7.3-7.1-.6-3-1.8-5.3-3.5-5.3z" />
+            <svg className="w-4 h-4 fill-slate-950" viewBox="0 0 24 24">
+              <path d="M12 2C12 7.52285 7.52285 12 2 12C7.52285 12 12 16.4772 12 22C12 16.4772 16.4772 12 22 12C16.4772 12 12 7.52285 12 2Z" />
             </svg>
           </div>
         )}
