@@ -24,15 +24,13 @@
 
 ## 📸 Screenshots & Demo
 
-<!-- Replace these with actual screenshots once captured -->
-
 | Dark Glassmorphism UI | HITL Approval Modal |
 |---|---|
-| ![UI Screenshot](public/screenshots/ui-main.png) | ![HITL Modal](public/screenshots/hitl-modal.png) |
+| ![UI Screenshot](./public/screenshots/ui-main.png) | ![HITL Modal](./public/screenshots/hitl-modal.png) |
 
 | Citation Drawer with RRF Sources | Live Telemetry Inspector |
 |---|---|
-| ![Citation Drawer](public/screenshots/citation-drawer.png) | ![Telemetry Modal](public/screenshots/telemetry-modal.png) |
+| ![Citation Drawer](./public/screenshots/citation-drawer.png) | ![Telemetry Modal](./public/screenshots/telemetry-modal.png) |
 
 ---
 
