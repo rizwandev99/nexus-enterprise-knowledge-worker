@@ -82,9 +82,10 @@ test.describe('Search, Telemetry & Multi-Model Routing E2E Suite', () => {
     await expect(webSearchBtn).toContainText('Web Search');
 
     const textarea = page.locator('textarea');
-    await textarea.fill('What is the latest version of Next.js?');
+    await textarea.fill('tell me todays news trending in india and tell me todays date and time also');
     await page.keyboard.press('Enter');
 
-    await expect(page.getByText(/Next\.js|version|Vercel|release|features/i).first()).toBeVisible({ timeout: 25000 });
+    // Verify response contains live date and news content
+    await expect(page.getByText(/India|news|September|2026|today/i).first()).toBeVisible({ timeout: 25000 });
   });
 });

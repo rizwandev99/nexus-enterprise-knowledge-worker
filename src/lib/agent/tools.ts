@@ -179,13 +179,29 @@ export const webSearchTool = tool(
     }
 
     try {
-      const res = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(trimmedQuery)}`, {
+      // DuckDuckGo HTML endpoint requires POST with application/x-www-form-urlencoded
+      let res = await fetch("https://html.duckduckgo.com/html/", {
+        method: "POST",
         headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
           "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
           "Accept-Language": "en-US,en;q=0.9",
         },
+        body: `q=${encodeURIComponent(trimmedQuery)}`,
       });
+
+      if (!res.ok) {
+        // Fallback to lite endpoint if html endpoint is constrained
+        res = await fetch("https://lite.duckduckgo.com/lite/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          },
+          body: `q=${encodeURIComponent(trimmedQuery)}`,
+        });
+      }
 
       if (!res.ok) {
         return `Web search service returned status ${res.status}. Falling back to internal knowledge base.`;
@@ -208,7 +224,7 @@ export const webSearchTool = tool(
       };
 
       const results: Array<{ title: string; snippet: string; url: string }> = [];
-      for (let i = 1; i < Math.min(resultBlocks.length, 6); i++) {
+      for (let i = 1; i < Math.min(resultBlocks.length, 7); i++) {
         const block = resultBlocks[i];
         const linkMatch = block.match(/<a[^>]+class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i);
         const snippetMatch = block.match(/<a[^>]+class="result__snippet"[^>]*>([\s\S]*?)<\/a>/i);
