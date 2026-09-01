@@ -50,3 +50,9 @@ DESign.md
 SYSTEM_STATE.md
 PROJECT.md
 scratch/
+playwright-report/
+test-results/
+agent-browser.tgz
+package/
+test_batch.json
+
