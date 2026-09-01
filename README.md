@@ -14,14 +14,19 @@
 
 <div align="center">
 
-### 🌐 [Live Cloud Application →](https://nexus-enterprise-knowledge-worker.vercel.app) &nbsp;|&nbsp; 📺 [Watch Full Demo on YouTube (4-min HD) →](https://youtu.be/vZSU9izlB1s)
+<img src="./public/screenshots/nexus-demo.gif" alt="Nexus Enterprise AI Knowledge Worker Live Showcase" width="100%" />
 
-<br/>
+<br/><br/>
 
-[![Nexus Enterprise AI Co-Worker Interactive Demo](public/screenshots/nexus-demo.gif)](https://youtu.be/vZSU9izlB1s)
+[![Watch YouTube HD Walkthrough](https://img.shields.io/badge/YouTube-Watch%20Full%20HD%20Demo%20(4--Min)-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/vZSU9izlB1s)
+&nbsp;&nbsp;
+[![Live Cloud App](https://img.shields.io/badge/Live%20Application-nexus--enterprise--knowledge--worker.vercel.app-6366F1?style=for-the-badge&logo=vercel&logoColor=white)](https://nexus-enterprise-knowledge-worker.vercel.app)
+&nbsp;&nbsp;
+[![GitHub Source](https://img.shields.io/badge/GitHub-Repository%20Source-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/rizwandev99/nexus-enterprise-knowledge-worker)
 
-*🎬 **Interactive System Preview**: Real-time Hybrid RAG, Human-in-the-Loop SQL execution, DuckDuckGo web search, and OTel telemetry stream.*  
-*(Click the preview animation above to watch the full HD walkthrough on YouTube)*
+<br/><br/>
+
+*🎬 **Interactive System Preview**: Real-time Hybrid RAG (pgvector + tsvector RRF), Human-in-the-Loop SQL execution, DuckDuckGo live web search, and OpenTelemetry distributed tracing.*
 
 <br/>
 
