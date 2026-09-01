@@ -50,36 +50,36 @@ Unlike conventional stateless LLM wrappers, Nexus uses a **LangGraph.js directed
 ## 🏗️ System Architecture
 
 ```mermaid
-graph TD
-    Client["Next.js 15 Client (React 19 / Dark Glassmorphism UI)"] -->|POST /api/chat (SSE Stream)| ChatAPI["API Route (/api/chat)"]
-    Client -->|POST /api/parse-document| DocParser["Document Parser (/api/parse-document)"]
+flowchart TD
+    Client["Next.js 15 Client<br/>(React 19 / Dark Glassmorphism UI)"] -->|"POST /api/chat (SSE Stream)"| ChatAPI["API Route<br/>(/api/chat)"]
+    Client -->|"POST /api/parse-document"| DocParser["Document Parser<br/>(/api/parse-document)"]
 
-    ChatAPI -->|Stream Events| LangGraph["LangGraph.js Directed Cyclic Graph"]
+    ChatAPI -->|"Stream Events"| LangGraph["LangGraph.js Directed Cyclic Graph"]
 
-    subgraph LangGraph State Machine
-        RAGNode["ragNode (Hybrid Search)"] -->|RRF Context & Citations| ReasoningNode["reasoningNode (GPT-OSS 120B / Multi-Provider)"]
-        ReasoningNode -->|Has Tool Call?| Router{"Tool Check"}
-        Router -->|Read SELECT / Ingestion| ToolsNode["toolsNode (Native Tools)"]
-        Router -->|DML Mutation| ApprovalInterrupt["approvalNode (interrupt() boundary)"]
-        Router -->|Complete| EndNode["Finalized (END)"]
+    subgraph StateMachine ["LangGraph State Machine"]
+        RAGNode["ragNode<br/>(Hybrid Search)"] -->|"RRF Context & Citations"| ReasoningNode["reasoningNode<br/>(GPT-OSS 120B / Multi-Provider)"]
+        ReasoningNode -->|"Has Tool Call?"| Router{"Tool Check"}
+        Router -->|"Read SELECT / Ingestion"| ToolsNode["toolsNode<br/>(Native Tools)"]
+        Router -->|"DML Mutation"| ApprovalInterrupt["approvalNode<br/>(interrupt boundary)"]
+        Router -->|"Complete"| EndNode["Finalized (END)"]
 
-        ToolsNode -->|Tool Exception| ReasoningNode
-        ApprovalInterrupt -->|Approved / Rejected| ToolsNode
+        ToolsNode -->|"Tool Exception (Auto-Heal)"| ReasoningNode
+        ApprovalInterrupt -->|"Approved / Rejected"| ToolsNode
     end
 
-    subgraph Storage & Persistence Layer
-        PrismaPostgres[("PostgreSQL 16 (pgvector + tsvector)")]
-        Checkpointer[("PostgreSQL Saver (PostgresSaver)")]
+    subgraph StorageLayer ["Storage & Persistence Layer"]
+        PrismaPostgres[("PostgreSQL 16<br/>(pgvector + tsvector)")]
+        Checkpointer[("PostgreSQL Saver<br/>(PostgresSaver)")]
     end
 
-    RAGNode <-->|Cosine Similarity + Full-Text RRF| PrismaPostgres
-    ToolsNode <-->|add_document / execute_sql_query / execute_sql_mutation| PrismaPostgres
-    LangGraph <-->|Thread State Persistence| Checkpointer
+    RAGNode <-->|"Cosine Similarity + Full-Text RRF"| PrismaPostgres
+    ToolsNode <-->|"add_document / execute_sql"| PrismaPostgres
+    LangGraph <-->|"Thread State Persistence"| Checkpointer
 
-    subgraph Observability
-        OTel["OpenTelemetry Instrumentation (/instrumentation.ts)"]
+    subgraph ObservabilityLayer ["Observability"]
+        OTel["OpenTelemetry Instrumentation<br/>(/instrumentation.ts)"]
     end
-    LangGraph -.->|Traces & Semantic Spans| OTel
+    LangGraph -.->|"Traces & Semantic Spans"| OTel
 ```
 
 ---

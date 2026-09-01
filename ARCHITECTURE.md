@@ -2,35 +2,35 @@
 
 ## 1. High-Level Architecture Overview
 ```mermaid
-graph TD
-    Client["Client UI (Next.js 15 / React 19 / Vercel AI SDK)"] -->|POST /api/chat (SSE Stream)| ChatAPI["API Route (/api/chat)"]
-    Client -->|POST /api/parse-document| DocParser["Document Parser (/api/parse-document)"]
+flowchart TD
+    Client["Client UI<br/>(Next.js 15 / React 19 / Vercel AI SDK)"] -->|"POST /api/chat (SSE Stream)"| ChatAPI["API Route<br/>(/api/chat)"]
+    Client -->|"POST /api/parse-document"| DocParser["Document Parser<br/>(/api/parse-document)"]
     
-    ChatAPI -->|Stream Events| LangGraph["LangGraph.js State Machine"]
+    ChatAPI -->|"Stream Events"| LangGraph["LangGraph.js State Machine"]
     
-    subgraph LangGraph Machine
-        RAGNode["Researcher (ragNode)"] -->|Hybrid Search| ReasoningNode["Reasoning Engine (reasoningNode)"]
-        ReasoningNode -->|Conditional Edge: Has Tool Calls?| Router{"Action Needed?"}
-        Router -->|Yes: Safe Read| ToolsNode["Execution Node (toolsNode)"]
-        Router -->|Yes: SQL Mutation| ApprovalInterrupt["HITL Approval Boundary (interrupt)"]
-        Router -->|No / Complete| EndNode["State Finalized (END)"]
-        ToolsNode -->|Self-Correction Feedback| ReasoningNode
-        ApprovalInterrupt -->|Approved / Rejected| ToolsNode
+    subgraph MachineLayer ["LangGraph Machine"]
+        RAGNode["Researcher<br/>(ragNode)"] -->|"Hybrid Search"| ReasoningNode["Reasoning Engine<br/>(reasoningNode)"]
+        ReasoningNode -->|"Conditional Edge: Has Tool Calls?"| Router{"Action Needed?"}
+        Router -->|"Yes: Safe Read"| ToolsNode["Execution Node<br/>(toolsNode)"]
+        Router -->|"Yes: SQL Mutation"| ApprovalInterrupt["HITL Approval Boundary<br/>(interrupt)"]
+        Router -->|"No / Complete"| EndNode["State Finalized (END)"]
+        ToolsNode -->|"Self-Correction Feedback"| ReasoningNode
+        ApprovalInterrupt -->|"Approved / Rejected"| ToolsNode
     end
     
-    subgraph Data & Storage Layer
-        PrismaPostgres[("PostgreSQL Database (Prisma Postgres / pgvector)")]
-        Checkpointer[("PostgreSQL Checkpointer (PostgresSaver)")]
+    subgraph StorageLayer ["Data & Storage Layer"]
+        PrismaPostgres[("PostgreSQL Database<br/>(Prisma Postgres / pgvector)")]
+        Checkpointer[("PostgreSQL Checkpointer<br/>(PostgresSaver)")]
     end
     
-    RAGNode <-->|Cosine Similarity + tsvector (RRF)| PrismaPostgres
-    ToolsNode <-->|execute_sql_query / execute_sql_mutation / add_document| PrismaPostgres
-    LangGraph <-->|Thread State Persistence| Checkpointer
+    RAGNode <-->|"Cosine Similarity + tsvector (RRF)"| PrismaPostgres
+    ToolsNode <-->|"execute_sql / add_document"| PrismaPostgres
+    LangGraph <-->|"Thread State Persistence"| Checkpointer
     
-    subgraph Observability
-        OTel["OpenTelemetry Instrumentation (/instrumentation.ts)"]
+    subgraph ObservabilityLayer ["Observability"]
+        OTel["OpenTelemetry Instrumentation<br/>(/instrumentation.ts)"]
     end
-    LangGraph -.->|Traces & Metrics| OTel
+    LangGraph -.->|"Traces & Metrics"| OTel
 ```
 
 ---
