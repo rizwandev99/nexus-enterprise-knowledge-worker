@@ -50,12 +50,9 @@ DESign.md
 SYSTEM_STATE.md
 PROJECT.md
 scratch/
-
-# Antigravity IDE internal tool artifacts
+playwright-report/
+test-results/
 agent-browser.tgz
-package/bin/
-package/cli/
-package/skill-data/
-package/scripts/
-package/skills/
+package/
 test_batch.json
+
