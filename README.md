@@ -14,21 +14,31 @@
 
 <div align="center">
 
-### 🌐 [Live Demo →](https://nexus-enterprise-knowledge-worker.vercel.app) &nbsp;|&nbsp; [2-min Walkthrough (Loom)](https://nexus-enterprise-knowledge-worker.vercel.app)
+### 🌐 [Live Cloud Application →](https://nexus-enterprise-knowledge-worker.vercel.app) &nbsp;|&nbsp; 📺 [Watch Full Demo on YouTube (4-min HD) →](https://youtu.be/vZSU9izlB1s)
 
-> **Try it live:** Click "⚡ Seed Demo KB" in the app to load sample documents, then ask: *"What is our data retention policy?"* or *"Show me all documents about security governance"*
+<br/>
+
+[![Nexus Enterprise AI Co-Worker Interactive Demo](./public/screenshots/nexus-demo.gif)](https://youtu.be/vZSU9izlB1s)
+
+*🎬 **Interactive System Preview**: Real-time Hybrid RAG, Human-in-the-Loop SQL execution, DuckDuckGo web search, and OTel telemetry stream.*  
+*(Click the preview animation above to watch the full HD walkthrough on YouTube)*
+
+<br/>
+
+> **Try it live in your browser:** Click **"📚 Seed Demo KB"** in the sidebar to populate enterprise compliance policies, then ask:  
+> *"What is our data retention policy?"* or *"Insert an audit log entry for user 42"* to trigger the HITL approval dialog!
 
 </div>
 
 ---
 
-## 📸 Screenshots & Demo
+## 📸 System Showcase & Interactive UI
 
-| Dark Glassmorphism UI | HITL Approval Modal |
+| 🎨 Dark Glassmorphism Workspace | 🛡️ HITL Human Approval Modal |
 |---|---|
 | ![UI Screenshot](./public/screenshots/ui-main.png) | ![HITL Modal](./public/screenshots/hitl-modal.png) |
 
-| Citation Drawer with RRF Sources | Live Telemetry Inspector |
+| 📑 3D Citation Drawer & RRF Sources | ⚡ Live LangGraph Telemetry Inspector |
 |---|---|
 | ![Citation Drawer](./public/screenshots/citation-drawer.png) | ![Telemetry Modal](./public/screenshots/telemetry-modal.png) |
 
