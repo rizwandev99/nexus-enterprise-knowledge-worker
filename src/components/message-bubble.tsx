@@ -63,7 +63,7 @@ export default function MessageBubble({
   const citationMatches = useMemo(() => {
     if (isUser) return [];
     const set = new Set<number>();
-    const re = /\[Doc-(\d+)\]/g;
+    const re = /\[Doc[-\u2010-\u2015\u2212\s]?(\d+)\]/gi;
     let m;
     while ((m = re.exec(partsText)) !== null) {
       set.add(parseInt(m[1], 10));
@@ -247,10 +247,10 @@ export default function MessageBubble({
   };
 
   const renderInlineElements = (text: string) => {
-    const parts = text.split(/(\[Doc-\d+\]|\*\*.*?\*\*|`[^`]+`)/g);
+    const parts = text.split(/(\[Doc[-\u2010-\u2015\u2212\s]?\d+\]|\*\*.*?\*\*|`[^`]+`)/gi);
 
     return parts.map((part, pIdx) => {
-      const docMatch = part.match(/\[Doc-(\d+)\]/);
+      const docMatch = part.match(/\[Doc[-\u2010-\u2015\u2212\s]?(\d+)\]/i);
       if (docMatch) {
         const docNum = parseInt(docMatch[1], 10);
         return (

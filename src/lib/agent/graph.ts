@@ -30,8 +30,8 @@ export function resolveModel(requestedModelId?: string) {
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   const deepseekKey = process.env.DEEPSEEK_API_KEY;
 
-  const defaultGroqModel = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
-  const defaultGroqQwenModel = process.env.GROQ_QWEN_MODEL || "qwen/qwen3.8-27b";
+  const defaultGroqModel = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
+  const defaultGroqQwenModel = process.env.GROQ_QWEN_MODEL || "openai/gpt-oss-20b";
 
   switch (modelId) {
     case "gpt-4o": {
@@ -292,10 +292,10 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
 
     const searchResults = await executeHybridSearch(query);
 
-    const citations = searchResults.map((r, idx) => ({
+    const citations = searchResults.slice(0, 3).map((r, idx) => ({
       id: `Doc-${idx + 1}`,
       title: r.metadata.title,
-      content: `(Database ID: ${r.metadata.id})\n${r.content}`,
+      content: `(Database ID: ${r.metadata.id})\n${r.content.slice(0, 350)}`,
       uri: r.metadata.uri,
     }));
 

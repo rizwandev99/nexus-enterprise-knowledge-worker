@@ -79,7 +79,7 @@ export async function saveMessage(chatId: string, role: string, content: string)
 export async function generateChatTitle(chatId: string, firstMessageContent: string) {
   try {
     const model = new ChatGroq({
-      model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
+      model: process.env.GROQ_MODEL || "openai/gpt-oss-20b",
       temperature: 0,
     });
     
