@@ -341,9 +341,42 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
     });
 
     const orderedMessages = [systemPrompt, ...conversationHistory];
-    const response = await model.invoke(orderedMessages);
+    let response: BaseMessage;
+    try {
+      response = await model.invoke(orderedMessages);
+    } catch (invokeErr: unknown) {
+      console.warn("[reasoningNode] Primary model invocation threw error, executing resilient fallback cascade:", invokeErr);
+      const backupModelNames = [
+        "qwen/qwen3.6-27b",
+        "qwen/qwen3.8-27b",
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b",
+        "allam-2-7b",
+      ];
+      let resolved = false;
+      let lastErr = invokeErr;
+      for (const backupName of backupModelNames) {
+        try {
+          const backupRunner = new ChatGroq({
+            model: backupName,
+            apiKey: groqKey,
+            temperature: 0,
+          }).bindTools(nativeTools);
+          response = await backupRunner.invoke(orderedMessages);
+          resolved = true;
+          console.log(`[reasoningNode] Successfully recovered via backup model: ${backupName}`);
+          break;
+        } catch (fbErr) {
+          console.warn(`[reasoningNode] Backup model ${backupName} failed, trying next:`, fbErr);
+          lastErr = fbErr;
+        }
+      }
+      if (!resolved) {
+        throw lastErr;
+      }
+    }
 
-    return { messages: [response] };
+    return { messages: [response!] };
   };
 
   // STATION 3: The Bouncer (approvalNode)
