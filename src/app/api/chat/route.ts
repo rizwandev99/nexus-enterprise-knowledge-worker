@@ -375,7 +375,7 @@ export async function POST(req: Request) {
                 writer.write({ type: "text-end", id: textBlockId });
                 textBlockId = null;
               }
-              currentWorkflow = await createAgentGraph({ modelId: nextFallback, webSearch: isWebSearchEnabled });
+              currentWorkflow = await createAgentGraph({ modelId: nextFallback, webSearch });
               continue;
             }
 
