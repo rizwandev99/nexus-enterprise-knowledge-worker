@@ -162,6 +162,45 @@ test.describe('Nexus Enterprise Knowledge Worker', () => {
     await approveBtn.click();
     await expect(modal).toBeHidden({ timeout: 15000 });
   });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // TEST 5: Sequential Chained HITL Mutations in Same Session
+  // ──────────────────────────────────────────────────────────────────────────
+  test('hitl: supports sequential chained mutations and approvals in the same session', async ({ page }) => {
+    test.setTimeout(60000);
+    await page.goto('http://localhost:3000');
+    await page.waitForLoadState('networkidle');
+
+    const textarea = page.locator('textarea');
+    const modal = page.locator('[role="dialog"]');
+
+    // ── First Mutation ──
+    await textarea.fill('Execute a database mutation to update document title in documents table to ARCHIVED');
+    await page.keyboard.press('Enter');
+
+    await expect(modal).toBeVisible({ timeout: 20000 });
+    await expect(modal.getByText('Human-in-the-Loop Approval')).toBeVisible();
+    await modal.getByRole('button', { name: /Approve & Execute/i }).click();
+    await expect(modal).toBeHidden({ timeout: 15000 });
+
+    // Wait for the first mutation confirmation response to stream in
+    await expect(page.getByText(/ARCHIVED/i).first()).toBeVisible({ timeout: 15000 });
+
+    // ── Second Chained Mutation ("delete it now") ──
+    await textarea.fill('delete it now');
+    const sendButton = page.locator('button[type="submit"][aria-label="Send message"]');
+    await expect(sendButton).toBeEnabled({ timeout: 15000 });
+    await page.keyboard.press('Enter');
+
+    // Modal MUST appear a second time for the delete operation!
+    await expect(modal).toBeVisible({ timeout: 25000 });
+    await expect(modal.getByText('Human-in-the-Loop Approval')).toBeVisible();
+    await expect(modal.getByText(/DELETE FROM documents/i)).toBeVisible();
+
+    await modal.getByRole('button', { name: /Approve & Execute/i }).click();
+    await expect(modal).toBeHidden({ timeout: 15000 });
+  });
 });
+
 
 

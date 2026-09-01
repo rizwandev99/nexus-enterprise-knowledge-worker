@@ -187,35 +187,33 @@ function ChatApp() {
     }
   }, [showToast]);
 
-  // Detect pending approval messages
-  const approvalMarkerMsg = messages.find((m) => {
-    if (m.role !== "assistant") return false;
-    const txt =
-      (typeof (m as unknown as { content?: string }).content === "string"
-        ? (m as unknown as { content: string }).content
-        : "") +
-      (Array.isArray(m.parts)
-        ? m.parts
-            .map((p) => {
-              if (typeof p === "string") return p;
-              if (p && typeof p === "object" && "text" in p && typeof (p as { text?: string }).text === "string") {
-                return (p as { text: string }).text;
-              }
-              return "";
-            })
-            .join("")
-        : "");
-    return txt.includes("__APPROVAL_REQUEST__");
-  });
-
+  // Detect pending approval messages (searching from latest message backwards and skipping already resolved approvals)
   const pendingApproval =
-    approvalMarkerMsg && !resolvedApprovals.has(approvalMarkerMsg.id)
-      ? approvalMarkerMsg
-      : null;
-
-  if (typeof window !== "undefined") {
-    console.log("[page.tsx] messages count:", messages.length, "pendingApproval:", Boolean(pendingApproval), "messages:", messages);
-  }
+    messages.findLast((m) => {
+      if (m.role !== "assistant") return false;
+      if (resolvedApprovals.has(m.id)) return false;
+      const txt =
+        (typeof (m as unknown as { content?: string }).content === "string"
+          ? (m as unknown as { content: string }).content
+          : "") +
+        (Array.isArray(m.parts)
+          ? m.parts
+              .map((p) => {
+                if (typeof p === "string") return p;
+                if (
+                  p &&
+                  typeof p === "object" &&
+                  "text" in p &&
+                  typeof (p as { text?: string }).text === "string"
+                ) {
+                  return (p as { text: string }).text;
+                }
+                return "";
+              })
+              .join("")
+          : "");
+      return txt.includes("__APPROVAL_REQUEST__");
+    }) || null;
 
   const handleApprove = useCallback(() => {
     if (!pendingApproval) return;
@@ -236,8 +234,31 @@ function ChatApp() {
   }, [pendingApproval, activeChatId, selectedModel, sendMessage]);
 
   const displayMessages = messages.filter((m) => {
-    const txt = m.parts?.map((p) => (p.type === "text" ? p.text : "")).join("") || "";
-    return !txt.includes("__APPROVAL_REQUEST__");
+    const txt =
+      (typeof (m as unknown as { content?: string }).content === "string"
+        ? (m as unknown as { content: string }).content
+        : "") +
+      (Array.isArray(m.parts)
+        ? m.parts
+            .map((p) => {
+              if (typeof p === "string") return p;
+              if (
+                p &&
+                typeof p === "object" &&
+                "text" in p &&
+                typeof (p as { text?: string }).text === "string"
+              ) {
+                return (p as { text: string }).text;
+              }
+              return "";
+            })
+            .join("")
+        : "");
+    return (
+      !txt.includes("__APPROVAL_REQUEST__") &&
+      !txt.includes("[HUMAN_APPROVAL_YES]") &&
+      !txt.includes("[HUMAN_APPROVAL_NO]")
+    );
   });
 
   return (
