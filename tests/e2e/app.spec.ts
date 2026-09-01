@@ -132,5 +132,36 @@ test.describe('Nexus Enterprise Knowledge Worker', () => {
     await page.waitForTimeout(4000);
     await page.screenshot({ path: 'tests/e2e/screenshots/03_mutation_executed.png' });
   });
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // TEST 4: Conversational Followup — "do it then" triggers HITL Approval Modal
+  // ──────────────────────────────────────────────────────────────────────────
+  test('hitl: handles conversational followups like "do it then" by triggering approval modal', async ({ page }) => {
+    test.setTimeout(45000);
+    await page.goto('http://localhost:3000');
+    await page.waitForLoadState('networkidle');
+
+    // 1. Send conversational query
+    const textarea = page.locator('textarea');
+    await textarea.fill('Can you change document titles to ARCHIVED?');
+    await page.keyboard.press('Enter');
+
+    // 2. Wait for first response or modal
+    const modal = page.locator('[role="dialog"]');
+    try {
+      await expect(modal).toBeVisible({ timeout: 12000 });
+    } catch {
+      // If modal didn't pop on first conversational question, send followup "do it then"
+      await textarea.fill('do it then');
+      await page.keyboard.press('Enter');
+      await expect(modal).toBeVisible({ timeout: 15000 });
+    }
+
+    await expect(modal.getByText('Human-in-the-Loop Approval')).toBeVisible();
+    const approveBtn = modal.getByRole('button', { name: /Approve & Execute/i });
+    await approveBtn.click();
+    await expect(modal).toBeHidden({ timeout: 15000 });
+  });
 });
+
 

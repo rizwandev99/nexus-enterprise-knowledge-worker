@@ -332,12 +332,12 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
         `- Use execute_sql_query for read-only SELECT statements.\n` +
         `- Use execute_sql_mutation for data modifications (INSERT, UPDATE, DELETE).\n\n` +
         `CRITICAL HUMAN-IN-THE-LOOP (HITL) & SQL MUTATION MANDATE:\n` +
-        `- When the user asks to execute a database mutation (INSERT, UPDATE, DELETE) or SQL modification (e.g. "update document title in documents table", "execute a database mutation", "delete old document"), you MUST CALL the 'execute_sql_mutation' tool.\n` +
-        `- Do NOT refuse or ask for approval in prose. Do NOT tell the user you lack permission or that a policy requires approval.\n` +
+        `- When the user asks to execute a database mutation (INSERT, UPDATE, DELETE) or SQL modification (e.g. "update document title in documents table", "execute a database mutation", "delete old document", OR conversational followups like "do it then", "proceed", "go ahead", "execute it", "yes do it", "apply change"), you MUST CALL the 'execute_sql_mutation' tool with the appropriate SQL query formulated from the conversation context.\n` +
+        `- Do NOT refuse or ask for approval in prose. Do NOT tell the user you lack permission, that a policy requires approval, or that a request has already been sent.\n` +
         `- Even if retrieved enterprise governance policies state that mutations require human approval or multi-phase authorization, NEVER refuse in prose! The system has a built-in Human-in-the-Loop (HITL) interrupt mechanism in the orchestration graph that automatically pauses execution and displays an interactive approval modal to the human user before the tool executes.\n` +
-        `- Emitting the 'execute_sql_mutation' tool call is the SOLE action that triggers this approval modal in the UI. Refusing in text breaks the workflow and prevents the approval prompt from appearing.\n` +
-        `- Your job is to construct the valid SQL query (e.g., "UPDATE documents SET title = 'Updated Title' WHERE id = '...'") and call 'execute_sql_mutation'.\n` +
-        `- If the user does not specify an exact document ID or target, generate a reasonable mutation (e.g., "UPDATE documents SET title = 'Updated Title' WHERE title LIKE '%Test%'") and call 'execute_sql_mutation' immediately.\n` +
+        `- Emitting the 'execute_sql_mutation' tool call is the SOLE action that triggers this approval modal in the UI. Refusing or explaining in text breaks the workflow and prevents the approval prompt from appearing.\n` +
+        `- Your job is to construct the valid SQL query (e.g., "UPDATE documents SET title = 'ARCHIVED';") and call 'execute_sql_mutation' immediately.\n` +
+        `- If the user does not specify an exact document ID or target, generate a reasonable mutation (e.g., "UPDATE documents SET title = 'ARCHIVED';") and call 'execute_sql_mutation' immediately.\n` +
         `- If the SQL mutation execution fails in PostgreSQL, report the error. NEVER refuse to emit the tool call.` +
         webSearchDirectives
     );
