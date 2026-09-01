@@ -286,6 +286,10 @@ export default function MessageBubble({
     });
   };
 
+  if (!isUser && !partsText.trim() && !isStreaming) {
+    return null;
+  }
+
   return (
     <div className="w-full flex flex-col gap-2 my-2">
       {/* Header with Avatar Squircle, Name, Timestamp */}
@@ -319,6 +323,17 @@ export default function MessageBubble({
           <p className="text-xs sm:text-sm text-slate-100 font-sans leading-relaxed whitespace-pre-wrap">
             {cleanUserText || partsText}
           </p>
+        ) : !partsText.trim() ? (
+          isStreaming ? (
+            <div className="flex items-center gap-2.5 py-1 text-xs font-mono text-slate-300">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce" />
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:150ms]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:300ms]" />
+              </span>
+              <span className="animate-pulse text-slate-300">Synthesizing response...</span>
+            </div>
+          ) : null
         ) : (
           renderFormattedContent(partsText)
         )}

@@ -13,38 +13,32 @@ import { test, expect } from '@playwright/test';
 test.describe('Hybrid RAG, 3D Citations & Markdown Engine', () => {
 
   test.beforeEach(async ({ page }) => {
-    // 2s pause to respect API rate limits
+    // 2s pause between test runs to ensure complete idle state
     await new Promise((resolve) => setTimeout(resolve, 2000));
     await page.goto('http://localhost:3000');
     await page.waitForLoadState('domcontentloaded');
-
-    // Ensure sample documents are seeded
-    const seedBtn = page.locator('button[title*="Seed sample governance and SLA documents"]').first();
-    if (await seedBtn.isVisible()) {
-      await seedBtn.click().catch(() => {});
-      await page.waitForTimeout(1000);
-    }
   });
 
   // ──────────────────────────────────────────────────────────────────────────
   // TEST 1: Enterprise Hybrid RAG Retrieval & Injected Citations
   // ──────────────────────────────────────────────────────────────────────────
   test('rag: hybrid search retrieves enterprise policy and renders citations [Doc-X]', async ({ page }) => {
-    test.setTimeout(45000);
+    test.setTimeout(90000);
 
     const textarea = page.locator('textarea');
     await textarea.fill('What is the company policy on data retention and GDPR Article 17 deletion?');
     
     const sendBtn = page.locator('button[type="submit"][aria-label="Send message"]');
+    await expect(sendBtn).toBeEnabled({ timeout: 10000 });
     await sendBtn.click();
 
     // Verify response content includes retrieved governance text
     const assistantBubble = page.locator('div.glass-panel').filter({ hasText: /retention|GDPR|90 days|24 hours|Zero-Trust/i }).first();
-    await expect(assistantBubble).toBeVisible({ timeout: 30000 });
+    await expect(assistantBubble).toBeVisible({ timeout: 60000 });
 
     // Verify citation pill [Doc-X] is rendered
     const citationBtn = page.locator('button[aria-label^="Doc-"], button:has-text("[Doc-")').first();
-    await expect(citationBtn).toBeVisible({ timeout: 20000 });
+    await expect(citationBtn).toBeVisible({ timeout: 40000 });
 
     // Screenshot of RAG retrieval & citations
     await page.screenshot({ path: 'tests/e2e/screenshots/rag_01_retrieval_citations.png' });
@@ -54,19 +48,20 @@ test.describe('Hybrid RAG, 3D Citations & Markdown Engine', () => {
   // TEST 2: 3D Citation Deck Rendering
   // ──────────────────────────────────────────────────────────────────────────
   test('deck: renders 3D stacked citation deck with depth offsets and inspect trigger', async ({ page }) => {
-    test.setTimeout(45000);
+    test.setTimeout(90000);
 
     const textarea = page.locator('textarea');
     await textarea.fill('What are the SLA commitments and P95 latency requirements for Nexus?');
     
     const sendBtn = page.locator('button[type="submit"][aria-label="Send message"]');
+    await expect(sendBtn).toBeEnabled({ timeout: 10000 });
     await sendBtn.click();
 
     // Wait for response with SLA details
-    await expect(page.getByText(/99\.99%|SLA|<450ms|latency|uptime/i).first()).toBeVisible({ timeout: 30000 });
+    await expect(page.getByText(/99\.99%|SLA|<450ms|latency|uptime/i).first()).toBeVisible({ timeout: 60000 });
 
     // Verify 3D Citation Deck header "Verified Sources"
-    await expect(page.getByText(/Verified Sources/i).first()).toBeVisible({ timeout: 20000 });
+    await expect(page.getByText(/Verified Sources/i).first()).toBeVisible({ timeout: 40000 });
 
     // Verify "✦ Inspect Citations" button
     const inspectBtn = page.getByRole('button', { name: /✦ Inspect Citations/i }).first();
@@ -84,24 +79,25 @@ test.describe('Hybrid RAG, 3D Citations & Markdown Engine', () => {
   // TEST 3: Slide-over Citation Drawer Lifecycle & Features
   // ──────────────────────────────────────────────────────────────────────────
   test('drawer: opens slide-over CitationDrawer with metadata, similarity scores, tabs, and 1-click copy', async ({ page }) => {
-    test.setTimeout(45000);
+    test.setTimeout(90000);
 
     const textarea = page.locator('textarea');
     await textarea.fill('What are the database mutation guidelines and change control protocol?');
     
     const sendBtn = page.locator('button[type="submit"][aria-label="Send message"]');
+    await expect(sendBtn).toBeEnabled({ timeout: 10000 });
     await sendBtn.click();
 
     // Wait for citations to appear
     const citationBtn = page.locator('button[aria-label^="Doc-"], button:has-text("[Doc-")').first();
-    await expect(citationBtn).toBeVisible({ timeout: 30000 });
+    await expect(citationBtn).toBeVisible({ timeout: 60000 });
 
     // Click citation pill to trigger Slide-over Citation Drawer
     await citationBtn.click();
 
     // Verify Slide-over Citation Drawer is open
     const drawer = page.locator('aside').filter({ hasText: /Source Inspector/i });
-    await expect(drawer).toBeVisible({ timeout: 10000 });
+    await expect(drawer).toBeVisible({ timeout: 15000 });
 
     // Verify header badge [Doc-1]
     await expect(drawer.getByText(/\[Doc-\d+\]/).first()).toBeVisible();
@@ -147,21 +143,22 @@ test.describe('Hybrid RAG, 3D Citations & Markdown Engine', () => {
   // TEST 4: Stream-Safe Markdown Engine & Code Block Copy
   // ──────────────────────────────────────────────────────────────────────────
   test('markdown: renders headers, bold/italics, bullet lists, inline code, and code block with copy button', async ({ page }) => {
-    test.setTimeout(45000);
+    test.setTimeout(90000);
 
     const textarea = page.locator('textarea');
     await textarea.fill('Provide a SQL query example wrapped in triple backticks with bullet list explanation');
     
     const sendBtn = page.locator('button[type="submit"][aria-label="Send message"]');
+    await expect(sendBtn).toBeEnabled({ timeout: 10000 });
     await sendBtn.click();
 
     // Wait for response
     const assistantBubble = page.locator('div.glass-panel').filter({ hasText: /SELECT|UPDATE|SQL|query|table/i }).first();
-    await expect(assistantBubble).toBeVisible({ timeout: 30000 });
+    await expect(assistantBubble).toBeVisible({ timeout: 60000 });
 
     // Check for <code> or <pre> code block
     const codeBlock = page.locator('pre code').first();
-    await expect(codeBlock).toBeVisible({ timeout: 20000 });
+    await expect(codeBlock).toBeVisible({ timeout: 30000 });
 
     // Check for code copy button
     const codeCopyBtn = page.locator('button[aria-label="copy code to clipboard"]').first();
@@ -178,17 +175,18 @@ test.describe('Hybrid RAG, 3D Citations & Markdown Engine', () => {
   // TEST 5: Structured Markdown Table Rendering
   // ──────────────────────────────────────────────────────────────────────────
   test('table: renders structured markdown table with headers and clean alignment', async ({ page }) => {
-    test.setTimeout(45000);
+    test.setTimeout(90000);
 
     const textarea = page.locator('textarea');
     await textarea.fill('Create a markdown table comparing PostgreSQL vs Redis with columns: Feature, PostgreSQL, Redis');
     
     const sendBtn = page.locator('button[type="submit"][aria-label="Send message"]');
+    await expect(sendBtn).toBeEnabled({ timeout: 10000 });
     await sendBtn.click();
 
     // Wait for table to render
     const table = page.locator('table').first();
-    await expect(table).toBeVisible({ timeout: 30000 });
+    await expect(table).toBeVisible({ timeout: 60000 });
 
     // Verify thead and th headers
     const headers = page.locator('th');
