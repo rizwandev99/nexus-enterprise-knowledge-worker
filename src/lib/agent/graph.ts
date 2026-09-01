@@ -29,8 +29,8 @@ export function resolveModel(requestedModelId?: string) {
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   const deepseekKey = process.env.DEEPSEEK_API_KEY;
 
-  const defaultGroqModel = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
-  const defaultGroqQwenModel = process.env.GROQ_QWEN_MODEL || "openai/gpt-oss-20b";
+  const defaultGroqModel = process.env.GROQ_MODEL || "qwen/qwen3.8-27b";
+  const defaultGroqQwenModel = process.env.GROQ_QWEN_MODEL || "qwen/qwen3.8-27b";
 
   switch (modelId) {
     case "gpt-4o": {
@@ -222,11 +222,11 @@ export async function createAgentGraph(options?: AgentGraphOptions | string) {
   // Ranked quality fallback chain across all active Groq models
   const groqKey = process.env.GROQ_API_KEY;
   const fallbackModelNames = [
-    "openai/gpt-oss-120b",
     "qwen/qwen3.8-27b",
-    "openai/gpt-oss-20b",
     "qwen/qwen3.6-27b",
     "groq/compound-mini",
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b",
   ];
 
   const fallbackInstances = [];

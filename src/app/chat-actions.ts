@@ -78,14 +78,22 @@ export async function saveMessage(chatId: string, role: string, content: string)
 
 export async function generateChatTitle(chatId: string, firstMessageContent: string) {
   try {
-    const model = new ChatGroq({
-      model: process.env.GROQ_MODEL || "openai/gpt-oss-20b",
+    const groqKey = process.env.GROQ_API_KEY;
+    const m1 = new ChatGroq({
+      model: "qwen/qwen3.8-27b",
+      apiKey: groqKey,
       temperature: 0,
     });
+    const m2 = new ChatGroq({
+      model: "qwen/qwen3.6-27b",
+      apiKey: groqKey,
+      temperature: 0,
+    });
+    const model = m1.withFallbacks({ fallbacks: [m2] });
     
     const response = await model.invoke([
       new SystemMessage("You are a helpful assistant that generates extremely concise chat titles (2-4 words max) based on the user's first message. Output ONLY the title, no quotes or prefix."),
-      new HumanMessage(firstMessageContent)
+      new HumanMessage(firstMessageContent.slice(0, 300))
     ]);
 
     let title = typeof response.content === "string" ? response.content : "New Chat";
