@@ -5,7 +5,7 @@
 // on the client understands natively.
 
 import { createAgentGraph } from "@/lib/agent/graph";
-import { estimateTokenCost, estimateTokenCount, TelemetryMetrics, TelemetryCitation } from "@/lib/agent/pricing";
+import { estimateTokenCost, estimateTokenCount, TelemetryMetrics, TelemetryCitation, SupportedModelId } from "@/lib/agent/pricing";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { HumanMessage } from "@langchain/core/messages";
 import { Command, isGraphInterrupt } from "@langchain/langgraph";
